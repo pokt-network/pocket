@@ -7,7 +7,6 @@ import (
 	"github.com/libp2p/go-libp2p/core/protocol"
 	"go.uber.org/multierr"
 
-	"github.com/pokt-network/pocket/p2p/providers"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -20,18 +19,16 @@ var (
 	_ typesP2P.RouterConfig = &RainTreeConfig{}
 )
 
-// baseConfig implements `RouterConfig` using the given libp2p host and current
-// height and peerstore providers. Intended for internal use by other `RouterConfig`
+// baseConfig implements `RouterConfig` using the given libp2p host, pokt address
+// and handler function. Intended for internal use by other `RouterConfig`
 // implementations with common config parameters.
 //
 // NB: intentionally *not* embedding `baseConfig` to improve readability of usages
 // of would-be embedders (e.g. `BackgroundConfig`).
 type baseConfig struct {
-	Host                  host.Host
-	Addr                  crypto.Address
-	CurrentHeightProvider providers.CurrentHeightProvider
-	PeerstoreProvider     providers.PeerstoreProvider
-	Handler               func(data []byte) error
+	Host    host.Host
+	Addr    crypto.Address
+	Handler func(data []byte) error
 }
 
 type UnicastRouterConfig struct {
@@ -44,20 +41,16 @@ type UnicastRouterConfig struct {
 
 // BackgroundConfig implements `RouterConfig` for use with `BackgroundRouter`.
 type BackgroundConfig struct {
-	Host                  host.Host
-	Addr                  crypto.Address
-	CurrentHeightProvider providers.CurrentHeightProvider
-	PeerstoreProvider     providers.PeerstoreProvider
-	Handler               func(data []byte) error
+	Host    host.Host
+	Addr    crypto.Address
+	Handler func(data []byte) error
 }
 
 // RainTreeConfig implements `RouterConfig` for use with `RainTreeRouter`.
 type RainTreeConfig struct {
-	Host                  host.Host
-	Addr                  crypto.Address
-	CurrentHeightProvider providers.CurrentHeightProvider
-	PeerstoreProvider     providers.PeerstoreProvider
-	Handler               func(data []byte) error
+	Host    host.Host
+	Addr    crypto.Address
+	Handler func(data []byte) error
 }
 
 // IsValid implements the respective member of the `RouterConfig` interface.
@@ -66,16 +59,8 @@ func (cfg *baseConfig) IsValid() (err error) {
 		err = multierr.Append(err, fmt.Errorf("pokt address not configured"))
 	}
 
-	if cfg.CurrentHeightProvider == nil {
-		err = multierr.Append(err, fmt.Errorf("current height provider not configured"))
-	}
-
 	if cfg.Host == nil {
 		err = multierr.Append(err, fmt.Errorf("host not configured"))
-	}
-
-	if cfg.PeerstoreProvider == nil {
-		err = multierr.Append(err, fmt.Errorf("peerstore provider not configured"))
 	}
 
 	if cfg.Handler == nil {
@@ -111,11 +96,9 @@ func (cfg *UnicastRouterConfig) IsValid() (err error) {
 // IsValid implements the respective member of the `RouterConfig` interface.
 func (cfg *BackgroundConfig) IsValid() error {
 	baseCfg := baseConfig{
-		Host:                  cfg.Host,
-		Addr:                  cfg.Addr,
-		CurrentHeightProvider: cfg.CurrentHeightProvider,
-		PeerstoreProvider:     cfg.PeerstoreProvider,
-		Handler:               cfg.Handler,
+		Host:    cfg.Host,
+		Addr:    cfg.Addr,
+		Handler: cfg.Handler,
 	}
 	return baseCfg.IsValid()
 }
@@ -123,11 +106,9 @@ func (cfg *BackgroundConfig) IsValid() error {
 // IsValid implements the respective member of the `RouterConfig` interface.
 func (cfg *RainTreeConfig) IsValid() error {
 	baseCfg := baseConfig{
-		Host:                  cfg.Host,
-		Addr:                  cfg.Addr,
-		CurrentHeightProvider: cfg.CurrentHeightProvider,
-		PeerstoreProvider:     cfg.PeerstoreProvider,
-		Handler:               cfg.Handler,
+		Host:    cfg.Host,
+		Addr:    cfg.Addr,
+		Handler: cfg.Handler,
 	}
 	return baseCfg.IsValid()
 }

@@ -9,8 +9,6 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/protocol"
-	"github.com/pokt-network/pocket/p2p/providers"
-	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/unicast"
 	"github.com/pokt-network/pocket/p2p/utils"
@@ -43,34 +41,39 @@ type rainTreeRouter struct {
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
 	host libp2pHost.Host
 	// selfAddr is the pocket address representing this host.
-	selfAddr              cryptoPocket.Address
-	peersManager          *rainTreePeersManager
-	pstoreProvider        peerstore_provider.PeerstoreProvider
-	currentHeightProvider providers.CurrentHeightProvider
+	selfAddr     cryptoPocket.Address
+	peersManager *rainTreePeersManager
 }
 
-func NewRainTreeRouter(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
+func Create(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
 	return new(rainTreeRouter).Create(bus, cfg)
 }
 
-func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
+func (*rainTreeRouter) Create(
+	bus modules.Bus,
+	cfg *config.RainTreeConfig,
+) (typesP2P.Router, error) {
 	rainTreeLogger := logger.Global.CreateLoggerForModule("rainTreeRouter")
 	if err := cfg.IsValid(); err != nil {
 		return nil, err
 	}
 
 	rtr := &rainTreeRouter{
-		host:                  cfg.Host,
-		selfAddr:              cfg.Addr,
-		pstoreProvider:        cfg.PeerstoreProvider,
-		currentHeightProvider: cfg.CurrentHeightProvider,
-		logger:                rainTreeLogger,
-		handler:               cfg.Handler,
+		host:     cfg.Host,
+		selfAddr: cfg.Addr,
+		logger:   rainTreeLogger,
+		handler:  cfg.Handler,
 	}
-	rtr.SetBus(bus)
+	bus.RegisterModule(rtr)
 
-	height := rtr.currentHeightProvider.CurrentHeight()
-	pstore, err := rtr.pstoreProvider.GetStakedPeerstoreAtHeight(height)
+	currentHeightProvider := bus.GetCurrentHeightProvider()
+	pstoreProvider, err := rtr.getPeerstoreProvider()
+	if err != nil {
+		return nil, err
+	}
+
+	height := currentHeightProvider.CurrentHeight()
+	pstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(height)
 	if err != nil {
 		return nil, fmt.Errorf("getting staked peerstore at height %d: %w", height, err)
 	}
@@ -82,7 +85,7 @@ func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (type
 		"peerstore_size": pstore.Size(),
 	}).Msg("initializing raintree router")
 
-	if err := rtr.setupDependencies(); err != nil {
+	if err := rtr.setupDependencies(pstore); err != nil {
 		return nil, err
 	}
 
@@ -91,6 +94,10 @@ func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (type
 
 func (rtr *rainTreeRouter) Close() error {
 	return nil
+}
+
+func (rtr *rainTreeRouter) GetModuleName() string {
+	return typesP2P.StakedActorRouterSubmoduleName
 }
 
 // NetworkBroadcast implements the respective member of `typesP2P.Router`.
@@ -112,6 +119,13 @@ func (rtr *rainTreeRouter) broadcastAtLevel(data []byte, level uint32) error {
 	}
 	msgBz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
+		return err
+	}
+
+	// TECHDEBT(#810, #811): remove once `bus.GetPeerstoreProvider()` is available.
+	// Pre-handling the error from `rtr.getPeerstoreProvider()` before it is called
+	// downstream in a context without an error return value.
+	if _, err = rtr.getPeerstoreProvider(); err != nil {
 		return err
 	}
 
@@ -318,14 +332,9 @@ func (rtr *rainTreeRouter) setupUnicastRouter() error {
 	return nil
 }
 
-func (rtr *rainTreeRouter) setupDependencies() error {
+func (rtr *rainTreeRouter) setupDependencies(pstore typesP2P.Peerstore) error {
 	if err := rtr.setupUnicastRouter(); err != nil {
 		return err
-	}
-
-	pstore, err := rtr.pstoreProvider.GetStakedPeerstoreAtHeight(rtr.currentHeightProvider.CurrentHeight())
-	if err != nil {
-		return fmt.Errorf("getting staked peerstore: %w", err)
 	}
 
 	if err := rtr.setupPeerManager(pstore); err != nil {

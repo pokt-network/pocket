@@ -134,6 +134,10 @@ func initializeAllTables(ctx context.Context, db *pgxpool.Conn) error {
 		}
 	}
 
+	if err := initialiseIBCTables(ctx, db); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -180,6 +184,16 @@ func initializeGovTables(ctx context.Context, db *pgxpool.Conn) error {
 
 func initializeBlockTables(ctx context.Context, db *pgxpool.Conn) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.BlockTableName, types.BlockTableSchema)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func initialiseIBCTables(ctx context.Context, db *pgxpool.Conn) error {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.IBCStoreTableName, types.IBCStoreTableSchema)); err != nil {
+		return err
+	}
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.IBCEventLogTableName, types.IBCEventLogTableSchema)); err != nil {
 		return err
 	}
 	return nil

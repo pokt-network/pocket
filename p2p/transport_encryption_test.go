@@ -64,6 +64,14 @@ func TestP2pModule_RainTreeRouter_Insecure_Error(t *testing.T) {
 	persistenceMock := preparePersistenceMock(t, busMock, genesisStateMock)
 	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 
+	currentHeightProviderMock := prepareCurrentHeightProviderMock(t, busMock)
+	busMock.RegisterModule(currentHeightProviderMock)
+	busMock.EXPECT().GetCurrentHeightProvider().Return(currentHeightProviderMock).AnyTimes()
+
+	pstore := new(typesP2P.PeerAddrMap)
+	pstoreProviderMock := preparePeerstoreProviderMock(t, busMock, pstore)
+	busMock.RegisterModule(pstoreProviderMock)
+
 	telemetryMock.EXPECT().GetBus().Return(busMock).AnyTimes()
 	telemetryMock.EXPECT().SetBus(busMock).AnyTimes()
 

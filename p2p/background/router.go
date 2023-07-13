@@ -18,6 +18,7 @@ import (
 	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/unicast"
 	"github.com/pokt-network/pocket/p2p/utils"
@@ -28,9 +29,8 @@ import (
 )
 
 var (
-	_ typesP2P.Router          = &backgroundRouter{}
-	_ modules.IntegrableModule = &backgroundRouter{}
-	_ backgroundRouterFactory  = &backgroundRouter{}
+	_ typesP2P.Router         = &backgroundRouter{}
+	_ backgroundRouterFactory = &backgroundRouter{}
 )
 
 // TECHDEBT: Make these values configurable
@@ -101,7 +101,7 @@ func (*backgroundRouter) Create(bus modules.Bus, cfg *config.BackgroundConfig) (
 		host:                   cfg.Host,
 		cancelReadSubscription: cancel,
 	}
-	rtr.SetBus(bus)
+	bus.RegisterModule(rtr)
 
 	bgRouterLogger.Info().Fields(map[string]any{
 		"host_id":                cfg.Host.ID(),
@@ -133,6 +133,11 @@ func (rtr *backgroundRouter) Close() error {
 		topicCloseErr,
 		rtr.kadDHT.Close(),
 	)
+}
+
+// GetModuleName implements the respective `modules.Integrable` interface  method.
+func (rtr *backgroundRouter) GetModuleName() string {
+	return typesP2P.UnstakedActorRouterSubmoduleName
 }
 
 // Broadcast implements the respective `typesP2P.Router` interface  method.
@@ -223,7 +228,8 @@ func (rtr *backgroundRouter) setupUnicastRouter() error {
 	return nil
 }
 
-func (rtr *backgroundRouter) setupDependencies(ctx context.Context, cfg *config.BackgroundConfig) error {
+// TECHBEDT(#810,#811): remove unused `BackgroundConfig`
+func (rtr *backgroundRouter) setupDependencies(ctx context.Context, _ *config.BackgroundConfig) error {
 	// NB: The order in which the internal components are setup below is important
 	if err := rtr.setupUnicastRouter(); err != nil {
 		return err
@@ -245,21 +251,30 @@ func (rtr *backgroundRouter) setupDependencies(ctx context.Context, cfg *config.
 		return fmt.Errorf("setting up subscription: %w", err)
 	}
 
-	if err := rtr.setupPeerstore(
-		ctx,
-		cfg.PeerstoreProvider,
-		cfg.CurrentHeightProvider,
-	); err != nil {
+	if err := rtr.setupPeerstore(ctx); err != nil {
 		return fmt.Errorf("setting up peerstore: %w", err)
 	}
 	return nil
 }
 
-func (rtr *backgroundRouter) setupPeerstore(
-	ctx context.Context,
-	pstoreProvider providers.PeerstoreProvider,
-	currentHeightProvider providers.CurrentHeightProvider,
-) (err error) {
+func (rtr *backgroundRouter) setupPeerstore(ctx context.Context) (err error) {
+	rtr.logger.Warn().Msg("setting up peerstore...")
+
+	// TECHDEBT(#810, #811): use `bus.GetPeerstoreProvider()` after peerstore provider
+	// is retrievable as a proper submodule
+	pstoreProviderModule, err := rtr.GetBus().GetModulesRegistry().
+		GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
+	if err != nil {
+		return fmt.Errorf("retrieving peerstore provider: %w", err)
+	}
+	pstoreProvider, ok := pstoreProviderModule.(providers.PeerstoreProvider)
+	if !ok {
+		return fmt.Errorf("unexpected peerstore provider type: %T", pstoreProviderModule)
+	}
+
+	rtr.logger.Debug().Msg("setupCurrentHeightProvider")
+	currentHeightProvider := rtr.GetBus().GetCurrentHeightProvider()
+
 	// seed initial peerstore with current on-chain peer info (i.e. staked actors)
 	rtr.pstore, err = pstoreProvider.GetStakedPeerstoreAtHeight(
 		currentHeightProvider.CurrentHeight(),

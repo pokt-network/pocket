@@ -34,6 +34,15 @@ type Bus interface {
 	GetStateMachineModule() StateMachineModule
 	GetIBCModule() IBCModule
 
+	// Pocket submodules
+	GetCurrentHeightProvider() CurrentHeightProvider
+
 	// Runtime
 	GetRuntimeMgr() RuntimeMgr
+
+	// Submodules
+	GetTreeStore() TreeStoreModule
+	GetIBCHost() IBCHostSubmodule
+	GetBulkStoreCacher() BulkStoreCacher
+	GetEventLogger() EventLogger
 }
