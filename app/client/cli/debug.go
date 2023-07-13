@@ -73,7 +73,8 @@ func newDebugUISubCommands() []*cobra.Command {
 // newDebugUICommand returns the cobra CLI for the Debug UI interface.
 func newDebugUICommand() *cobra.Command {
 	return &cobra.Command{
-		Use:               "debug_ui",
+		Aliases:           []string{"dui", "d"},
+		Use:               "debugui",
 		Short:             "Debug selection ui for rapid development",
 		Args:              cobra.MaximumNArgs(0),
 		PersistentPreRunE: helpers.P2PDependenciesPreRunE,
