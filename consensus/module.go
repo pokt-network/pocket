@@ -134,8 +134,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	bus.RegisterModule(m)
 
 	// Ensure `CurrentHeightProvider` submodule is registered.
-	_, err = consensus.Create(bus)
-	if err != nil {
+	if _, err = consensus.Create(bus); err != nil {
 		return nil, fmt.Errorf("failed to create current height provider: %w", err)
 	}
 

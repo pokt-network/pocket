@@ -299,8 +299,7 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 		// TECHDEBT: compare against `runtime.ErrModuleNotRegistered(...)`.
 		m.logger.Debug().Msg("creating new persistence peerstore...")
 		// Ensure a peerstore provider exists by creating a `persistencePeerstoreProvider`.
-		_, err := persPSP.Create(m.GetBus())
-		if err != nil {
+		if _, err := persPSP.Create(m.GetBus()); err != nil {
 			return err
 		}
 		return nil
