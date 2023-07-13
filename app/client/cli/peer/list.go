@@ -45,13 +45,12 @@ func listRunE(cmd *cobra.Command, _ []string) error {
 			return ErrRouterType
 		}
 		routerType = debug.UnstakedRouterType
-	case allFlag:
+	// even if `allFlag` is false, we still want to print all peers
+	default:
 		if stakedFlag || unstakedFlag {
 			return ErrRouterType
 		}
 		routerType = debug.AllRouterTypes
-	default:
-		return ErrRouterType
 	}
 
 	debugMsg := &messaging.DebugMessage{

@@ -2,16 +2,20 @@ package debug
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	"github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/shared/modules"
-	"os"
 )
+
+var peerListTableHeader = []string{"Peer ID", "Pokt Address", "ServiceURL"}
 
 func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 	var (
 		peers           types.PeerList
-		pstorePlurality = ""
+		routerPlurality = ""
 	)
 
 	// TECHDEBT(#810, #811): use `bus.GetPeerstoreProvider()` after peerstore provider
@@ -45,7 +49,7 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 
 		peers = pstore.GetPeerList()
 	case AllRouterTypes:
-		pstorePlurality = "s"
+		routerPlurality = "s"
 
 		// TODO_THIS_COMMIT: what about unstaked peers actors?
 		// if !isStaked ...
@@ -90,7 +94,7 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 		os.Stdout,
 		"%s router peerstore%s:\n",
 		routerType,
-		pstorePlurality,
+		routerPlurality,
 	); err != nil {
 		return fmt.Errorf("printing to stdout: %w", err)
 	}
@@ -101,6 +105,29 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 	return nil
 }
 
-func getPeerstoreProvider() (peerstore_provider.PeerstoreProvider, error) {
-	return nil, nil
+// PrintPeerListTable prints a table of the passed peers to stdout. Header row is defined
+// by `peerListTableHeader`. Row printing behavior is defined by `peerListRowConsumerFactory`.
+func PrintPeerListTable(peers types.PeerList) error {
+	return utils.PrintTable(peerListTableHeader, peerListRowConsumerFactory(peers))
+}
+
+func peerListRowConsumerFactory(peers types.PeerList) utils.RowConsumer {
+	return func(provideRow utils.RowProvider) error {
+		for _, peer := range peers {
+			libp2pAddrInfo, err := utils.Libp2pAddrInfoFromPeer(peer)
+			if err != nil {
+				return fmt.Errorf("converting peer to libp2p addr info: %w", err)
+			}
+
+			err = provideRow(
+				libp2pAddrInfo.ID.String(),
+				peer.GetAddress().String(),
+				peer.GetServiceURL(),
+			)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 }

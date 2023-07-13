@@ -2,6 +2,7 @@ package p2p
 
 import (
 	"fmt"
+
 	"github.com/pokt-network/pocket/p2p/debug"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/messaging"
