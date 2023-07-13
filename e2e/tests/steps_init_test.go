@@ -23,7 +23,7 @@ import (
 var e2eLogger = pocketLogger.Global.CreateLoggerForModule("e2e")
 
 const (
-	// Each actor is represented e.g. validator-001 thru validator-999
+	// Each actor is represented e.g. validator-001-pocket:42069 thru validator-999-pocket:42069.
 	// Defines the host & port scheme that LocalNet uses for naming actors.
 	validatorServiceURLTmpl = "validator-%s-pocket:%d"
 	// validatorA maps to suffix ID 001 and is also used by the cluster-manager
