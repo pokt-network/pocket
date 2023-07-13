@@ -1,6 +1,8 @@
 package helpers
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/pokt-network/pocket/app/client/cli/flags"
@@ -30,7 +32,11 @@ func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
 	if err := setupPeerstoreProvider(*runtimeMgr, flags.RemoteCLIURL); err != nil {
 		return err
 	}
-	setupCurrentHeightProvider(*runtimeMgr, flags.RemoteCLIURL)
+
+	if err := setupRPCCurrentHeightProvider(*runtimeMgr, flags.RemoteCLIURL); err != nil {
+		return err
+	}
+
 	setupAndStartP2PModule(*runtimeMgr)
 
 	return nil
@@ -44,15 +50,16 @@ func setupPeerstoreProvider(rm runtime.Manager, rpcURL string) error {
 	return nil
 }
 
-func setupCurrentHeightProvider(rm runtime.Manager, rpcURL string) {
-	// TECHDEBT(#810): simplify after current height provider is refactored as
-	// a submodule.
-	bus := rm.GetBus()
-	modulesRegistry := bus.GetModulesRegistry()
-	currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
+func setupRPCCurrentHeightProvider(rm runtime.Manager, rpcURL string) error {
+	// Ensure `CurrentHeightProvider` exists in the modules registry.
+	_, err := rpcCHP.Create(
+		rm.GetBus(),
 		rpcCHP.WithCustomRPCURL(rpcURL),
 	)
-	modulesRegistry.RegisterModule(currentHeightProvider)
+	if err != nil {
+		return fmt.Errorf("setting up current height provider: %w", err)
+	}
+	return nil
 }
 
 func setupAndStartP2PModule(rm runtime.Manager) {
