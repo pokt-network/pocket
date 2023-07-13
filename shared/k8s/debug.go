@@ -64,7 +64,7 @@ func FetchApplicationPrivateKeys(clientset *kubernetes.Clientset) (map[string]st
 
 // fetchPrivateKeys returns a map corresponding to the data section of
 // the private keys Kubernetes secret for the specified resource name and actor.
-func fetchPrivateKeys(clientset *kubernetes.Clientset, resourceName string, actor string) (map[string]string, error) {
+func fetchPrivateKeys(clientset *kubernetes.Clientset, resourceName, actor string) (map[string]string, error) {
 	privateKeysMap := make(map[string]string)
 
 	privateKeysSecretResourceName := ""
