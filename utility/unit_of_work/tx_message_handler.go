@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"math/big"
 
+	ibcTypes "github.com/pokt-network/pocket/ibc/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -26,6 +27,10 @@ func (u *baseUtilityUnitOfWork) handleMessage(msg typesUtil.Message) (err coreTy
 		return u.handleUnpauseMessage(x)
 	case *typesUtil.MessageChangeParameter:
 		return u.handleMessageChangeParameter(x)
+	case *ibcTypes.UpdateIBCStore:
+		return u.handleUpdateIBCStore(x)
+	case *ibcTypes.PruneIBCStore:
+		return u.handlePruneIBCStore(x)
 	default:
 		return coreTypes.ErrUnknownMessage(x)
 	}
@@ -218,6 +223,20 @@ func (u *baseUtilityUnitOfWork) handleMessageChangeParameter(message *typesUtil.
 		return coreTypes.ErrProtoFromAny(err)
 	}
 	return u.updateParam(message.ParameterKey, v)
+}
+
+func (u *baseUtilityUnitOfWork) handleUpdateIBCStore(message *ibcTypes.UpdateIBCStore) coreTypes.Error {
+	if err := u.persistenceRWContext.SetIBCStoreEntry(message.Key, message.Value); err != nil {
+		return coreTypes.ErrIBCUpdatingStore(err)
+	}
+	return nil
+}
+
+func (u *baseUtilityUnitOfWork) handlePruneIBCStore(message *ibcTypes.PruneIBCStore) coreTypes.Error {
+	if err := u.persistenceRWContext.SetIBCStoreEntry(message.Key, nil); err != nil {
+		return coreTypes.ErrIBCUpdatingStore(err)
+	}
+	return nil
 }
 
 func (u *baseUtilityUnitOfWork) checkBelowMaxChains(actorType coreTypes.ActorType, chains []string) coreTypes.Error {

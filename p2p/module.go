@@ -124,6 +124,7 @@ func (m *p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 
 	return m, nil
 }
+
 func (m *p2pModule) GetModuleName() string {
 	return modules.P2PModuleName
 }

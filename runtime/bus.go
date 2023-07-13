@@ -123,6 +123,18 @@ func (m *bus) GetIBCModule() modules.IBCModule {
 	return getModuleFromRegistry[modules.IBCModule](m, modules.IBCModuleName)
 }
 
+func (m *bus) GetTreeStore() modules.TreeStoreModule {
+	return getModuleFromRegistry[modules.TreeStoreModule](m, modules.TreeStoreModuleName)
+}
+
+func (m *bus) GetIBCHost() modules.IBCHostSubmodule {
+	return getModuleFromRegistry[modules.IBCHostSubmodule](m, modules.IBCHostSubmoduleName)
+}
+
+func (m *bus) GetBulkStoreCacher() modules.BulkStoreCacher {
+	return getModuleFromRegistry[modules.BulkStoreCacher](m, modules.BulkStoreCacherModuleName)
+}
+
 func (m *bus) GetCurrentHeightProvider() modules.CurrentHeightProvider {
 	return getModuleFromRegistry[modules.CurrentHeightProvider](m, modules.CurrentHeightProviderSubmoduleName)
 }
