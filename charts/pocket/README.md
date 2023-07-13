@@ -46,6 +46,7 @@ privateKeySecretKeyRef:
 | config.fisherman.enabled | bool | `false` |  |
 | config.logger.format | string | `"json"` |  |
 | config.logger.level | string | `"debug"` |  |
+| config.p2p.enable_peer_discovery_debug_rpc | bool | `false` |  |
 | config.p2p.hostname | string | `""` |  |
 | config.p2p.is_empty_connection_type | bool | `false` |  |
 | config.p2p.max_mempool_count | int | `100000` |  |
