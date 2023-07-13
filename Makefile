@@ -159,7 +159,7 @@ rebuild_client_start: docker_check ## Rebuild and run a client daemon which is o
 
 .PHONY: client_connect
 client_connect: docker_check ## Connect to the running client debugging daemon
-	docker exec -it client /bin/bash -c "POCKET_REMOTE_CLI_URL=http://validator1:50832 go run -tags=debug app/client/*.go debugui"
+	docker exec -it client /bin/bash -c "go run -tags=debug app/client/*.go DebugUI"
 
 .PHONY: build_and_watch
 build_and_watch: ## Continous build Pocket's main entrypoint as files change
@@ -525,7 +525,7 @@ localnet_up: ## Starts up a k8s LocalNet with all necessary dependencies (tl;dr 
 
 .PHONY: localnet_client_debug
 localnet_client_debug: ## Opens a `client debug` cli to interact with blockchain (e.g. change pacemaker mode, reset to genesis, etc). Though the node binary updates automatiacally on every code change (i.e. hot reloads), if client is already open you need to re-run this command to execute freshly compiled binary.
-	kubectl exec -it deploy/dev-cli-client --container pocket -- p1 debugui --remote_cli_url http://pocket-validators:50832
+	kubectl exec -it deploy/dev-cli-client --container pocket -- p1 DebugUI --remote_cli_url http://pocket-validators:50832
 
 .PHONY: localnet_shell
 localnet_shell: ## Opens a shell in the pod that has the `client` cli available. The binary updates automatically whenever the code changes (i.e. hot reloads).
