@@ -11,6 +11,7 @@ import (
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -22,7 +23,6 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/stretchr/testify/require"
 )
 
 // TECHDEBT(#609): move & de-dup.
@@ -128,6 +128,14 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 			mockConsensusModule := mockModules.NewMockConsensusModule(ctrl)
 			mockConsensusModule.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
 			mockBus.EXPECT().GetConsensusModule().Return(mockConsensusModule).AnyTimes()
+
+			currentHeightProviderMock := prepareCurrentHeightProviderMock(t, mockBus)
+			mockBus.RegisterModule(currentHeightProviderMock)
+
+			pstore := new(typesP2P.PeerAddrMap)
+			pstoreProviderMock := preparePeerstoreProviderMock(t, mockBus, pstore)
+			mockBus.RegisterModule(pstoreProviderMock)
+
 			mockRuntimeMgr.EXPECT().GetConfig().Return(&configs.Config{
 				PrivateKey: privKey.String(),
 				P2P: &configs.P2PConfig{
@@ -247,6 +255,17 @@ func newP2PModule(t *testing.T, privKey cryptoPocket.PrivateKey, opts ...modules
 	consensusModuleMock := mockModules.NewMockConsensusModule(ctrl)
 	consensusModuleMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
 	mockBus.EXPECT().GetConsensusModule().Return(consensusModuleMock).AnyTimes()
+
+	currentHeightProviderMock := prepareCurrentHeightProviderMock(t, mockBus)
+	mockBus.RegisterModule(currentHeightProviderMock)
+	mockBus.EXPECT().
+		GetCurrentHeightProvider().
+		Return(currentHeightProviderMock).
+		AnyTimes()
+
+	pstore := new(typesP2P.PeerAddrMap)
+	pstoreProviderMock := preparePeerstoreProviderMock(t, mockBus, pstore)
+	mockBus.RegisterModule(pstoreProviderMock)
 
 	telemetryModuleMock := baseTelemetryMock(t, nil)
 	mockBus.EXPECT().GetTelemetryModule().Return(telemetryModuleMock).AnyTimes()

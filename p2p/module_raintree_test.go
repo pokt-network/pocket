@@ -251,6 +251,14 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 
 		persistenceMock := preparePersistenceMock(t, busMocks[i], genesisMock)
 		consensusMock := prepareConsensusMock(t, busMocks[i])
+		currentHeightProviderMock := prepareCurrentHeightProviderMock(t, busMocks[i])
+
+		busMocks[i].RegisterModule(currentHeightProviderMock)
+		busMocks[i].EXPECT().
+			GetCurrentHeightProvider().
+			Return(currentHeightProviderMock).
+			AnyTimes()
+
 		telemetryMock := prepareTelemetryMock(t, busMocks[i], valId, &readWriteWaitGroup, expectedWrites)
 
 		prepareBusMock(busMocks[i], persistenceMock, consensusMock, telemetryMock)

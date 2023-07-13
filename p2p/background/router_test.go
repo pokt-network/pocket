@@ -22,13 +22,16 @@ import (
 	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/protocol"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mock_types "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/p2p/utils"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
+	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 )
 
@@ -303,6 +306,23 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 	// setup notifee/notify BEFORE bootstrapping
 	notifee := &libp2pNetwork.NotifyBundle{
 		ConnectedF: func(_ libp2pNetwork.Network, _ libp2pNetwork.Conn) {
+			// TECHDEBT: it's rare but possible that a host will re-connect,
+			// causing the `bootstrapWaitgroup` to go negative.
+			// This test should be redesigned using atomic counters or
+			// something similar to avoid this issue.
+			defer func() {
+				if err := recover(); err != nil {
+					if err.(error).Error() == "sync: negative WaitGroup counter" {
+						// ignore negative WaitGroup counter error
+						return
+					}
+					// fail the test for anything else; converting the panic into
+					// test failure allows the test to run with the `-count` flag
+					// to completion.
+					t.Fatal(err)
+				}
+			}()
+
 			t.Logf("connected!")
 			bootstrapWaitgroup.Done()
 		},
@@ -399,6 +419,7 @@ func newTestRouter(
 	return newRouterWithSelfPeerAndHost(t, selfPeer, host, handler)
 }
 
+// TECHDEBT(#796): de-dup & refactor
 func newRouterWithSelfPeerAndHost(
 	t *testing.T,
 	selfPeer typesP2P.Peer,
@@ -415,16 +436,27 @@ func newRouterWithSelfPeerAndHost(
 		},
 	}).AnyTimes()
 
+	modulesRegistry := runtime.NewModulesRegistry()
+	busMock := mockModules.NewMockBus(ctrl)
+	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
+	busMock.EXPECT().GetModulesRegistry().Return(modulesRegistry).AnyTimes()
+	busMock.EXPECT().RegisterModule(gomock.Any()).Do(func(m modules.Submodule) {
+		modulesRegistry.RegisterModule(m)
+		m.SetBus(busMock)
+	}).AnyTimes()
+
 	consensusMock := mockModules.NewMockConsensusModule(ctrl)
+	consensusMock.EXPECT().GetModuleName().Return(modules.ConsensusModuleName).AnyTimes()
+	consensusMock.EXPECT().GetBus().Return(busMock).AnyTimes()
+	consensusMock.EXPECT().SetBus(gomock.Any()).AnyTimes()
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
+	busMock.EXPECT().GetCurrentHeightProvider().Return(consensusMock).AnyTimes()
 
 	pstore := make(typesP2P.PeerAddrMap)
 	pstoreProviderMock := mock_types.NewMockPeerstoreProvider(ctrl)
+	pstoreProviderMock.EXPECT().GetModuleName().Return(peerstore_provider.PeerstoreProviderSubmoduleName)
 	pstoreProviderMock.EXPECT().GetStakedPeerstoreAtHeight(gomock.Any()).Return(pstore, nil).AnyTimes()
-
-	busMock := mockModules.NewMockBus(ctrl)
-	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
-	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
+	modulesRegistry.RegisterModule(pstoreProviderMock)
 
 	err := pstore.AddPeer(selfPeer)
 	require.NoError(t, err)
@@ -434,11 +466,9 @@ func newRouterWithSelfPeerAndHost(
 	}
 
 	router, err := Create(busMock, &config.BackgroundConfig{
-		Addr:                  selfPeer.GetAddress(),
-		PeerstoreProvider:     pstoreProviderMock,
-		CurrentHeightProvider: consensusMock,
-		Host:                  host,
-		Handler:               handler,
+		Addr:    selfPeer.GetAddress(),
+		Host:    host,
+		Handler: handler,
 	})
 	require.NoError(t, err)
 

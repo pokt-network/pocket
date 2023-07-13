@@ -16,7 +16,6 @@ import (
 	"github.com/pokt-network/pocket/p2p/background"
 	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/providers"
-	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	persPSP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/persistence"
 	"github.com/pokt-network/pocket/p2p/raintree"
@@ -47,13 +46,8 @@ type p2pModule struct {
 	identity       libp2p.Option
 	listenAddrs    libp2p.Option
 
-	// TECHDEBT(#810): register the providers to the module registry instead of
-	// holding a reference in the module struct and passing via router config.
-	//
 	// Assigned during creation via `#setupDependencies()`.
-	currentHeightProvider providers.CurrentHeightProvider
-	pstoreProvider        providers.PeerstoreProvider
-	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
+	nonceDeduper *mempool.GenericFIFOSet[uint64, uint64]
 
 	// TECHDEBT(#810): register the routers to the module registry instead of
 	// holding a reference in the module struct. This will improve testability.
@@ -130,6 +124,7 @@ func (m *p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 
 	return m, nil
 }
+
 func (m *p2pModule) GetModuleName() string {
 	return modules.P2PModuleName
 }
@@ -281,10 +276,6 @@ func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 
 // setupDependencies sets up the module's current height and peerstore providers.
 func (m *p2pModule) setupDependencies() error {
-	if err := m.setupCurrentHeightProvider(); err != nil {
-		return err
-	}
-
 	if err := m.setupPeerstoreProvider(); err != nil {
 		return err
 	}
@@ -306,57 +297,19 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 		GetModulesRegistry().
 		GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
 	if err != nil {
+		// TECHDEBT: compare against `runtime.ErrModuleNotRegistered(...)`.
 		m.logger.Debug().Msg("creating new persistence peerstore...")
-		pstoreProvider, err := persPSP.Create(m.GetBus())
-		if err != nil {
+		// Ensure a peerstore provider exists by creating a `persistencePeerstoreProvider`.
+		if _, err := persPSP.Create(m.GetBus()); err != nil {
 			return err
 		}
-
-		m.pstoreProvider = pstoreProvider
 		return nil
 	}
 
-	m.logger.Debug().Msg("loaded persistence peerstore...")
-	pstoreProvider, ok := pstoreProviderModule.(providers.PeerstoreProvider)
-	if !ok {
+	m.logger.Debug().Msg("loaded peerstore provider...")
+	if _, ok := pstoreProviderModule.(providers.PeerstoreProvider); !ok {
 		return fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
 	}
-
-	// TECHDEBT(#810): register the provider to the module registry instead of
-	// holding a reference in the module struct and passing via router config.
-	m.pstoreProvider = pstoreProvider
-
-	return nil
-}
-
-// setupCurrentHeightProvider attempts to retrieve the current height provider
-// from the bus registry, falls back to the consensus module if none is registered.
-func (m *p2pModule) setupCurrentHeightProvider() error {
-	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
-	m.logger.Debug().Msg("setupCurrentHeightProvider")
-	currentHeightProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(current_height_provider.ModuleName)
-	if err != nil {
-		// TECHDEBT(#810): add a `consensusCurrentHeightProvider` submodule to wrap
-		// the consensus module usage (similar to how `persistencePeerstoreProvider`
-		// wraps persistence).
-		currentHeightProviderModule = m.GetBus().GetConsensusModule()
-	}
-
-	if currentHeightProviderModule == nil {
-		return errors.New("no current height provider or consensus module registered")
-	}
-
-	m.logger.Debug().Msg("loaded current height provider")
-
-	currentHeightProvider, ok := currentHeightProviderModule.(providers.CurrentHeightProvider)
-	if !ok {
-		return fmt.Errorf("unexpected current height provider type: %T", currentHeightProviderModule)
-	}
-
-	// TECHDEBT(#810): register the provider to the module registry instead of
-	// holding a reference in the module struct and passing via router config.
-	m.currentHeightProvider = currentHeightProvider
-
 	return nil
 }
 
@@ -401,14 +354,12 @@ func (m *p2pModule) setupStakedRouter() (err error) {
 	}
 
 	m.logger.Debug().Msg("setting up staked actor router")
-	m.stakedActorRouter, err = raintree.NewRainTreeRouter(
+	m.stakedActorRouter, err = raintree.Create(
 		m.GetBus(),
 		&config.RainTreeConfig{
-			Addr:                  m.address,
-			CurrentHeightProvider: m.currentHeightProvider,
-			PeerstoreProvider:     m.pstoreProvider,
-			Host:                  m.host,
-			Handler:               m.handlePocketEnvelope,
+			Addr:    m.address,
+			Host:    m.host,
+			Handler: m.handlePocketEnvelope,
 		},
 	)
 	if err != nil {
@@ -430,11 +381,9 @@ func (m *p2pModule) setupUnstakedRouter() (err error) {
 	m.unstakedActorRouter, err = background.Create(
 		m.GetBus(),
 		&config.BackgroundConfig{
-			Addr:                  m.address,
-			CurrentHeightProvider: m.currentHeightProvider,
-			PeerstoreProvider:     m.pstoreProvider,
-			Host:                  m.host,
-			Handler:               m.handlePocketEnvelope,
+			Addr:    m.address,
+			Host:    m.host,
+			Handler: m.handlePocketEnvelope,
 		},
 	)
 	if err != nil {
@@ -545,7 +494,7 @@ func (m *p2pModule) isNonceAlreadyObserved(nonce utils.Nonce) bool {
 }
 
 func (m *p2pModule) redundantNonceTelemetry(nonce utils.Nonce) {
-	blockHeight := m.currentHeightProvider.CurrentHeight()
+	blockHeight := m.GetBus().GetCurrentHeightProvider().CurrentHeight()
 	m.GetBus().
 		GetTelemetryModule().
 		GetEventMetricsAgent().
@@ -568,9 +517,29 @@ func (m *p2pModule) getMultiaddr() (multiaddr.Multiaddr, error) {
 }
 
 func (m *p2pModule) getStakedPeerstore() (typesP2P.Peerstore, error) {
-	return m.pstoreProvider.GetStakedPeerstoreAtHeight(
-		m.currentHeightProvider.CurrentHeight(),
+	pstoreProvider, err := m.getPeerstoreProvider()
+	if err != nil {
+		return nil, err
+	}
+
+	return pstoreProvider.GetStakedPeerstoreAtHeight(
+		m.GetBus().GetCurrentHeightProvider().CurrentHeight(),
 	)
+}
+
+// TECHDEBT(#810, #811): replace with `bus.GetPeerstoreProvider()` once available.
+func (m *p2pModule) getPeerstoreProvider() (peerstore_provider.PeerstoreProvider, error) {
+	pstoreProviderModule, err := m.GetBus().
+		GetModulesRegistry().
+		GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
+	if err != nil {
+		return nil, err
+	}
+	pstoreProvider, ok := pstoreProviderModule.(peerstore_provider.PeerstoreProvider)
+	if !ok {
+		return nil, fmt.Errorf("peerstore provider not available")
+	}
+	return pstoreProvider, nil
 }
 
 // isStakedActor returns whether the current node is a staked actor at the current height.

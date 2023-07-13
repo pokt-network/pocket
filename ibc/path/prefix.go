@@ -1,4 +1,4 @@
-package host
+package path
 
 import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"

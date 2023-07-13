@@ -322,7 +322,6 @@ flowchart
         rp2ph -- "deduplicate msg mempool" --> rnd
     end
 
-
     rp2ph -. "(iff not duplicate msg)\npublish event" .-> rbus
 
     rrth --> rp2ph

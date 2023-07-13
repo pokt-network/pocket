@@ -1,6 +1,7 @@
 package unit_of_work
 
 import (
+	ibcTypes "github.com/pokt-network/pocket/ibc/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -24,6 +25,10 @@ func (u *baseUtilityUnitOfWork) getSignerCandidates(msg typesUtil.Message) ([][]
 		return u.getMessageUnpauseSignerCandidates(x)
 	case *typesUtil.MessageChangeParameter:
 		return u.getMessageChangeParameterSignerCandidates(x)
+	case *ibcTypes.UpdateIBCStore:
+		return u.getUpdateIBCStoreSingerCandidates(x)
+	case *ibcTypes.PruneIBCStore:
+		return u.getPruneIBCStoreSingerCandidates(x)
 	default:
 		return nil, coreTypes.ErrUnknownMessage(x)
 	}
@@ -71,4 +76,12 @@ func (u *baseUtilityUnitOfWork) getMessageUnpauseSignerCandidates(msg *typesUtil
 
 func (u *baseUtilityUnitOfWork) getMessageSendSignerCandidates(msg *typesUtil.MessageSend) ([][]byte, coreTypes.Error) {
 	return [][]byte{msg.FromAddress}, nil
+}
+
+func (u *baseUtilityUnitOfWork) getUpdateIBCStoreSingerCandidates(msg *ibcTypes.UpdateIBCStore) ([][]byte, coreTypes.Error) {
+	return [][]byte{msg.Signer}, nil
+}
+
+func (u *baseUtilityUnitOfWork) getPruneIBCStoreSingerCandidates(msg *ibcTypes.PruneIBCStore) ([][]byte, coreTypes.Error) {
+	return [][]byte{msg.Signer}, nil
 }
