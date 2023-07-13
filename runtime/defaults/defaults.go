@@ -73,8 +73,9 @@ var (
 	DefaultKeybaseVaultMountPath = ""
 
 	// ibc
-	DefaultIBCEnabled   = false
-	DefaultIBCStoresDir = "/var/ibc"
+	DefaultIBCEnabled              = false
+	DefaultIBCStoresDir            = "/var/ibc"
+	DefaultIBCCacheMaxHeightCached = uint64(5)
 )
 
 var (

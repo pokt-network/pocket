@@ -31,6 +31,16 @@ func (se *stdErr) Code() Code {
 	return se.CodeError
 }
 
+func (se *stdErr) Is(target error) bool {
+	err, ok := target.(*stdErr)
+	if !ok {
+		return false
+	}
+	codeEq := se.Code() == err.Code()
+	msgEq := se.Error() == err.Error()
+	return codeEq && msgEq
+}
+
 func NewError(code Code, msg string) Error {
 	return &stdErr{
 		CodeError: code,
@@ -38,7 +48,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 148
+// NextCode: 149
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -187,6 +197,7 @@ const (
 	CodeIBCUpdatingStoreError             Code = 145
 	CodeIBCStoreAlreadyExistsError        Code = 146
 	CodeIBCStoreDoesNotExistError         Code = 147
+	CodeIBCKeyDoesNotExistError           Code = 148
 )
 
 const (
@@ -332,6 +343,7 @@ const (
 	IBCUpdatingStoreError             = "an error occurred updating the ibc store postgres database"
 	IBCStoreAlreadyExistsError        = "ibc store already exists in the store manager"
 	IBCStoreDoesNotExistError         = "ibc store does not exist in the store manager"
+	IBCKeyDoesNotExistError           = "key does not exist in the ibc store"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -905,4 +917,8 @@ func ErrIBCStoreAlreadyExists(name string) Error {
 
 func ErrIBCStoreDoesNotExist(name string) Error {
 	return NewError(CodeIBCStoreDoesNotExistError, fmt.Sprintf("%s: %s", IBCStoreDoesNotExistError, name))
+}
+
+func ErrIBCKeyDoesNotExist(key string) Error {
+	return NewError(CodeIBCKeyDoesNotExistError, fmt.Sprintf("%s: %s", IBCKeyDoesNotExistError, key))
 }

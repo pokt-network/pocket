@@ -118,7 +118,7 @@ MethodLoop:
 			case reflect.Slice:
 				switch arg.Elem().Kind() {
 				case reflect.Uint8:
-					v = reflect.ValueOf([]uint8{uint8(rand.Intn(2 ^ 8 - 1))})
+					v = reflect.ValueOf([]uint8{0})
 				case reflect.String:
 					v = reflect.ValueOf([]string{"abc"})
 				default:

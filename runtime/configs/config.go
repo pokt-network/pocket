@@ -33,6 +33,7 @@ type Config struct {
 	Servicer    *ServicerConfig    `json:"servicer"`
 	Fisherman   *FishermanConfig   `json:"fisherman"`
 	IBC         *IBCConfig         `json:"ibc"`
+	IBCHost     *IBCHostConfig     `json:"ibc_host"`
 }
 
 // ParseConfig parses the config file and returns a Config struct
@@ -163,6 +164,11 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 		IBC: &IBCConfig{
 			Enabled:   defaults.DefaultIBCEnabled,
 			StoresDir: defaults.DefaultIBCStoresDir,
+			Host: &IBCHostConfig{
+				BulkStoreCacher: &BulkStoreCacherConfig{
+					MaxHeightCached: defaults.DefaultIBCCacheMaxHeightCached,
+				},
+			},
 		},
 	}
 
@@ -183,7 +189,7 @@ func WithPK(pk string) func(*Config) {
 		cfg.PrivateKey = pk
 		cfg.Consensus.PrivateKey = pk
 		cfg.P2P.PrivateKey = pk
-		cfg.IBC.PrivateKey = pk
+		cfg.IBC.Host.PrivateKey = pk
 	}
 }
 

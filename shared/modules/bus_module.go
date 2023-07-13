@@ -36,4 +36,9 @@ type Bus interface {
 
 	// Runtime
 	GetRuntimeMgr() RuntimeMgr
+
+	// Submodules
+	GetTreeStore() TreeStoreModule
+	GetIBCHost() IBCHostSubmodule
+	GetBulkStoreCacher() BulkStoreCacher
 }

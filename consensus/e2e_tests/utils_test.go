@@ -122,7 +122,8 @@ func CreateTestConsensusPocketNode(
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
-	ibcMock := ibcUtils.IBCMockWithHost(t, eventsChannel)
+	ibcMock, hostMock := ibcUtils.IBCMockWithHost(t, bus)
+	bus.RegisterModule(hostMock)
 
 	for _, module := range []modules.Module{
 		p2pMock,

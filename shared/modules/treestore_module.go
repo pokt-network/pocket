@@ -5,6 +5,8 @@ import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
 )
 
+//go:generate mockgen -destination=./mocks/treestore_module_mock.go github.com/pokt-network/pocket/shared/modules TreeStoreModule
+
 const (
 	TreeStoreModuleName = "tree_store"
 )

@@ -10,7 +10,7 @@ const (
 	IBCStoreTableSchema = `(
 		height BIGINT NOT NULL,
 		key TEXT NOT NULL,
-		value TEXT,
+		value TEXT NOT NULL,
 		PRIMARY KEY (height, key)
 	)`
 )
