@@ -21,6 +21,10 @@ type PeerstoreProvider interface {
 	// at a given height. These peers communicate via the p2p module's staked actor
 	// router.
 	GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error)
+	// GetStakedPeerstoreAtCurrentHeight returns a peerstore containing all staked
+	// peers at the current height. These peers communicate via the p2p module's
+	// staked actor router.
+	GetStakedPeerstoreAtCurrentHeight() (typesP2P.Peerstore, error)
 	// GetUnstakedPeerstore returns a peerstore containing all peers which
 	// communicate via the p2p module's unstaked actor router.
 	GetUnstakedPeerstore() (typesP2P.Peerstore, error)

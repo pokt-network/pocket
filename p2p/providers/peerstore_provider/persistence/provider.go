@@ -58,6 +58,11 @@ func (persistencePSP *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(h
 	return peerstore_provider.ActorsToPeerstore(persistencePSP, validators)
 }
 
+func (persistencePSP *persistencePeerstoreProvider) GetStakedPeerstoreAtCurrentHeight() (typesP2P.Peerstore, error) {
+	currentHeight := persistencePSP.GetBus().GetCurrentHeightProvider().CurrentHeight()
+	return persistencePSP.GetStakedPeerstoreAtHeight(currentHeight)
+}
+
 // GetStakedPeerstoreAtHeight implements the respective `PeerstoreProvider` interface method.
 func (persistencePSP *persistencePeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
 	// TECHDEBT(#810, #811): use `bus.GetUnstakedActorRouter()` once it's available.
