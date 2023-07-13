@@ -33,7 +33,7 @@ func (u *baseUtilityUnitOfWork) basicValidateTransaction(tx *coreTypes.Transacti
 
 	// Get the address of the transaction signer
 	pubKey, er := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
-	if err != nil {
+	if er != nil {
 		return nil, coreTypes.ErrNewPublicKeyFromBytes(er)
 	}
 	address := pubKey.Address()

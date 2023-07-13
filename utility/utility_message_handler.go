@@ -44,7 +44,6 @@ func (u *utilityModule) HandleUtilityMessage(message *anypb.Any) error {
 		}
 
 		u.logger.Info().Str("message_type", "TxGossipMessage").Msg("Successfully added a new message to the mempool!")
-
 	default:
 		return coreTypes.ErrUnknownMessageType(message.MessageName())
 	}

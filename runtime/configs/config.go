@@ -161,7 +161,8 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 		Servicer:  &ServicerConfig{},
 		Fisherman: &FishermanConfig{},
 		IBC: &IBCConfig{
-			Enabled: defaults.DefaultIBCEnabled,
+			Enabled:   defaults.DefaultIBCEnabled,
+			StoresDir: defaults.DefaultIBCStoresDir,
 		},
 	}
 
@@ -182,6 +183,7 @@ func WithPK(pk string) func(*Config) {
 		cfg.PrivateKey = pk
 		cfg.Consensus.PrivateKey = pk
 		cfg.P2P.PrivateKey = pk
+		cfg.IBC.PrivateKey = pk
 	}
 }
 

@@ -9,8 +9,8 @@ import (
 	"github.com/regen-network/gocuke"
 )
 
-// BaseIbcMock returns a mock IBC module without a Host
-func BaseIbcMock(t gocuke.TestingT, busMock *mockModules.MockBus) *mockModules.MockIBCModule {
+// BaseIBCMock returns a mock IBC module without a Host
+func BaseIBCMock(t gocuke.TestingT, busMock *mockModules.MockBus) *mockModules.MockIBCModule {
 	ctrl := gomock.NewController(t)
 	ibcMock := mockModules.NewMockIBCModule(ctrl)
 
@@ -22,8 +22,8 @@ func BaseIbcMock(t gocuke.TestingT, busMock *mockModules.MockBus) *mockModules.M
 	return ibcMock
 }
 
-// IbcMockWithHost returns a mock IBC module with a Host
-func IbcMockWithHost(t gocuke.TestingT, _ modules.EventsChannel) *mockModules.MockIBCModule {
+// IBCMockWithHost returns a mock IBC module with a Host
+func IBCMockWithHost(t gocuke.TestingT, _ modules.EventsChannel) *mockModules.MockIBCModule {
 	ctrl := gomock.NewController(t)
 	ibcMock := mockModules.NewMockIBCModule(ctrl)
 

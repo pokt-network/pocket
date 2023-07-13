@@ -1,17 +1,28 @@
 package ibc
 
 import (
+	"encoding/hex"
+	"fmt"
+	"sync"
+
+	"github.com/pokt-network/pocket/ibc/store"
+	ibcTypes "github.com/pokt-network/pocket/ibc/types"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var _ modules.IBCModule = &ibcModule{}
 
 type ibcModule struct {
 	base_modules.IntegrableModule
+
+	m sync.Mutex
 
 	cfg    *configs.IBCConfig
 	logger *modules.Logger
@@ -75,13 +86,76 @@ func (m *ibcModule) GetModuleName() string {
 	return modules.IBCModuleName
 }
 
+// HandleMessage accepts a generic IBC message and routes it to the utility mempool
+// TECHDEBT(#868): This SHOULD NOT be this way and is actually just a temporary workaround.
+// The correct thing to do is sign transactions before broadcasting them and pass them
+// directly into the utility module. This function will be removed in #868
+func (m *ibcModule) HandleMessage(message *anypb.Any) error {
+	m.m.Lock()
+	defer m.m.Unlock()
+
+	// Check the message is actually a valid IBC message
+	msg, err := codec.GetCodec().FromAny(message)
+	if err != nil {
+		return err
+	}
+	ibcMessage, ok := msg.(*ibcTypes.IBCMessage)
+	if !ok {
+		return fmt.Errorf("failed to cast message to IBCMessage")
+	}
+	if err := ibcMessage.ValidateBasic(); err != nil {
+		return err
+	}
+
+	// Convert IBC message to a utility Transaction
+	tx, err := ibcTypes.ConvertIBCMessageToTx(ibcMessage)
+	if err != nil {
+		return err
+	}
+
+	// Sign the transaction
+	pkBz, err := hex.DecodeString(m.cfg.PrivateKey)
+	if err != nil {
+		return err
+	}
+	pk, err := crypto.NewPrivateKeyFromBytes(pkBz)
+	if err != nil {
+		return err
+	}
+	signableBz, err := tx.SignableBytes()
+	if err != nil {
+		return err
+	}
+	signature, err := pk.Sign(signableBz)
+	if err != nil {
+		return err
+	}
+	tx.Signature = &coreTypes.Signature{
+		Signature: signature,
+		PublicKey: pk.PublicKey().Bytes(),
+	}
+
+	// Marshall the Transaction and send it to the utility module
+	txBz, err := codec.GetCodec().Marshal(tx)
+	if err != nil {
+		return err
+	}
+	if err := m.GetBus().GetUtilityModule().HandleTransaction(txBz); err != nil {
+		return err
+	}
+	m.logger.Info().Str("message_type", "IBCMessage").Msg("Successfully added a new message to the mempool!")
+	return nil
+}
+
 // newHost returns a new IBC host instance if one is not already created
 func (m *ibcModule) newHost() error {
 	if m.host != nil {
-		return coreTypes.ErrHostAlreadyExists()
+		return coreTypes.ErrIBCHostAlreadyExists()
 	}
 	host := &host{
-		logger: m.logger,
+		logger:       m.logger,
+		storesDir:    m.cfg.StoresDir,
+		storeManager: store.NewStoreManager(m.cfg.StoresDir),
 	}
 	m.host = host
 	return nil

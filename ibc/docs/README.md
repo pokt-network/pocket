@@ -95,7 +95,9 @@ _Note_: Connections, Channels and Ports in IBC are not the same as networking co
 
 [ICS24][ics24] defines the IBC stores and these must be a part of the Pocket networks consensus state. As such the `ibcTree` is defined as one of the state trees used to generate the root hash. This tree contains the relevant information the hosts/relayers need to be able to use IBC, in accordance with ICS-24 and the other ICS components.
 
-TODO([#854](https://github.com/pokt-network/pocket/issues/854)): Add a local cache for changes to the state for use in the event of the node crashing.
+In order to interact with the IBC store's the host must create a `ProvableStore` instance which can make local changes to the state and propagate these through the network. This store maintains a local cache that can be backed up to disk and restored. In the event of a node failure, or local changes being unable to be propagated, the cache can be restored from the disk backup and the host can attempt to propagate the changes again.
+
+See: [store/provable_store.go](../store/provable_store.go) and [ics24.md](ics24.md) for more details on the specifics of the IBC store implementation for Pocket.
 
 ## Components
 

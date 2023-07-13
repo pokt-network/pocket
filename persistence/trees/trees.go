@@ -38,6 +38,7 @@ const (
 	TransactionsTreeName = "transactions"
 	ParamsTreeName       = "params"
 	FlagsTreeName        = "flags"
+	IBCTreeName          = "ibc"
 )
 
 var actorTypeToMerkleTreeName = map[coreTypes.ActorType]string{
@@ -60,7 +61,7 @@ var stateTreeNames = []string{
 	// Account Trees
 	AccountTreeName, PoolTreeName,
 	// Data Trees
-	TransactionsTreeName, ParamsTreeName, FlagsTreeName,
+	TransactionsTreeName, ParamsTreeName, FlagsTreeName, IBCTreeName,
 }
 
 // stateTree is a wrapper around the SMT that contains an identifying
@@ -195,7 +196,15 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			if err := t.updateFlagsTree(flags); err != nil {
 				return "", fmt.Errorf("failed to update flags tree - %w", err)
 			}
-		// Default should not happen; panic and log the treeType - this is a strong code smell.
+		case IBCTreeName:
+			keys, values, err := sql.GetIBCStoreUpdates(pgtx, height)
+			if err != nil {
+				return "", fmt.Errorf("failed to get IBC store updates: %w", err)
+			}
+			if err := t.updateIBCTree(keys, values); err != nil {
+				return "", fmt.Errorf("failed to update IBC tree: %w", err)
+			}
+		// Default
 		default:
 			t.logger.Panic().Msgf("unhandled merkle tree type: %s", treeName)
 		}
@@ -344,5 +353,24 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 		}
 	}
 
+	return nil
+}
+
+func (t *treeStore) updateIBCTree(keys, values [][]byte) error {
+	if len(keys) != len(values) {
+		return fmt.Errorf("keys and values must be the same length")
+	}
+	for i, key := range keys {
+		value := values[i]
+		if value == nil {
+			if err := t.merkleTrees[IBCTreeName].tree.Delete(key); err != nil {
+				return err
+			}
+			continue
+		}
+		if err := t.merkleTrees[IBCTreeName].tree.Update(key, value); err != nil {
+			return err
+		}
+	}
 	return nil
 }
