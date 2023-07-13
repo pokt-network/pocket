@@ -135,6 +135,10 @@ func (m *bus) GetBulkStoreCacher() modules.BulkStoreCacher {
 	return getModuleFromRegistry[modules.BulkStoreCacher](m, modules.BulkStoreCacherModuleName)
 }
 
+func (m *bus) GetEventLogger() modules.EventLogger {
+	return getModuleFromRegistry[modules.EventLogger](m, modules.EventLoggerModuleName)
+}
+
 func (m *bus) GetCurrentHeightProvider() modules.CurrentHeightProvider {
 	return getModuleFromRegistry[modules.CurrentHeightProvider](m, modules.CurrentHeightProviderSubmoduleName)
 }

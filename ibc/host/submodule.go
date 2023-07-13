@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/pokt-network/pocket/ibc/events"
 	"github.com/pokt-network/pocket/ibc/store"
 	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -19,6 +20,10 @@ type ibcHost struct {
 	cfg       *configs.IBCHostConfig
 	logger    *modules.Logger
 	storesDir string
+
+	// only a single bulk store cacher and event logger are allowed
+	bsc modules.BulkStoreCacher
+	em  modules.EventLogger
 }
 
 func Create(bus modules.Bus, config *configs.IBCHostConfig, options ...modules.IBCHostOption) (modules.IBCHostSubmodule, error) {
@@ -51,8 +56,10 @@ func (*ibcHost) Create(bus modules.Bus, config *configs.IBCHostConfig, options .
 		option(h)
 	}
 	h.logger.Info().Msg("🛰️ Creating IBC host 🛰️")
+
 	bus.RegisterModule(h)
-	_, err := store.Create(h.GetBus(),
+
+	bsc, err := store.Create(h.GetBus(),
 		h.cfg.BulkStoreCacher,
 		store.WithLogger(h.logger),
 		store.WithStoresDir(h.storesDir),
@@ -61,6 +68,14 @@ func (*ibcHost) Create(bus modules.Bus, config *configs.IBCHostConfig, options .
 	if err != nil {
 		return nil, err
 	}
+	h.bsc = bsc
+
+	em, err := events.Create(h.GetBus(), events.WithLogger(h.logger))
+	if err != nil {
+		return nil, err
+	}
+	h.em = em
+
 	return h, nil
 }
 
