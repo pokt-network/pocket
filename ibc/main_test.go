@@ -198,7 +198,7 @@ func newTestRuntimeConfig(
 			Host: &configs.IBCHostConfig{
 				PrivateKey: "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 				BulkStoreCacher: &configs.BulkStoreCacherConfig{
-					MaxHeightStored: 3,
+					MaxHeightCached: 3,
 				},
 			},
 		},

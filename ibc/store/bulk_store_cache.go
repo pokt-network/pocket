@@ -1,7 +1,7 @@
 package store
 
 import (
-	"fmt"
+	"path/filepath"
 	"sync"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -14,7 +14,7 @@ import (
 var (
 	_ modules.BulkStoreCacher = &bulkStoreCache{}
 
-	cacheDirs = func(storesDir string) string { return fmt.Sprintf("%s/caches", storesDir) }
+	cacheDirs = func(storesDir string) string { return filepath.Join(storesDir, "caches") }
 )
 
 type lockableStoreMap struct {

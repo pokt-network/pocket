@@ -75,7 +75,7 @@ var (
 	// ibc
 	DefaultIBCEnabled              = false
 	DefaultIBCStoresDir            = "/var/ibc"
-	DefaultIBCCacheMaxHeightStored = uint64(5)
+	DefaultIBCCacheMaxHeightCached = uint64(5)
 )
 
 var (

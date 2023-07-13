@@ -166,7 +166,7 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			StoresDir: defaults.DefaultIBCStoresDir,
 			Host: &IBCHostConfig{
 				BulkStoreCacher: &BulkStoreCacherConfig{
-					MaxHeightStored: defaults.DefaultIBCCacheMaxHeightStored,
+					MaxHeightCached: defaults.DefaultIBCCacheMaxHeightCached,
 				},
 			},
 		},

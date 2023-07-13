@@ -21,6 +21,11 @@ func GetNonce() uint64 {
 		rand.Seed(time.Now().UTC().UnixNano()) //nolint:staticcheck // G404 - Weak random source is okay in unit tests
 		return rand.Uint64()                   //nolint:gosec // G404 - Weak source of random here is fallback
 	}
+
+	// 0 is an invalid value
+	if bigNonce.Uint64() == 0 {
+		return GetNonce()
+	}
 	return bigNonce.Uint64()
 }
 
