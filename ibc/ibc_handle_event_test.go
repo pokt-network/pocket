@@ -2,6 +2,7 @@ package ibc
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -12,7 +13,7 @@ import (
 
 func TestHandleEvent_FlushCaches(t *testing.T) {
 	mgr, _, _, _, ibcMod := prepareEnvironment(t, 1, 0, 0, 0)
-	tmpDir := mgr.GetConfig().IBC.StoresDir + "/caches"
+	tmpDir := filepath.Join(mgr.GetConfig().IBC.StoresDir, "/caches")
 	ibcHost := ibcMod.GetBus().GetIBCHost()
 	store, err := ibcHost.GetProvableStore("test")
 	require.NoError(t, err)
@@ -43,6 +44,7 @@ func TestHandleEvent_FlushCaches(t *testing.T) {
 	}
 
 	for _, kv := range kvs {
+		// Insert both update and prune events
 		if kv.value != nil {
 			require.NoError(t, store.Set(kv.key, kv.value))
 		} else {
@@ -97,7 +99,7 @@ func TestHandleEvent_FlushCaches(t *testing.T) {
 // using MaxHeightCached = 3; set in `ibc/main_test.go` as a config variable
 func TestHandleEvent_PruneCaches(t *testing.T) {
 	mgr, _, _, _, ibcMod := prepareEnvironment(t, 1, 0, 0, 0)
-	tmpDir := mgr.GetConfig().IBC.StoresDir + "/caches"
+	tmpDir := filepath.Join(mgr.GetConfig().IBC.StoresDir, "/caches")
 	ibcHost := ibcMod.GetBus().GetIBCHost()
 	store, err := ibcHost.GetProvableStore("test")
 	require.NoError(t, err)
@@ -169,6 +171,7 @@ func TestHandleEvent_PruneCaches(t *testing.T) {
 
 			for _, height := range tc.heightsStored[1:] {
 				for _, kv := range kvs {
+					// Insert both update and prune events; all 4 events for each height
 					if kv.value != nil {
 						require.NoError(t, store.Set(kv.key, kv.value))
 					} else {
