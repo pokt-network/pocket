@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/pokt-network/pocket/app/client/cli/flags"
 	"github.com/pokt-network/pocket/logger"
@@ -11,6 +12,7 @@ import (
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
 	rpcPSP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
 	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -21,13 +23,13 @@ const debugPrivKey = "09fc8ee114e678e665d09179acb9a30060f680df44ba06b51434ee4794
 // P2PDependenciesPreRunE initializes peerstore & current height providers, and a
 // p2p module which consumes them. Everything is registered to the bus.
 func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
-	if err := flags.ParseConfigAndFlags(nil, nil); err != nil {
-		return err
-	}
 
-	// TODO_THIS_COMMIT: figure out what to do with this vvv
 	// TECHDEBT: this is to keep backwards compatibility with localnet
 	flags.ConfigPath = runtime.GetEnv("CONFIG_PATH", "build/config/config.validator1.json")
+	configs.ParseConfig(flags.ConfigPath)
+
+	// set final `remote_cli_url` value; order of precedence: flag > env var > config > default
+	flags.RemoteCLIURL = viper.GetString("remote_cli_url")
 
 	runtimeMgr := runtime.NewManagerFromFiles(
 		flags.ConfigPath, genesisPath,
