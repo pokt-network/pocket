@@ -432,7 +432,7 @@ func newPersistenceMock(t *testing.T,
 		EXPECT().
 		GetIBCStoreEntry(gomock.Any(), gomock.Any()).
 		DoAndReturn(
-			func(key []byte, _ int64) ([]byte, error) {
+			func(key []byte, _ uint64) ([]byte, error) {
 				value, ok := dbMap[hex.EncodeToString(key)]
 				if !ok {
 					return nil, coreTypes.ErrIBCKeyDoesNotExist(string(key))
