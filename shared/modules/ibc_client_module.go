@@ -39,11 +39,11 @@ type ClientManager interface {
 	// the ClientMessage can be verified using the existing ClientState and ConsensusState
 	UpdateClient(identifier string, clientMessage ClientMessage) error
 
-	// QueryConsensusState returns the ConsensusState at the given height for the given client
-	QueryConsensusState(identifier string, height Height) (ConsensusState, error)
+	// GetConsensusState returns the ConsensusState at the given height for the given client
+	GetConsensusState(identifier string, height Height) (ConsensusState, error)
 
-	// QueryClientState returns the ClientState for the given client
-	QueryClientState(identifier string) (ClientState, error)
+	// GetClientState returns the ClientState for the given client
+	GetClientState(identifier string) (ClientState, error)
 
 	// SubmitMisbehaviour submits evidence for a misbehaviour to the client, possibly invalidating
 	// previously valid state roots and thus preventing future updates
@@ -114,9 +114,9 @@ type ClientState interface {
 
 	// UpdateState updates and stores as necessary any associated information
 	// for an IBC client, such as the ClientState and corresponding ConsensusState.
-	// Upon successful update, a list of consensus heights is returned.
+	// Upon successful update, a consensus height is returned.
 	// It assumes the ClientMessage has already been verified.
-	UpdateState(clientStore ProvableStore, clientMsg ClientMessage) []Height
+	UpdateState(clientStore ProvableStore, clientMsg ClientMessage) Height
 }
 
 // ConsensusState is an interface that defines the methods required by a clients

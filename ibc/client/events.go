@@ -15,7 +15,7 @@ func (c *clientManager) emitCreateClientEvent(clientId string, clientState modul
 			Attributes: []*core_types.Attribute{
 				core_types.NewAttribute(client_types.AttributeKeyClientID, []byte(clientId)),
 				core_types.NewAttribute(client_types.AttributeKeyClientType, []byte(clientState.ClientType())),
-				core_types.NewAttribute(client_types.AttributeKeyConsensusHeight, []byte(clientState.GetLatestHeight().String())),
+				core_types.NewAttribute(client_types.AttributeKeyConsensusHeight, []byte(clientState.GetLatestHeight().ToString())),
 			},
 		},
 	)
@@ -39,7 +39,7 @@ func (c *clientManager) emitUpdateClientEvent(
 			Attributes: []*core_types.Attribute{
 				core_types.NewAttribute(client_types.AttributeKeyClientID, []byte(clientId)),
 				core_types.NewAttribute(client_types.AttributeKeyClientType, []byte(clientType)),
-				core_types.NewAttribute(client_types.AttributeKeyConsensusHeight, []byte(consensusHeight.String())),
+				core_types.NewAttribute(client_types.AttributeKeyConsensusHeight, []byte(consensusHeight.ToString())),
 				core_types.NewAttribute(client_types.AttributeKeyHeader, clientMsgBz),
 			},
 		},
@@ -54,7 +54,7 @@ func (c *clientManager) emitUpgradeClientEvent(clientId string, clientState modu
 			Attributes: []*core_types.Attribute{
 				core_types.NewAttribute(client_types.AttributeKeyClientID, []byte(clientId)),
 				core_types.NewAttribute(client_types.AttributeKeyClientType, []byte(clientState.ClientType())),
-				core_types.NewAttribute(client_types.AttributeKeyConsensusHeight, []byte(clientState.GetLatestHeight().String())),
+				core_types.NewAttribute(client_types.AttributeKeyConsensusHeight, []byte(clientState.GetLatestHeight().ToString())),
 			},
 		},
 	)
