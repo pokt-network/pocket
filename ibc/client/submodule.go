@@ -2,7 +2,6 @@ package client
 
 import (
 	"github.com/pokt-network/pocket/ibc/path"
-	core_types "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
@@ -65,7 +64,7 @@ func (c *clientManager) UpdateClient(
 // QueryConsensusState returns the ConsensusState at the given height for the
 // stored client with the given identifier
 func (c *clientManager) QueryConsensusState(
-	identifier string, height *core_types.Height,
+	identifier string, height modules.Height,
 ) (modules.ConsensusState, error) {
 	return nil, nil
 }

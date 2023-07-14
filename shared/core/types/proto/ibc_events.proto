@@ -4,31 +4,12 @@ package core;
 
 option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
-// Attribute represents a key-value pair in an IBC event
+message IBCEvent {
+    string topic = 1;
+    repeated Attribute attributes = 2;
+}
+
 message Attribute {
     bytes key = 1;
     bytes value = 2;
-}
-
-// IBCEvent are used after a series of insertions/updates/deletions to the IBC store
-// they capture the type of changes made, such as creating a new light client, or
-// opening a connection. They also capture the height at which the change was made
-// and the different key-value pairs that were modified in the attributes field.
-message IBCEvent {
-    string topic = 1;
-    uint64 height = 2;
-    repeated Attribute attributes = 3;
-}
-
-// Height represents the height of an IBC client's state
-message Height {
-    uint64 revision_number = 1;
-    uint64 revision_height = 2;
-}
-
-// Ord is an enum representing the equality of two heights
-enum Ord {
-    LT = 0;
-    EQ = 1;
-    GT = 2;
 }
