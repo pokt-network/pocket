@@ -19,7 +19,7 @@ import (
 const (
 	privateKeysSecretResourceNameValidators   = "validators-private-keys"
 	privateKeysSecretResourceNameServicers    = "servicers-private-keys"
-	privateKeysSecretResourceNameFisherman    = "fisherman-private-keys"
+	privateKeysSecretResourceNameFishermen    = "fishermen-private-keys"
 	privateKeysSecretResourceNameApplications = "applications-private-keys"
 	kubernetesServiceAccountNamespaceFile     = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
 	defaultNamespace                          = "default"
