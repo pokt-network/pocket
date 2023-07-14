@@ -245,7 +245,7 @@ type PersistenceReadContext interface {
 
 	// IBC Queries
 	// GetIBCStoreEntry returns the value of the key at the given height from the ibc_entries table
-	GetIBCStoreEntry(key []byte, height int64) ([]byte, error)
+	GetIBCStoreEntry(key []byte, height uint64) ([]byte, error)
 	// GetIBCEvent returns the matching IBC events for any topic at the height provied
 	GetIBCEvents(height uint64, topic string) ([]*coreTypes.IBCEvent, error)
 }
