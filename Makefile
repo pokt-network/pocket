@@ -43,6 +43,11 @@ kubectl_check:
 	fi; \
 	}
 
+.PHONY: trigger_ci
+trigger_ci: ## Trigger the CI pipeline by submitting an empty commit; See https://github.com/pokt-network/pocket/issues/900 for details
+	git commit --allow-empty -m "Empty commit"
+	git push
+
 .PHONY: prompt_user
 # Internal helper target - prompt the user before continuing
 prompt_user:
