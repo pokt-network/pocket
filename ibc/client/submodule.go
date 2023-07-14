@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pokt-network/pocket/ibc/path"
+	core_types "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
@@ -78,7 +79,7 @@ func (c *clientManager) CreateClient(
 		return "", err
 	}
 
-	c.logger.Info().Str("identifier", identifier).Str("height", clientState.GetLatestHeight().String()).Msg("client created at height")
+	c.logger.Info().Str("identifier", identifier).Str("height", clientState.GetLatestHeight().ToString()).Msg("client created at height")
 
 	// Emit the create client event to the event logger
 	if err := c.emitCreateClientEvent(identifier, clientState); err != nil {
@@ -94,20 +95,53 @@ func (c *clientManager) CreateClient(
 func (c *clientManager) UpdateClient(
 	identifier string, clientMessage modules.ClientMessage,
 ) error {
+	// Get the client state
+	clientState, err := c.GetClientState(identifier)
+	if err != nil {
+		return err
+	}
+
+	// Get the client store
+	clientStore, err := c.GetBus().GetIBCHost().GetProvableStore(path.KeyClientStorePrefix)
+	if err != nil {
+		return err
+	}
+
+	// Check the state is active
+	if clientState.Status(clientStore) != modules.ActiveStatus {
+		return core_types.ErrIBCClientNotActive()
+	}
+
+	// Verify the client message
+	if err := clientState.VerifyClientMessage(clientStore, clientMessage); err != nil {
+		return err
+	}
+
+	// Check for misbehaviour on the source chain
+	misbehaved := clientState.CheckForMisbehaviour(clientStore, clientMessage)
+	if misbehaved {
+		clientState.UpdateStateOnMisbehaviour(clientStore, clientMessage)
+		c.logger.Info().Str("identifier", identifier).Msg("client frozen for misbehaviour")
+
+		// emit the submit misbehaviour event to the event logger
+		if err := c.emitSubmitMisbehaviourEvent(identifier, clientState); err != nil {
+			c.logger.Error().Err(err).Str("identifier", identifier).Msg("failed to emit client submit misbehaviour event")
+			return err
+		}
+		return nil
+	}
+
+	// Update the client
+	consensusHeight := clientState.UpdateState(clientStore, clientMessage)
+	c.logger.Info().Str("identifier", identifier).Str("height", consensusHeight.ToString()).Msg("client state updated")
+
+	// emit the update client event to the event logger
+	if err := c.emitUpdateClientEvent(identifier, clientState.ClientType(), consensusHeight, clientMessage); err != nil {
+		c.logger.Error().Err(err).Str("identifier", identifier).Msg("failed to emit client update event")
+		return err
+	}
+
 	return nil
-}
-
-// QueryConsensusState returns the ConsensusState at the given height for the
-// stored client with the given identifier
-func (c *clientManager) QueryConsensusState(
-	identifier string, height modules.Height,
-) (modules.ConsensusState, error) {
-	return nil, nil
-}
-
-// QueryClientState returns the ClientState for the stored client with the given identifier
-func (c *clientManager) QueryClientState(identifier string) (modules.ClientState, error) {
-	return nil, nil
 }
 
 // SubmitMisbehaviour submits evidence for a misbehaviour to the client, possibly
