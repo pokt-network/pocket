@@ -53,7 +53,7 @@ func FetchServicerPrivateKeys(clientset *kubernetes.Clientset) (map[string]strin
 // FetchFishermanPrivateKeys returns a map corresponding to the data section of
 // the fisherman private keys Kubernetes secret.
 func FetchFishermanPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
-	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameFisherman)
+	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameFishermen)
 }
 
 // FetchApplicationPrivateKeys returns a map corresponding to the data section of
