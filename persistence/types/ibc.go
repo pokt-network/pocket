@@ -23,7 +23,7 @@ const (
 )
 
 // InsertIBCStoreEntryQuery returns the query to insert a key/value pair into the ibc_entries table
-func InsertIBCStoreEntryQuery(height int64, key, value []byte) string {
+func InsertIBCStoreEntryQuery(height uint64, key, value []byte) string {
 	return fmt.Sprintf(
 		`INSERT INTO %s(height, key, value) VALUES(%d, '%s', '%s')`,
 		IBCStoreTableName,
@@ -34,7 +34,7 @@ func InsertIBCStoreEntryQuery(height int64, key, value []byte) string {
 }
 
 // InsertIBCEventQuery returns the query to insert an event into the ibc_events table
-func InsertIBCEventQuery(height int64, topic, eventHex string) string {
+func InsertIBCEventQuery(height uint64, topic, eventHex string) string {
 	return fmt.Sprintf(
 		`INSERT INTO %s(height, topic, event) VALUES(%d, '%s', '%s')`,
 		IBCEventLogTableName,
@@ -45,7 +45,7 @@ func InsertIBCEventQuery(height int64, topic, eventHex string) string {
 }
 
 // GetIBCStoreEntryQuery returns the latest value for the key at the height provided or at the last updated height
-func GetIBCStoreEntryQuery(height int64, key []byte) string {
+func GetIBCStoreEntryQuery(height uint64, key []byte) string {
 	return fmt.Sprintf(
 		`SELECT value FROM %s WHERE height <= %d AND key = '%s' ORDER BY height DESC LIMIT 1`,
 		IBCStoreTableName,
