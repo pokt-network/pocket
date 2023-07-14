@@ -5,6 +5,7 @@ package background
 import (
 	"context"
 	"fmt"
+	"time"
 
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
@@ -30,6 +31,13 @@ import (
 var (
 	_ typesP2P.Router         = &backgroundRouter{}
 	_ backgroundRouterFactory = &backgroundRouter{}
+)
+
+// TECHDEBT: Make these values configurable
+// TECHDEBT: Consider using an exponential backoff instead
+const (
+	connectMaxRetries   = 5
+	connectRetryTimeout = time.Second * 2
 )
 
 type backgroundRouterFactory = modules.FactoryWithConfig[typesP2P.Router, *config.BackgroundConfig]
@@ -357,11 +365,28 @@ func (rtr *backgroundRouter) bootstrap(ctx context.Context) error {
 			return nil
 		}
 
-		if err := rtr.host.Connect(ctx, libp2pAddrInfo); err != nil {
+		if err := rtr.connectWithRetry(ctx, libp2pAddrInfo); err != nil {
 			return fmt.Errorf("connecting to peer: %w", err)
 		}
 	}
 	return nil
+}
+
+// connectWithRetry attempts to connect to the given peer, retrying up to connectMaxRetries times
+// and waiting connectRetryTimeout between each attempt.
+func (rtr *backgroundRouter) connectWithRetry(ctx context.Context, libp2pAddrInfo libp2pPeer.AddrInfo) error {
+	var err error
+	for i := 0; i < connectMaxRetries; i++ {
+		err = rtr.host.Connect(ctx, libp2pAddrInfo)
+		if err == nil {
+			return nil
+		}
+
+		fmt.Printf("Failed to connect (attempt %d), retrying in %v...\n", i+1, connectRetryTimeout)
+		time.Sleep(connectRetryTimeout)
+	}
+
+	return fmt.Errorf("failed to connect after %d attempts, last error: %w", 5, err)
 }
 
 // topicValidator is used in conjunction with libp2p-pubsub's notion of "topic
