@@ -1,12 +1,21 @@
 package client
 
 import (
+	"fmt"
+
 	"github.com/pokt-network/pocket/ibc/path"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
-var _ modules.ClientManager = &clientManager{}
+var (
+	_                  modules.ClientManager = &clientManager{}
+	allowedClientTypes                       = make(map[string]struct{}, 0)
+)
+
+func init() {
+	allowedClientTypes["08-wasm"] = struct{}{}
+}
 
 type clientManager struct {
 	base_modules.IntegrableModule
@@ -49,7 +58,34 @@ func (c *clientManager) GetModuleName() string { return modules.ClientManagerMod
 func (c *clientManager) CreateClient(
 	clientState modules.ClientState, consensusState modules.ConsensusState,
 ) (string, error) {
+	// Check if the client type is allowed
+	if !isAllowedClientType(clientState.ClientType()) {
+		return "", fmt.Errorf("client type %s is not supported", clientState.ClientType())
+	}
+
+	// Generate a unique identifier for the client
 	identifier := path.GenerateClientIdentifier()
+
+	// Retrieve the client store
+	clientStore, err := c.GetBus().GetIBCHost().GetProvableStore(path.KeyClientStorePrefix)
+	if err != nil {
+		return "", err
+	}
+
+	// Initialise the client with the clientState provided
+	if err := clientState.Initialise(clientStore, consensusState); err != nil {
+		c.logger.Error().Err(err).Str("identifier", identifier).Msg("failed to initialize client")
+		return "", err
+	}
+
+	c.logger.Info().Str("identifier", identifier).Str("height", clientState.GetLatestHeight().String()).Msg("client created at height")
+
+	// Emit the create client event to the event logger
+	if err := c.emitCreateClientEvent(identifier, clientState); err != nil {
+		c.logger.Error().Err(err).Str("identifier", identifier).Msg("failed to emit client created event")
+		return "", err
+	}
+
 	return identifier, nil
 }
 
@@ -80,4 +116,11 @@ func (c *clientManager) SubmitMisbehaviour(
 	identifier string, clientMessage modules.ClientMessage,
 ) error {
 	return nil
+}
+
+func isAllowedClientType(clientType string) bool {
+	if _, ok := allowedClientTypes[clientType]; ok {
+		return true
+	}
+	return false
 }
