@@ -1,6 +1,6 @@
 package modules
 
-//go:generate mockgen -destination=./mocks/persistence_module_mock.go github.com/pokt-network/pocket/shared/modules PersistenceModule,PersistenceRWContext,PersistenceReadContext,PersistenceWriteContext,PersistenceLocalContext,TreeStoreModule
+//go:generate mockgen -destination=./mocks/persistence_module_mock.go github.com/pokt-network/pocket/shared/modules PersistenceModule,PersistenceRWContext,PersistenceReadContext,PersistenceWriteContext,PersistenceLocalContext
 
 import (
 	"math/big"
