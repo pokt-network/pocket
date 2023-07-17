@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "github.com/pokt-network/pocket/ibc/client/types";
+
+// ClientState for a Wasm light client
+message ClientState {
+    bytes data = 1;           // opaque data passed to the wasm client
+    bytes wasm_checksum = 2;  // checksum of the wasm client code
+    Height latest_height = 3; // latest height of the client
+}
+
+// ConsensusState for a Wasm light client
+message ConsensusState {
+    bytes data = 1;       // opaque data passed to the wasm client
+    uint64 timestamp = 2; // unix nano timestamp of the block
+}
+
+// Header for a Wasm light client
+message Header {
+    bytes data = 1;       // opaque data passed to the wasm client
+    Height height = 2;    // height of the header
+}
+
+// Misbehaviour for a Wasm light client
+message Misbehaviour {
+    bytes data = 1;       // opaque data passed to the wasm client
+}
+
+// Height represents the height of a client
+message Height {
+    uint64 revision_number = 1;
+    uint64 revision_height = 2;
+}

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/pokt-network/pocket/ibc/client/types"
 	"github.com/pokt-network/pocket/ibc/path"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -24,8 +25,8 @@ func (c *clientManager) GetConsensusState(
 	}
 
 	// Unmarshal into a ConsensusState interface
-	var consState modules.ConsensusState
-	if err := codec.GetInterfaceRegistry().UnmarshalInterface(consStateBz, &consState); err != nil {
+	consState := new(types.ConsensusState)
+	if err := codec.GetCodec().Unmarshal(consStateBz, consState); err != nil {
 		return nil, err
 	}
 
@@ -47,8 +48,8 @@ func (c *clientManager) GetClientState(identifier string) (modules.ClientState, 
 	}
 
 	// Unmarshal into a ClientState interface
-	var clientState modules.ClientState
-	if err := codec.GetInterfaceRegistry().UnmarshalInterface(clientStateBz, &clientState); err != nil {
+	clientState := new(types.ClientState)
+	if err := codec.GetCodec().Unmarshal(clientStateBz, clientState); err != nil {
 		return nil, err
 	}
 
