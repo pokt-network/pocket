@@ -54,7 +54,7 @@ linters-settings:
         failOn: dsl
         rules: "build/linters/*.go"
 run:
-  go: "1.19"
+  go: "1.20"
   skip-dirs:
     - build/linters
   build-tags:
