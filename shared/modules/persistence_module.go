@@ -35,9 +35,6 @@ type PersistenceModule interface {
 	GetTxIndexer() indexer.TxIndexer
 	TransactionExists(transactionHash string) (bool, error)
 
-	// TreeStore operations
-	GetTreeStore() TreeStoreModule
-
 	// Debugging / development only
 	HandleDebugMessage(*messaging.DebugMessage) error
 
