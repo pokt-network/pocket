@@ -45,9 +45,14 @@ type ClientManager interface {
 	// GetClientState returns the ClientState for the given client
 	GetClientState(identifier string) (ClientState, error)
 
-	// SubmitMisbehaviour submits evidence for a misbehaviour to the client, possibly invalidating
-	// previously valid state roots and thus preventing future updates
-	SubmitMisbehaviour(identifier string, clientMessage ClientMessage) error
+	// UpgradeClient upgrades an existing client with the given identifier using the
+	// ClientState and ConsentusState provided. It can only do so if the new client
+	// was committed to by the old client at the specified upgrade height
+	UpgradeClient(
+		identifier string,
+		clientState ClientState, consensusState ConsensusState,
+		proofUpgradeClient, proofUpgradeConsState []byte,
+	) error
 }
 
 // ClientState is an interface that defines the methods required by a clients
@@ -117,6 +122,21 @@ type ClientState interface {
 	// Upon successful update, a consensus height is returned.
 	// It assumes the ClientMessage has already been verified.
 	UpdateState(clientStore ProvableStore, clientMsg ClientMessage) Height
+
+	// Upgrade functions
+	// NOTE: proof heights are not included as upgrade to a new revision is expected to pass only on the last
+	// height committed by the current revision. Clients are responsible for ensuring that the planned last
+	// height of the current revision is somehow encoded in the proof verification process.
+	// This is to ensure that no premature upgrades occur, since upgrade plans committed to by the counterparty
+	// may be cancelled or modified before the last planned height.
+	// If the upgrade is verified, the upgraded client and consensus states must be set in the client store.
+	VerifyUpgradeAndUpdateState(
+		clientStore ProvableStore,
+		newClient ClientState,
+		newConsState ConsensusState,
+		proofUpgradeClient,
+		proofUpgradeConsState []byte,
+	) error
 }
 
 // ConsensusState is an interface that defines the methods required by a clients
