@@ -40,6 +40,8 @@ func TestTreeStore_AtomicUpdates(t *testing.T) {
 		err := ts.merkleTrees[treeName].tree.Update([]byte("foo"), []byte("bar"))
 		require.NoError(t, err)
 	}
+	err = ts.Commit()
+	require.NoError(t, err)
 
 	hash1 := ts.getStateHash()
 	require.NotEmpty(t, hash1)

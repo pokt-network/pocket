@@ -104,24 +104,16 @@ func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.Persiste
 	return persistenceMod.(modules.PersistenceModule)
 }
 func createAndInsertDefaultTestApp(t *testing.T, db *persistence.PostgresContext) (*coreTypes.Actor, error) {
-	app, err := newTestApp(t)
-	if err != nil {
-		return nil, err
-	}
-	// TODO(andrew): Avoid the use of `log.Fatal(fmt.Sprintf`
-	// TODO(andrew): Use `require.NoError` instead of `log.Fatal` in tests`
+	app := newTestApp(t)
+
 	addrBz, err := hex.DecodeString(app.Address)
-	if err != nil {
-		t.Errorf("an error occurred converting address to bytes %s", app.Address)
-	}
+	require.NoError(t, err)
+
 	pubKeyBz, err := hex.DecodeString(app.PublicKey)
-	if err != nil {
-		t.Errorf("an error occurred converting pubKey to bytes %s", app.PublicKey)
-	}
+	require.NoError(t, err)
+
 	outputBz, err := hex.DecodeString(app.Output)
-	if err != nil {
-		t.Errorf("an error occurred converting output to bytes %s", app.Output)
-	}
+	require.NoError(t, err)
 	return app, db.InsertApp(
 		addrBz,
 		pubKeyBz,
@@ -134,16 +126,12 @@ func createAndInsertDefaultTestApp(t *testing.T, db *persistence.PostgresContext
 		DefaultUnstakingHeight)
 }
 
-func newTestApp(t *testing.T) (*coreTypes.Actor, error) {
+func newTestApp(t *testing.T) *coreTypes.Actor {
 	operatorKey, err := crypto.GeneratePublicKey()
-	if err != nil {
-		t.Errorf("failed to generate test app: %v", err)
-	}
+	require.NoError(t, err)
 
 	outputAddr, err := crypto.GenerateAddress()
-	if err != nil {
-		t.Errorf("failed to generate test app: %v", err)
-	}
+	require.NoError(t, err)
 
 	return &coreTypes.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
@@ -153,7 +141,7 @@ func newTestApp(t *testing.T) (*coreTypes.Actor, error) {
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          hex.EncodeToString(outputAddr),
-	}, nil
+	}
 }
 
 func NewTestPostgresContext(t testing.TB, height int64, testPersistenceMod modules.PersistenceModule) *persistence.PostgresContext {

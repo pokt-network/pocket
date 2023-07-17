@@ -81,8 +81,8 @@ type PersistenceRWContext interface {
 // PersistenceWriteContext has no use-case independent of `PersistenceRWContext`, but is a useful abstraction
 type PersistenceWriteContext interface {
 	// Context Operations
-	NewSavePoint([]byte) error
-	RollbackToSavePoint([]byte) error
+	NewSavePoint() error
+	RollbackToSavePoint() error
 	Release()
 
 	// Commits (and releases) the current context to disk (i.e. finality).

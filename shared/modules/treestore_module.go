@@ -23,13 +23,14 @@ type TreeStoreModule interface {
 
 	AtomicStore
 
-	// Update returns the new state hash for a given height.
+	// Update returns the computed state hash for a given height.
 	// * Height is passed through to the Update function and is used to query the TxIndexer for transactions
 	// to update into the merkle tree set
 	// * Passing a higher height will cause a change but repeatedly calling the same or a lower height will
 	// not incur a change.
 	// * By nature of it taking a pgx transaction at runtime, Update inherits the pgx transaction's read view of the
 	// database.
+	// * Commit must be called after Update to persist any changes it made to disk.
 	Update(pgtx pgx.Tx, height uint64) (string, error)
 	// DebugClearAll completely clears the state of the trees. For debugging purposes only.
 	DebugClearAll() error

@@ -36,18 +36,22 @@ type PostgresContext struct {
 	networkId string
 }
 
-func (p *PostgresContext) NewSavePoint(bytes []byte) error {
-	p.logger.Info().Bool("TODO", true).Msg("NewSavePoint not implemented")
+// NewSavePoint generates a new Savepoint for this context.
+func (p *PostgresContext) NewSavePoint() error {
+	if err := p.stateTrees.Savepoint(); err != nil {
+		return err
+	}
 	return nil
 }
 
-// TECHDEBT(#327): Guarantee atomicity betweens `prepareBlock`, `insertBlock` and `storeBlock` for save points & rollbacks.
-func (p *PostgresContext) RollbackToSavePoint(bytes []byte) error {
-	p.logger.Info().Bool("TODO", true).Msg("RollbackToSavePoint not fully implemented")
-	return p.tx.Rollback(context.TODO())
+// RollbackToSavepoint triggers a rollback for the current pgx transaction and the underylying submodule stores.
+func (p *PostgresContext) RollbackToSavePoint() error {
+	ctx := context.TODO()
+	err := p.tx.Rollback(ctx)
+	p.stateTrees.Rollback()
+	return err
 }
 
-// IMPROVE(#361): Guarantee the integrity of the state
 // Full details in the thread from the PR review: https://github.com/pokt-network/pocket/pull/285#discussion_r1018471719
 func (p *PostgresContext) ComputeStateHash() (string, error) {
 	stateHash, err := p.stateTrees.Update(p.tx, uint64(p.Height))
@@ -58,7 +62,6 @@ func (p *PostgresContext) ComputeStateHash() (string, error) {
 	return p.stateHash, nil
 }
 
-// TECHDEBT(#327): Make sure these operations are atomic
 func (p *PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
 	p.logger.Info().Int64("height", p.Height).Msg("About to commit block & context")
 

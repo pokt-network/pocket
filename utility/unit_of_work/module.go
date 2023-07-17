@@ -1,12 +1,11 @@
 package unit_of_work
 
 import (
-	"fmt"
-
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
+	"go.uber.org/multierr"
 )
 
 const (
@@ -48,6 +47,7 @@ func (uow *baseUtilityUnitOfWork) SetProposalBlock(blockHash string, proposerAdd
 	return nil
 }
 
+// ApplyBlock atomically applies a block to the persistence layer for a given height.
 func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 	log := uow.logger.With().Fields(map[string]interface{}{
 		"source": "ApplyBlock",
@@ -58,51 +58,55 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 		return coreTypes.ErrProposalBlockNotSet()
 	}
 
+	if err := uow.newSavePoint(); err != nil {
+		return err
+	}
+
 	// begin block lifecycle phase
 	log.Debug().Msg("calling beginBlock")
 	if err := uow.beginBlock(); err != nil {
 		return err
 	}
 
+	// processProposalBlockTransactions indexes the transactions into the TxIndexer.
+	// if it fails, it triggers a rollback to undo the changes that processProposalBlockTransactions
+	// could have caused.
 	log.Debug().Msg("processing transactions from proposal block")
 	txMempool := uow.GetBus().GetUtilityModule().GetMempool()
 	if err := uow.processProposalBlockTransactions(txMempool); err != nil {
-		return err
+		rollErr := uow.revertLastSavePoint()
+		return multierr.Combine(rollErr, err)
 	}
 
-	// end block lifecycle phase
+	// end block lifecycle phase calls endBlock and reverts to the last known savepoint if it encounters any errors
 	log.Debug().Msg("calling endBlock")
 	if err := uow.endBlock(uow.proposalProposerAddr); err != nil {
-		return err
+		rollErr := uow.revertLastSavePoint()
+		return multierr.Combine(rollErr, err)
 	}
+
 	// return the app hash (consensus module will get the validator set directly)
-	log.Debug().Msg("computing state hash")
 	stateHash, err := uow.persistenceRWContext.ComputeStateHash()
 	if err != nil {
-		log.Fatal().Err(err).Bool("TODO", true).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
-		return coreTypes.ErrAppHash(err)
+		rollErr := uow.persistenceRWContext.RollbackToSavePoint()
+		return coreTypes.ErrAppHash(multierr.Append(err, rollErr))
 	}
 
 	// IMPROVE(#655): this acts as a feature flag to allow tests to ignore the check if needed, ideally the tests should have a way to determine
 	// the hash and set it into the proposal block it's currently hard to do because the state is different at every test run (non-determinism)
 	if uow.proposalStateHash != IgnoreProposalBlockCheckHash {
 		if uow.proposalStateHash != stateHash {
-			log.Fatal().Bool("TODO", true).
-				Str("proposalStateHash", uow.proposalStateHash).
-				Str("stateHash", stateHash).
-				Msg("State hash mismatch. TODO: Look into roll-backing the entire commit...")
-			return coreTypes.ErrAppHash(fmt.Errorf("state hash mismatch: expected %s from the proposal, got %s", uow.proposalStateHash, stateHash))
+			return uow.revertLastSavePoint()
 		}
 	}
 
-	log.Info().Str("state_hash", stateHash).Msgf("ApplyBlock succeeded!")
+	log.Info().Str("state_hash", stateHash).Msgf("🧱 ApplyBlock succeeded!")
 
 	uow.stateHash = stateHash
 
 	return nil
 }
 
-// TODO(@deblasis): change tracking here
 func (uow *baseUtilityUnitOfWork) Commit(quorumCert []byte) error {
 	uow.logger.Debug().Msg("committing the rwPersistenceContext...")
 	if err := uow.persistenceRWContext.Commit(uow.proposalProposerAddr, quorumCert); err != nil {
@@ -112,7 +116,6 @@ func (uow *baseUtilityUnitOfWork) Commit(quorumCert []byte) error {
 	return nil
 }
 
-// TODO(@deblasis): change tracking reset here
 func (uow *baseUtilityUnitOfWork) Release() error {
 	rwCtx := uow.persistenceRWContext
 	if rwCtx != nil {
