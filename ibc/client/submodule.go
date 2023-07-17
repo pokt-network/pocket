@@ -75,15 +75,19 @@ func (c *clientManager) CreateClient(
 
 	// Initialise the client with the clientState provided
 	if err := clientState.Initialise(clientStore, consensusState); err != nil {
-		c.logger.Error().Err(err).Str("identifier", identifier).Msg("failed to initialize client")
+		c.logger.Error().Err(err).Str("identifier", identifier).
+			Msg("failed to initialize client")
 		return "", err
 	}
 
-	c.logger.Info().Str("identifier", identifier).Str("height", clientState.GetLatestHeight().ToString()).Msg("client created at height")
+	c.logger.Info().Str("identifier", identifier).
+		Str("height", clientState.GetLatestHeight().ToString()).
+		Msg("client created at height")
 
 	// Emit the create client event to the event logger
 	if err := c.emitCreateClientEvent(identifier, clientState); err != nil {
-		c.logger.Error().Err(err).Str("identifier", identifier).Msg("failed to emit client created event")
+		c.logger.Error().Err(err).Str("identifier", identifier).
+			Msg("failed to emit client created event")
 		return "", err
 	}
 
@@ -121,11 +125,13 @@ func (c *clientManager) UpdateClient(
 	misbehaved := clientState.CheckForMisbehaviour(clientStore, clientMessage)
 	if misbehaved {
 		clientState.UpdateStateOnMisbehaviour(clientStore, clientMessage)
-		c.logger.Info().Str("identifier", identifier).Msg("client frozen for misbehaviour")
+		c.logger.Info().Str("identifier", identifier).
+			Msg("client frozen for misbehaviour")
 
 		// emit the submit misbehaviour event to the event logger
 		if err := c.emitSubmitMisbehaviourEvent(identifier, clientState); err != nil {
-			c.logger.Error().Err(err).Str("identifier", identifier).Msg("failed to emit client submit misbehaviour event")
+			c.logger.Error().Err(err).Str("identifier", identifier).
+				Msg("failed to emit client submit misbehaviour event")
 			return err
 		}
 		return nil
@@ -133,11 +139,14 @@ func (c *clientManager) UpdateClient(
 
 	// Update the client
 	consensusHeight := clientState.UpdateState(clientStore, clientMessage)
-	c.logger.Info().Str("identifier", identifier).Str("height", consensusHeight.ToString()).Msg("client state updated")
+	c.logger.Info().Str("identifier", identifier).
+		Str("height", consensusHeight.ToString()).
+		Msg("client state updated")
 
 	// emit the update client event to the event logger
 	if err := c.emitUpdateClientEvent(identifier, clientState.ClientType(), consensusHeight, clientMessage); err != nil {
-		c.logger.Error().Err(err).Str("identifier", identifier).Msg("failed to emit client update event")
+		c.logger.Error().Err(err).Str("identifier", identifier).
+			Msg("failed to emit client update event")
 		return err
 	}
 
@@ -175,15 +184,19 @@ func (c *clientManager) UpgradeClient(
 		upgradedClient, upgradedConsState,
 		proofUpgradeClient, proofUpgradeConsState,
 	); err != nil {
-		c.logger.Error().Err(err).Str("identifier", identifier).Msg("failed to verify upgrade")
+		c.logger.Error().Err(err).Str("identifier", identifier).
+			Msg("failed to verify upgrade")
 		return err
 	}
 
-	c.logger.Info().Str("identifier", identifier).Str("height", upgradedClient.GetLatestHeight().ToString()).Msg("client upgraded")
+	c.logger.Info().Str("identifier", identifier).
+		Str("height", upgradedClient.GetLatestHeight().ToString()).
+		Msg("client upgraded")
 
 	// emit the upgrade client event to the event logger
 	if err := c.emitUpgradeClientEvent(identifier, upgradedClient); err != nil {
-		c.logger.Error().Err(err).Str("identifier", identifier).Msg("failed to emit client upgrade event")
+		c.logger.Error().Err(err).Str("identifier", identifier).
+			Msg("failed to emit client upgrade event")
 		return err
 	}
 
