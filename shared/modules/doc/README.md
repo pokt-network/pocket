@@ -436,18 +436,18 @@ This is useful not only for prototyping but also for different use cases such as
 
 Submodules can be registered the same way full Modules can be, by passing the Submodule to the RegisterModule function. Submodules should typically be registered to the bus for dependency injection reasons. Modules and submodules are all responsible for registering themselves with the Bus. This pattern emerged organically during development and is now considered best practice. Additionally, modules should not maintain pointer references to modules and should instead call the Bus to get a new reference to a module whenever they need to call that module.
 
-Submodule interfaces are typically defined in the `shared/modules` package with the rest of the module interfaces in a file named `XXX_module.go`, where XXX denotes the name of the submodule. That same file should contain the factory function definition for a submodule which should be embedded by the Submodule interface type. Modules should follow the same pattern but embed the Module interface instead of the Submodule interface in the module's interface declaration.
+Submodule interfaces are typically defined in the `shared/modules` package with the rest of the module interfaces in a file named `XXX_submodule.go`, where XXX denotes the name of the submodule. That same file should contain the factory function definition for a submodule which should be embedded by the `Submodule` interface type. Factory function definitions should typically not be exported.
 
-For example, in the TreeStore code below, you can see that the TreeStoreFactory is embedded in the TreeStoreModule, which also embeds the Submodule interface.
+For example, in the TreeStore code below, the `treeStoreFactory` is defined and then embedded in the `TreeStoreModule`, which also embeds the Submodule interface. Typically these factory functions should be kept private at the package level.
 
 ```go
-type TreeStoreFactory = FactoryWithOptions[TreeStoreModule, TreeStoreOption]
+type treeStoreFactory = FactoryWithOptions[TreeStoreModule, TreeStoreOption]
 
 // TreeStoreModules defines the interface for atomic updates and rollbacks to the internal
 // merkle trees that compose the state hash of pocket.
 type TreeStoreModule interface {
     Submodule
-    TreeStoreFactory
+    treeStoreFactory
     // ...
 }
 ```
