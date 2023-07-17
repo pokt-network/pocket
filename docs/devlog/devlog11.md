@@ -1,4 +1,4 @@
-# Pocket V1 DevLog #17 <!-- omit in toc -->
+# Pocket V1 DevLog #11 <!-- omit in toc -->
 
 **Date Published**: July 17th, 2023
 
@@ -13,8 +13,7 @@ We have kept the goals and details in this document short, but feel free to reac
     - [Savepoints \& Rollbacks - Presentation, Demo \& Audio](#savepoints--rollbacks---presentation-demo--audio)
 - [Contribute to V1 🧑‍💻](#contribute-to-v1-)
   - [Links \& References](#links--references)
-- [Contribute to V0](#contribute-to-v0)
-- [ScreenShots](#screenshots)
+- [Screenshots](#screenshots)
   - [Iteration 20 - Completed](#iteration-20---completed)
     - [V0 Results](#v0-results)
     - [V1 Results](#v1-results)
@@ -25,29 +24,33 @@ We have kept the goals and details in this document short, but feel free to reac
 **Iterate Dates**: July 3rd - July 17th, 2023
 
 ```bash
-git diff  --stat
+# V1 Repo
+git diff b1c64d3ca89b2c284b2b22ff7fdeb333601266c8 --stat
+# 152 files changed, 6579 insertions(+), 1072 deletions(-)
 ```
 
 Note that this exclude the work we did on infrastructure support, internal documentation, v0 work, SMT repo, collaboration with other projects and a lot more that happens behind the scenes!
 
 ### V0
 
-- Adoption
-- TestNet Documentation
-- Snapshot
-- Pruner
-  Releases
-  Documentation
+Lots of work from our community members which can be accessed [pokt-network/pocket-core/README](https://github.com/pokt-network/pocket-core/blob/staging/README.md):
 
-https://docs.google.com/presentation/d/1OYPv_-oST3dUS44HzUNKGsetd50BsPdmbhBRJ5TJvXc/edit?usp=sharing
+- Snapshots from the `Liquify` team
+- TestNet observability from the `Nodefleet` team
+- Pocket Prunner from the `c0d3r` team
+- Adoption of the RC 0.10.4 release ongoing
+
+![RC 0.10 adoption](https://github.com/pokt-network/pocket/assets/1892194/5684b877-5a75-46df-9be3-c5967fa5b309)
+
+![Documentation](https://github.com/pokt-network/pocket/assets/1892194/d80e8a0d-b16f-4880-93dd-6c295831224f)
 
 ### V1
 
 Our goal was **to finalize and demo** as much as possible from the [previous iteration](https://github.com/pokt-network/pocket/blob/main/docs/devlog/devlog10.md).
 
-Though this was not complete, we:
+Though this was not fully complete, we:
 
-1. Reviewd & merged in a lot of code
+1. Reviewed & merged in a lot of code
 2. Had a couple internal demos & presentations
 3. Aiming to tie the 🪢 this iteration
 
@@ -74,9 +77,7 @@ Though this was not complete, we:
 - [V1 Wiki](https://github.com/pokt-network/pocket/wiki)
 - [V1 Project Dashboard](https://github.com/pokt-network/pocket/projects?query=is%3Aopen)
 
-## Contribute to V0
-
-## ScreenShots
+## Screenshots
 
 Please note that everything that was not `Done` in ` iteration20` is moving over to `iteration21`.
 
