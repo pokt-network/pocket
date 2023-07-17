@@ -8,17 +8,16 @@ We have kept the goals and details in this document short, but feel free to reac
 
 - [Iteration 20 Goals \& Results](#iteration-20-goals--results)
   - [V0](#v0)
-  - [M1: PoS](#m1-pos)
-  - [M2: DoS](#m2-dos)
-  - [M3: RoS](#m3-ros)
-  - [M7: IBC](#m7-ibc)
+  - [V1](#v1)
+    - [P2P - Presentation \& Audio](#p2p---presentation--audio)
+    - [Savepoints \& Rollbacks - Presentation, Demo \& Audio](#savepoints--rollbacks---presentation-demo--audio)
 - [Contribute to V1 🧑‍💻](#contribute-to-v1-)
   - [Links \& References](#links--references)
 - [Contribute to V0](#contribute-to-v0)
 - [ScreenShots](#screenshots)
   - [Iteration 20 - Completed](#iteration-20---completed)
-    - [V0](#v0-1)
-    - [V1](#v1)
+    - [V0 Results](#v0-results)
+    - [V1 Results](#v1-results)
   - [Iteration 21 - Planned](#iteration-21---planned)
 
 ## Iteration 20 Goals & Results
@@ -26,107 +25,45 @@ We have kept the goals and details in this document short, but feel free to reac
 **Iterate Dates**: July 3rd - July 17th, 2023
 
 ```bash
-git diff 2074a1b0c27ec2c73168b02852cc6145b657c0af --stat
-# 107 files changed, 9032 insertions(+), 10508 deletions(-)
+git diff  --stat
 ```
 
 Note that this exclude the work we did on infrastructure support, internal documentation, v0 work, SMT repo, collaboration with other projects and a lot more that happens behind the scenes!
 
 ### V0
 
-- 🟢 **TestNet Rehearsal**
+- Adoption
+- TestNet Documentation
+- Snapshot
+- Pruner
+  Releases
+  Documentation
 
-  - 100% completeness of TestNet Rehearsal
-  - **Grade**: 10 / 10
-    - Completed
+https://docs.google.com/presentation/d/1OYPv_-oST3dUS44HzUNKGsetd50BsPdmbhBRJ5TJvXc/edit?usp=sharing
 
-- 🟢 **MainNet Rehearsal**
-  - Have 5% of MainNet run the latest beta (w/o protocol upgrade)
-  - **Grade**: 10 / 10
-    - Completed and found some bugs along the way too when synching from scratch
+### V1
 
-### M1: PoS
+Our goal was **to finalize and demo** as much as possible from the [previous iteration](https://github.com/pokt-network/pocket/blob/main/docs/devlog/devlog10.md).
 
-- 🔴 Consensus
+Though this was not complete, we:
 
-  - Attempt #1: Remove State Sync dependency on FSM
-  - Attempt #3: finish minimum viable state sync
-  - **Grade**: 1 / 10
-    - Very little time left to work on this
+1. Reviewd & merged in a lot of code
+2. Had a couple internal demos & presentations
+3. Aiming to tie the 🪢 this iteration
 
-- 🟢 Persistence
+#### P2P - Presentation & Audio
 
-  - MVP of the full commit & rollback DEMO
-  - **Grade**: 7 / 10
-    - The test which was going to be the demo has fought me more than expected but good progress has been made, there’s a design document ready, and the test harness is there, the mocks and the submodule interactions have been the problem.
+[Audio](https://drive.google.com/file/d/1Ps6PAkaUnbW8BSV1bmAFAomkwr_YtMdP/view?usp=sharing)
 
-- 🟢 P2P
-  - Attempt #N: Finishing off and merging in everything related to gossip and background
-  - **Grade**: 8.5 / 10
+[![Presentation](https://github.com/pokt-network/pocket/assets/1892194/1cf6ea45-0979-40ab-9923-6a5f254f2fa9)](https://drive.google.com/file/d/1MiiCRxMyrO0T-9nAzUSV9ICX-ySQ7vGZ/view)
 
-### M2: DoS
+#### Savepoints & Rollbacks - Presentation, Demo & Audio
 
-- 🔴 **Primary focus: observability**
-  - Open question: need to identify issues w/ metric access
-  - Streamlining logging: Make structured logging system easily available to new devs w/ documentation part of LocalNet instructions
-  - Attach smaller tickets in a separate repo to V2
-  - **Grade**: 0 / 10
-    - Other infrastructure related maintenance issues took away time from being able to focus on observability
+[Audio](https://drive.google.com/file/d/1NO6n6iwnvqWgIPVSUNJRJTsRBzri8Oub/view?usp=sharing)
 
-### M3: RoS
+[![Presentation](https://github.com/pokt-network/pocket/assets/1892194/73cb78e3-0709-4cb2-a5f7-d8efd0a77121)](https://drive.google.com/file/d/1MiiCRxMyrO0T-9nAzUSV9ICX-ySQ7vGZ/view)
 
-- 🟢 **Trustless Relay**
-
-  - Session caching on the client
-  - Finish all the PRs in flight (review, merge in)
-  - Provide an E2E test that works, blocks CI if it breaks, documented and visible (DEMO)
-  - **Grade**: 8 / 10
-
-- 🟡 **Feature Flags**
-  - Scope out the work necessary and create an E2E Feature Path github ticket using the template we created
-  - **Grade**: 5 / 10
-    - Research and design doc made good progress w/ support from bigBoss bus still a lot to do.
-
-### M7: IBC
-
-- 🟢 **SMST**
-
-  - Get it reviewed & merged in
-  - Clean up the documentation & merge it in
-  - Visualizers: create a visualizer for the tree
-  - Present: Finish off the SMT presentation
-  - Stretch goal: potentially start storing trustless relays in it
-  - **Grade**: 8.5 / 10
-    - SMST merged (wrapper around SMT option)
-    - Visualiser is accurate but not pretty could do with some more work
-    - Presentation went well but definietly could improve on some packed slides
-    - Need to work closer with @Arash Deshmeh to get it in prod with M3
-
-- 🟢 **ICS23**
-
-  - Put up the github ticket and PR for reivew to merge in the proof mechanisms
-  - Up to cosmos on ETA to review/merge
-  - **Grade**: 9 / 10
-    - ICS23 merged in our repo using my fork of `cosmos/ics23` as a dependency
-    - My explanations on why the exclusion proof is needed can improve as others find it hard to understand
-    - Cosmos PR is ready to merge pending review (probably take a while)
-
-- 🟡 **ICS24**
-
-  - Put up event logging for review; stretch goal is to merge
-  - **Grade**: 6 / 10
-    - ICS-24 stores have made great progress
-    - Event logging unfortunately didnt make this fortnight
-    - Message onto/off of bus as transactions works well 👍🏻
-
-- 🟡 **Light client spike**
-  - Start knowing where to head with research
-  - **Grade**: 5 / 10
-    - ICS-02 specced out well
-    - ICS-08 needs more work into its design
-      - Need to learn more about CosmWasm and WasmVM
-    - WIP document needs to be converted to ticket epic
-      - https://hackmd.io/0WVMarGpSIGqEyzvnygWpw
+[![Demo Video](https://github.com/pokt-network/pocket-core/assets/1892194/89326008-621e-46db-b0bb-2f51e84c683c)](https://drive.google.com/file/d/1N4G9TPkcxEcYGq99wR8JrDXFk3dMvBGl/view)
 
 ## Contribute to V1 🧑‍💻
 
@@ -141,15 +78,15 @@ Note that this exclude the work we did on infrastructure support, internal docum
 
 ## ScreenShots
 
-Please note that everything that was not `Done` in iteration19 is moving over to iteration20.
+Please note that everything that was not `Done` in ` iteration20` is moving over to `iteration21`.
 
 ### Iteration 20 - Completed
 
-#### V0
+#### V0 Results
 
 ![V0 Completed](https://github.com/pokt-network/pocket/assets/1892194/381cacde-8e9a-4b15-8b69-b8e1f2f3803a)
 
-#### V1
+#### V1 Results
 
 ![V1 Completed - 1](https://github.com/pokt-network/pocket/assets/1892194/17c90d3d-efcf-40f0-b0fc-793343442524)
 ![V1 Completed - 2](https://github.com/pokt-network/pocket/assets/1892194/584c28b7-76a6-45b7-b6ff-aa5cd2abc482)
