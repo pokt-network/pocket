@@ -50,7 +50,7 @@ func WithTreeStoreDirectory(path string) modules.TreeStoreOption {
 	}
 }
 
-func (t *TreeStore) GetModuleName() string { return modules.TreeStoreModuleName }
+func (t *TreeStore) GetModuleName() string { return modules.TreeStoreSubmoduleName }
 
 func (t *TreeStore) setupTrees() error {
 	if t.TreeStoreDir == ":memory:" {

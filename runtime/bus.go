@@ -72,7 +72,7 @@ func (m *bus) GetPersistenceModule() modules.PersistenceModule {
 }
 
 func (m *bus) GetTreeStoreModule() modules.TreeStoreModule {
-	return getModuleFromRegistry[modules.TreeStoreModule](m, modules.TreeStoreModuleName)
+	return getModuleFromRegistry[modules.TreeStoreModule](m, modules.TreeStoreSubmoduleName)
 }
 
 func (m *bus) GetP2PModule() modules.P2PModule {
@@ -128,7 +128,7 @@ func (m *bus) GetIBCModule() modules.IBCModule {
 }
 
 func (m *bus) GetTreeStore() modules.TreeStoreModule {
-	return getModuleFromRegistry[modules.TreeStoreModule](m, modules.TreeStoreModuleName)
+	return getModuleFromRegistry[modules.TreeStoreModule](m, modules.TreeStoreSubmoduleName)
 }
 
 func (m *bus) GetIBCHost() modules.IBCHostSubmodule {
