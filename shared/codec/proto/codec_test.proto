@@ -8,7 +8,12 @@ option go_package = "github.com/pokt-network/pocket/shared/codec";
 // proto structures in order to test the `Marhsal` and `Unmarshal` functions
 // See https://github.com/pokt-network/pocket/issues/231 for more details
 message TestProtoStructure {
-  int32 field1 = 1;
-  string field2 = 2;
-  bool field3 = 3;
+    int32 field1 = 1;
+    string field2 = 2;
+    bool field3 = 3;
+}
+
+message TestProtoStructure2 {
+    int32 field1 = 1;
+    string field2 = 2;
 }
