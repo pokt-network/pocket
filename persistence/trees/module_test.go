@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/pokt-network/pocket/internal/testutil"
-	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	"github.com/pokt-network/pocket/persistence/trees"
 	"github.com/pokt-network/pocket/runtime"
@@ -114,7 +113,7 @@ func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.Moc
 	}).AnyTimes()
 	mockModulesRegistry := mockModules.NewMockModulesRegistry(ctrl)
 	mockModulesRegistry.EXPECT().GetModule(peerstore_provider.PeerstoreProviderSubmoduleName).Return(nil, runtime.ErrModuleNotRegistered(peerstore_provider.PeerstoreProviderSubmoduleName)).AnyTimes()
-	mockModulesRegistry.EXPECT().GetModule(current_height_provider.ModuleName).Return(nil, runtime.ErrModuleNotRegistered(current_height_provider.ModuleName)).AnyTimes()
+	mockModulesRegistry.EXPECT().GetModule(modules.CurrentHeightProviderSubmoduleName).Return(nil, runtime.ErrModuleNotRegistered(modules.CurrentHeightProviderSubmoduleName)).AnyTimes()
 	mockBus.EXPECT().GetModulesRegistry().Return(mockModulesRegistry).AnyTimes()
 	mockBus.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
 	return mockBus
