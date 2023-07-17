@@ -144,11 +144,49 @@ func (c *clientManager) UpdateClient(
 	return nil
 }
 
-// SubmitMisbehaviour submits evidence for a misbehaviour to the client, possibly
-// invalidating previously valid state roots and thus preventing future updates
-func (c *clientManager) SubmitMisbehaviour(
-	identifier string, clientMessage modules.ClientMessage,
+// UpgradeClient upgrades an existing client with the given identifier using the
+// ClientState and ConsentusState provided. It can only do so if the new client
+// was committed to by the old client at the specified upgrade height
+func (c *clientManager) UpgradeClient(
+	identifier string,
+	upgradedClient modules.ClientState, upgradedConsState modules.ConsensusState,
+	proofUpgradeClient, proofUpgradeConsState []byte,
 ) error {
+	// Get the client state
+	clientState, err := c.GetClientState(identifier)
+	if err != nil {
+		return err
+	}
+
+	// Get the client store
+	clientStore, err := c.GetBus().GetIBCHost().GetProvableStore(path.KeyClientStorePrefix)
+	if err != nil {
+		return err
+	}
+
+	// Check the state is active
+	if clientState.Status(clientStore) != modules.ActiveStatus {
+		return core_types.ErrIBCClientNotActive()
+	}
+
+	// Verify the upgrade
+	if err := clientState.VerifyUpgradeAndUpdateState(
+		clientStore,
+		upgradedClient, upgradedConsState,
+		proofUpgradeClient, proofUpgradeConsState,
+	); err != nil {
+		c.logger.Error().Err(err).Str("identifier", identifier).Msg("failed to verify upgrade")
+		return err
+	}
+
+	c.logger.Info().Str("identifier", identifier).Str("height", upgradedClient.GetLatestHeight().ToString()).Msg("client upgraded")
+
+	// emit the upgrade client event to the event logger
+	if err := c.emitUpgradeClientEvent(identifier, upgradedClient); err != nil {
+		c.logger.Error().Err(err).Str("identifier", identifier).Msg("failed to emit client upgrade event")
+		return err
+	}
+
 	return nil
 }
 
