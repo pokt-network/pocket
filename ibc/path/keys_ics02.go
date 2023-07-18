@@ -28,6 +28,12 @@ func consensusStatePath(height string) string {
 	return fmt.Sprintf("%s/%s", KeyConsensusStatePrefix, height)
 }
 
+// ConsensusStateKey returns the store key for the consensus state of a particular client
+// in a prefixed client store
+func ConsensusStateKey(height string) []byte {
+	return []byte(consensusStatePath(height))
+}
+
 // fullConsensusStatePath takes a client identifier and returns a Path under which to
 // store the consensus state of a client.
 func fullConsensusStatePath(clientID, height string) string {
