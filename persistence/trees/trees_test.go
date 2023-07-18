@@ -17,3 +17,7 @@ func TestTreeStore_DebugClearAll(t *testing.T) {
 	// TODO: Write test case for the DebugClearAll method
 	t.Skip("TODO: Write test case for DebugClearAll method")
 }
+
+func TestTreeStore_GetTreeHashes(t *testing.T) {
+	t.Skip("TODO: Write test case for GetTreeHashes method")
+}

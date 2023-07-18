@@ -92,7 +92,10 @@ func (p *PostgresContext) GetValidatorSetHash(height int64) ([]byte, error) {
 	}
 	buf := new(bytes.Buffer)
 	for _, val := range validators {
-		buf.WriteString(val.GetPublicKey())
+		_, err := buf.WriteString(val.GetPublicKey())
+		if err != nil {
+			return nil, err
+		}
 	}
 	valHash := crypto.SHA3Hash(buf.Bytes())
 	return valHash, nil
