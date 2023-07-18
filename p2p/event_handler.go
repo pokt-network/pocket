@@ -30,7 +30,12 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 		}
 
 		oldPeerList := m.stakedActorRouter.GetPeerstore().GetPeerList()
-		updatedPeerstore, err := m.pstoreProvider.GetStakedPeerstoreAtHeight(consensusNewHeightEvent.Height)
+		pstoreProvider, err := m.getPeerstoreProvider()
+		if err != nil {
+			return err
+		}
+
+		updatedPeerstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(consensusNewHeightEvent.Height)
 		if err != nil {
 			return err
 		}

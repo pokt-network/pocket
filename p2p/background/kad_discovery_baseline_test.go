@@ -22,13 +22,13 @@ const dhtUpdateSleepDuration = time.Millisecond * 500
 func TestLibp2pKademliaPeerDiscovery(t *testing.T) {
 	ctx := context.Background()
 
-	addr1, host1, _ := setupHostAndDiscovery(t, ctx, defaults.DefaultP2PPort, nil)
+	addr1, host1, kad1 := setupHostAndDiscovery(t, ctx, defaults.DefaultP2PPort, nil)
 
 	bootstrapAddr, err := multiaddr.NewMultiaddr(fmt.Sprintf("%s/p2p/%s", addr1, host1.ID().String()))
 	require.NoError(t, err)
 
-	addr2, host2, _ := setupHostAndDiscovery(t, ctx, defaults.DefaultP2PPort+1, bootstrapAddr)
-	addr3, host3, _ := setupHostAndDiscovery(t, ctx, defaults.DefaultP2PPort+2, bootstrapAddr)
+	addr2, host2, kad2 := setupHostAndDiscovery(t, ctx, defaults.DefaultP2PPort+1, bootstrapAddr)
+	addr3, host3, kad3 := setupHostAndDiscovery(t, ctx, defaults.DefaultP2PPort+2, bootstrapAddr)
 
 	expectedPeerIDs := []libp2pPeer.ID{host1.ID(), host2.ID(), host3.ID()}
 
@@ -50,8 +50,20 @@ func TestLibp2pKademliaPeerDiscovery(t *testing.T) {
 	require.ElementsMatchf(t, expectedPeerIDs, host3.Peerstore().Peers(), "host3 peer IDs don't match")
 
 	// add another peer to network...
-	addr4, host4, _ := setupHostAndDiscovery(t, ctx, defaults.DefaultP2PPort+3, bootstrapAddr)
+	addr4, host4, kad4 := setupHostAndDiscovery(t, ctx, defaults.DefaultP2PPort+3, bootstrapAddr)
 	expectedPeerIDs = append(expectedPeerIDs, host4.ID())
+
+	t.Cleanup(func() {
+		for _, kad := range []*dht.IpfsDHT{kad1, kad2, kad3, kad4} {
+			err := kad.Close()
+			require.NoError(t, err)
+		}
+
+		for _, host := range []libp2pHost.Host{host1, host2, host3, host4} {
+			err := host.Close()
+			require.NoError(t, err)
+		}
+	})
 
 	// TECHDEBT: consider using `host.ConnManager().Notifee()` to avoid sleeping here
 	time.Sleep(time.Millisecond * 500)

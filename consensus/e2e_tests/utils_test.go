@@ -133,12 +133,13 @@ func createTestConsensusPocketNode(
 	runtimeMgr := (bus).GetRuntimeMgr()
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
-	p2pMock := baseP2PMock(t, sharedNetworkChannel)
-	utilityMock := baseUtilityMock(t, sharedNetworkChannel, runtimeMgr.GetGenesis(), consensusModule)
-	telemetryMock := baseTelemetryMock(t, sharedNetworkChannel)
-	loggerMock := baseLoggerMock(t, sharedNetworkChannel)
-	rpcMock := baseRpcMock(t, sharedNetworkChannel)
-	ibcMock := ibcUtils.IbcMockWithHost(t, sharedNetworkChannel)
+	p2pMock := baseP2PMock(t, eventsChannel)
+	utilityMock := baseUtilityMock(t, eventsChannel, runtimeMgr.GetGenesis(), consensusModule)
+	telemetryMock := baseTelemetryMock(t, eventsChannel)
+	loggerMock := baseLoggerMock(t, eventsChannel)
+	rpcMock := baseRpcMock(t, eventsChannel)
+	ibcMock, hostMock := ibcUtils.IBCMockWithHost(t, bus)
+	bus.RegisterModule(hostMock)
 
 	for _, module := range []modules.Module{
 		p2pMock,
@@ -694,11 +695,7 @@ func waitForProposalMsgs(
 	maxWaitTime time.Duration,
 	failOnExtraMessages bool,
 ) ([]*anypb.Any, error) {
-<<<<<<< HEAD
 	proposalMsgs, err := waitForNetworkConsensusEvents(t, clck, sharedNetworkChannel, typesCons.HotstuffStep(step), consensus.Propose, numExpectedMsgs, maxWaitTime, failOnExtraMessages)
-=======
-	proposalMsgs, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, typesCons.HotstuffStep(step), consensus.Propose, numExpectedMsgs, maxWaitTime, failOnExtraMessages)
->>>>>>> main
 	if err != nil {
 		return nil, err
 	}
@@ -738,8 +735,6 @@ func triggerNextView(t *testing.T, pocketNodes idToNodeMapping) {
 	for _, node := range pocketNodes {
 		triggerDebugMessage(t, node, messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW)
 	}
-<<<<<<< HEAD
-=======
 	return nil
 }
 
@@ -780,7 +775,6 @@ func waitForNodeToCatchUp(
 	targetHeight uint64,
 ) error {
 	return nil
->>>>>>> main
 }
 
 func generatePlaceholderBlock(height uint64, leaderAddrr cryptoPocket.Address) *coreTypes.Block {

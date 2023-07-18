@@ -9,6 +9,9 @@ import (
 	"github.com/spf13/cobra/doc"
 )
 
+// TODO: Document that `Aliases` should be either dromedaryCase, one word lowercase, or just a few lowercase letters.
+// TODO: Document that `Use` should also be PascalCase
+
 func main() {
 	workingDir, err := os.Getwd()
 	if err != nil {

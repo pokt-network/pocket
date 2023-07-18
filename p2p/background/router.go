@@ -5,6 +5,7 @@ package background
 import (
 	"context"
 	"fmt"
+	"time"
 
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
@@ -17,6 +18,7 @@ import (
 	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/unicast"
 	"github.com/pokt-network/pocket/p2p/utils"
@@ -27,9 +29,15 @@ import (
 )
 
 var (
-	_ typesP2P.Router          = &backgroundRouter{}
-	_ modules.IntegrableModule = &backgroundRouter{}
-	_ backgroundRouterFactory  = &backgroundRouter{}
+	_ typesP2P.Router         = &backgroundRouter{}
+	_ backgroundRouterFactory = &backgroundRouter{}
+)
+
+// TECHDEBT: Make these values configurable
+// TECHDEBT: Consider using an exponential backoff instead
+const (
+	connectMaxRetries   = 5
+	connectRetryTimeout = time.Second * 2
 )
 
 type backgroundRouterFactory = modules.FactoryWithConfig[typesP2P.Router, *config.BackgroundConfig]
@@ -93,7 +101,7 @@ func (*backgroundRouter) Create(bus modules.Bus, cfg *config.BackgroundConfig) (
 		host:                   cfg.Host,
 		cancelReadSubscription: cancel,
 	}
-	rtr.SetBus(bus)
+	bus.RegisterModule(rtr)
 
 	bgRouterLogger.Info().Fields(map[string]any{
 		"host_id":                cfg.Host.ID(),
@@ -125,6 +133,11 @@ func (rtr *backgroundRouter) Close() error {
 		topicCloseErr,
 		rtr.kadDHT.Close(),
 	)
+}
+
+// GetModuleName implements the respective `modules.Integrable` interface  method.
+func (rtr *backgroundRouter) GetModuleName() string {
+	return typesP2P.UnstakedActorRouterSubmoduleName
 }
 
 // Broadcast implements the respective `typesP2P.Router` interface  method.
@@ -215,7 +228,8 @@ func (rtr *backgroundRouter) setupUnicastRouter() error {
 	return nil
 }
 
-func (rtr *backgroundRouter) setupDependencies(ctx context.Context, cfg *config.BackgroundConfig) error {
+// TECHBEDT(#810,#811): remove unused `BackgroundConfig`
+func (rtr *backgroundRouter) setupDependencies(ctx context.Context, _ *config.BackgroundConfig) error {
 	// NB: The order in which the internal components are setup below is important
 	if err := rtr.setupUnicastRouter(); err != nil {
 		return err
@@ -237,21 +251,30 @@ func (rtr *backgroundRouter) setupDependencies(ctx context.Context, cfg *config.
 		return fmt.Errorf("setting up subscription: %w", err)
 	}
 
-	if err := rtr.setupPeerstore(
-		ctx,
-		cfg.PeerstoreProvider,
-		cfg.CurrentHeightProvider,
-	); err != nil {
+	if err := rtr.setupPeerstore(ctx); err != nil {
 		return fmt.Errorf("setting up peerstore: %w", err)
 	}
 	return nil
 }
 
-func (rtr *backgroundRouter) setupPeerstore(
-	ctx context.Context,
-	pstoreProvider providers.PeerstoreProvider,
-	currentHeightProvider providers.CurrentHeightProvider,
-) (err error) {
+func (rtr *backgroundRouter) setupPeerstore(ctx context.Context) (err error) {
+	rtr.logger.Warn().Msg("setting up peerstore...")
+
+	// TECHDEBT(#810, #811): use `bus.GetPeerstoreProvider()` after peerstore provider
+	// is retrievable as a proper submodule
+	pstoreProviderModule, err := rtr.GetBus().GetModulesRegistry().
+		GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
+	if err != nil {
+		return fmt.Errorf("retrieving peerstore provider: %w", err)
+	}
+	pstoreProvider, ok := pstoreProviderModule.(providers.PeerstoreProvider)
+	if !ok {
+		return fmt.Errorf("unexpected peerstore provider type: %T", pstoreProviderModule)
+	}
+
+	rtr.logger.Debug().Msg("setupCurrentHeightProvider")
+	currentHeightProvider := rtr.GetBus().GetCurrentHeightProvider()
+
 	// seed initial peerstore with current on-chain peer info (i.e. staked actors)
 	rtr.pstore, err = pstoreProvider.GetStakedPeerstoreAtHeight(
 		currentHeightProvider.CurrentHeight(),
@@ -342,11 +365,28 @@ func (rtr *backgroundRouter) bootstrap(ctx context.Context) error {
 			return nil
 		}
 
-		if err := rtr.host.Connect(ctx, libp2pAddrInfo); err != nil {
+		if err := rtr.connectWithRetry(ctx, libp2pAddrInfo); err != nil {
 			return fmt.Errorf("connecting to peer: %w", err)
 		}
 	}
 	return nil
+}
+
+// connectWithRetry attempts to connect to the given peer, retrying up to connectMaxRetries times
+// and waiting connectRetryTimeout between each attempt.
+func (rtr *backgroundRouter) connectWithRetry(ctx context.Context, libp2pAddrInfo libp2pPeer.AddrInfo) error {
+	var err error
+	for i := 0; i < connectMaxRetries; i++ {
+		err = rtr.host.Connect(ctx, libp2pAddrInfo)
+		if err == nil {
+			return nil
+		}
+
+		fmt.Printf("Failed to connect (attempt %d), retrying in %v...\n", i+1, connectRetryTimeout)
+		time.Sleep(connectRetryTimeout)
+	}
+
+	return fmt.Errorf("failed to connect after %d attempts, last error: %w", 5, err)
 }
 
 // topicValidator is used in conjunction with libp2p-pubsub's notion of "topic

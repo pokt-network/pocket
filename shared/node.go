@@ -188,7 +188,9 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	case messaging.ConsensusNewHeightEventType:
 		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
-		return multierr.Combine(err_consensus, err_p2p) // TECHDEBT: Remove this lib once we move to Go 1.2
+		err_ibc := node.GetBus().GetIBCModule().HandleEvent(message.Content)
+		// TODO: Remove this lib once we move to Go 1.2
+		return multierr.Combine(err_p2p, err_ibc, err_consensus)
 
 	case messaging.StateMachineTransitionEventType:
 		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)
