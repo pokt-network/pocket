@@ -16,6 +16,7 @@ const (
 	ExpiredStatus      ClientStatus = "expired"
 	FrozenStatus       ClientStatus = "frozen"
 	UnauthorizedStatus ClientStatus = "unauthorized"
+	UnknownStatus      ClientStatus = "unknown"
 )
 
 type ClientManagerOption func(ClientManager)
@@ -115,13 +116,13 @@ type ClientState interface {
 
 	// UpdateStateOnMisbehaviour should perform appropriate state changes on a
 	// client state given that misbehaviour has been detected and verified
-	UpdateStateOnMisbehaviour(clientStore ProvableStore, clientMsg ClientMessage)
+	UpdateStateOnMisbehaviour(clientStore ProvableStore, clientMsg ClientMessage) error
 
 	// UpdateState updates and stores as necessary any associated information
 	// for an IBC client, such as the ClientState and corresponding ConsensusState.
 	// Upon successful update, a consensus height is returned.
 	// It assumes the ClientMessage has already been verified.
-	UpdateState(clientStore ProvableStore, clientMsg ClientMessage) Height
+	UpdateState(clientStore ProvableStore, clientMsg ClientMessage) (Height, error)
 
 	// Upgrade functions
 	// NOTE: proof heights are not included as upgrade to a new revision is expected to pass only on the last
