@@ -1,10 +1,12 @@
 package persistence
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 func (p *PostgresContext) GetActor(actorType coreTypes.ActorType, address []byte, height int64) (*coreTypes.Actor, error) {
@@ -78,6 +80,22 @@ func (p *PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Acto
 		vals = append(vals, actor)
 	}
 	return
+}
+
+// GetValidatorSetHash returns the validator set hash for a given height
+// the hash is calculated by appending each validators public key to a
+// buffer and hashing the buffer.
+func (p *PostgresContext) GetValidatorSetHash(height int64) ([]byte, error) {
+	validators, err := p.GetAllValidators(height) // sorted by address+height desc
+	if err != nil {
+		return nil, err
+	}
+	buf := new(bytes.Buffer)
+	for _, val := range validators {
+		buf.Write([]byte(val.GetPublicKey()))
+	}
+	valHash := crypto.SHA3Hash(buf.Bytes())
+	return valHash, nil
 }
 
 func (p *PostgresContext) GetAllServicers(height int64) (sn []*coreTypes.Actor, err error) {

@@ -101,6 +101,16 @@ func (t *treeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
 	return nil, nil
 }
 
+// GetTreeHashes returns a map of tree names to their root hashes for all
+// the trees tracked by the treestore, excluding the root tree
+func (t *treeStore) GetTreeHashes() map[string]string {
+	hashes := make(map[string]string, len(t.merkleTrees))
+	for treeName, stateTree := range t.merkleTrees {
+		hashes[treeName] = hex.EncodeToString(stateTree.tree.Root())
+	}
+	return hashes
+}
+
 // Update takes a transaction and a height and updates
 // all of the trees in the treeStore for that height.
 func (t *treeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {

@@ -86,6 +86,11 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 	// TECHDEBT: This will lead to different timestamp in each node's block store because `prepareBlock` is called locally. Needs to be revisisted and decided on a proper implementation.
 	timestamp := timestamppb.Now()
 
+	valSetHash, err := p.GetValidatorSetHash(p.Height)
+	if err != nil {
+		return nil, err
+	}
+
 	// Preapre the block proto
 	blockHeader := &coreTypes.BlockHeader{
 		Height:            uint64(p.Height),
@@ -95,6 +100,8 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 		ProposerAddress:   proposerAddr,
 		QuorumCertificate: quorumCert,
 		Timestamp:         timestamp,
+		StateTreeHashes:   p.stateTrees.GetTreeHashes(),
+		NextValSetHash:    hex.EncodeToString(valSetHash),
 	}
 	block := &coreTypes.Block{
 		BlockHeader:  blockHeader,
