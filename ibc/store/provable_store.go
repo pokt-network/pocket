@@ -233,5 +233,7 @@ func applyPrefix(prefix coreTypes.CommitmentPrefix, key []byte) coreTypes.Commit
 	if len(prefix) > len(slashed) && bytes.Equal(prefix[:len(slashed)], slashed) {
 		return key
 	}
-	return path.ApplyPrefix(prefix, string(key))
+	prefixed := path.ApplyPrefix(prefix, string(key))
+	trimmed := strings.TrimSuffix(string(prefixed), "/")
+	return coreTypes.CommitmentPath(trimmed)
 }
