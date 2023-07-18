@@ -1501,6 +1501,8 @@ components:
         - proposer_addr
         - quorum_cert
         - timestamp
+        - state_tree_hashes
+        - next_val_set_hash
       properties:
         height:
           type: integer
@@ -1516,6 +1518,12 @@ components:
         quorum_cert:
           $ref: "#/components/schemas/QuorumCertificate"
         timestamp:
+          type: string
+        state_tree_hashes:
+          type: object
+          additionalProperties:
+            type: string
+        next_val_set_hash:
           type: string
     Coin:
       type: object
