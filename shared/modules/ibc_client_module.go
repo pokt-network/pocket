@@ -23,8 +23,8 @@ type ClientManagerOption func(ClientManager)
 
 type clientManagerFactory = FactoryWithOptions[ClientManager, ClientManagerOption]
 
-// ClientManager is the interface that defines the methods needed to interact with an IBC light client
-// it manages the different lifecycle methods for the different clients
+// ClientManager is the interface that defines the methods needed to interact with an
+// IBC light client it manages the different lifecycle methods for the different clients
 // https://github.com/cosmos/ibc/tree/main/spec/core/ics-002-client-semantics
 type ClientManager interface {
 	Submodule
@@ -40,12 +40,6 @@ type ClientManager interface {
 	// the ClientMessage can be verified using the existing ClientState and ConsensusState
 	UpdateClient(identifier string, clientMessage ClientMessage) error
 
-	// GetConsensusState returns the ConsensusState at the given height for the given client
-	GetConsensusState(identifier string, height Height) (ConsensusState, error)
-
-	// GetClientState returns the ClientState for the given client
-	GetClientState(identifier string) (ClientState, error)
-
 	// UpgradeClient upgrades an existing client with the given identifier using the
 	// ClientState and ConsentusState provided. It can only do so if the new client
 	// was committed to by the old client at the specified upgrade height
@@ -54,6 +48,17 @@ type ClientManager interface {
 		clientState ClientState, consensusState ConsensusState,
 		proofUpgradeClient, proofUpgradeConsState []byte,
 	) error
+
+	// === Client Queries ===
+
+	// GetConsensusState returns the ConsensusState at the given height for the given client
+	GetConsensusState(identifier string, height Height) (ConsensusState, error)
+
+	// GetClientState returns the ClientState for the given client
+	GetClientState(identifier string) (ClientState, error)
+
+	// GetHostConsensusState returns the ConsensusState at the given height for the host chain
+	GetHostConsensusState(height Height) (ConsensusState, error)
 }
 
 // ClientState is an interface that defines the methods required by a clients
