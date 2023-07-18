@@ -11,25 +11,25 @@ We have kept the goals and details in this document short, but feel free to reac
   - [V1](#v1)
     - [P2P - Presentation \& Audio](#p2p---presentation--audio)
     - [Savepoints \& Rollbacks - Presentation, Demo \& Audio](#savepoints--rollbacks---presentation-demo--audio)
-- [Contribute to V1 🧑‍💻](#contribute-to-v1-)
-  - [Links \& References](#links--references)
 - [Screenshots](#screenshots)
   - [Iteration 20 - Completed](#iteration-20---completed)
     - [V0 Results](#v0-results)
     - [V1 Results](#v1-results)
   - [Iteration 21 - Planned](#iteration-21---planned)
+- [Contribute to V1 🧑‍💻](#contribute-to-v1-)
+  - [Links \& References](#links--references)
 
 ## Iteration 20 Goals & Results
 
 **Iterate Dates**: July 3rd - July 17th, 2023
+
+@red-0ne joined the team, we made a ton of progress on the latest v0 release and we're honing in on a hanful of demos that are coming together!
 
 ```bash
 # V1 Repo
 git diff b1c64d3ca89b2c284b2b22ff7fdeb333601266c8 --stat
 # 152 files changed, 6579 insertions(+), 1072 deletions(-)
 ```
-
-Note that this exclude the work we did on infrastructure support, internal documentation, v0 work, SMT repo, collaboration with other projects and a lot more that happens behind the scenes!
 
 ### V0
 
@@ -48,11 +48,12 @@ Lots of work from our community members which can be accessed [pokt-network/pock
 
 Our goal was **to finalize and demo** as much as possible from the [previous iteration](https://github.com/pokt-network/pocket/blob/main/docs/devlog/devlog10.md).
 
-Though this was not fully complete, we:
+🟡 Though this was not fully complete, we give ourselves an overall `6.5/10` by:
 
-1. Reviewed & merged in a lot of code
-2. Had a couple internal demos & presentations
+1. Reviewing & merged in a lot of code necessary for the demos
+2. Doing a couple of internal demos & presentations
 3. Aiming to tie the 🪢 this iteration
+4. Having one huge demo showcasing all the hard work from the last couple of iterations
 
 #### P2P - Presentation & Audio
 
@@ -67,15 +68,6 @@ Though this was not fully complete, we:
 [![Presentation](https://github.com/pokt-network/pocket/assets/1892194/73cb78e3-0709-4cb2-a5f7-d8efd0a77121)](https://drive.google.com/file/d/1MiiCRxMyrO0T-9nAzUSV9ICX-ySQ7vGZ/view)
 
 [![Demo Video](https://github.com/pokt-network/pocket-core/assets/1892194/89326008-621e-46db-b0bb-2f51e84c683c)](https://drive.google.com/file/d/1N4G9TPkcxEcYGq99wR8JrDXFk3dMvBGl/view)
-
-## Contribute to V1 🧑‍💻
-
-### Links & References
-
-- [V1 Specifications](https://github.com/pokt-network/pocket-network-protocol)
-- [V1 Repo](https://github.com/pokt-network/pocket)
-- [V1 Wiki](https://github.com/pokt-network/pocket/wiki)
-- [V1 Project Dashboard](https://github.com/pokt-network/pocket/projects?query=is%3Aopen)
 
 ## Screenshots
 
@@ -93,5 +85,16 @@ Please note that everything that was not `Done` in ` iteration20` is moving over
 ![V1 Completed - 2](https://github.com/pokt-network/pocket/assets/1892194/584c28b7-76a6-45b7-b6ff-aa5cd2abc482)
 
 ### Iteration 21 - Planned
+
+![V1 Planned](https://github.com/pokt-network/pocket/assets/1892194/6d645e0b-3f07-4c58-ba9d-c99fe672fc58)
+
+## Contribute to V1 🧑‍💻
+
+### Links & References
+
+- [V1 Specifications](https://github.com/pokt-network/pocket-network-protocol)
+- [V1 Repo](https://github.com/pokt-network/pocket)
+- [V1 Wiki](https://github.com/pokt-network/pocket/wiki)
+- [V1 Project Dashboard](https://github.com/pokt-network/pocket/projects?query=is%3Aopen)
 
 <!-- GITHUB_WIKI: devlog/2023_07_17 -->
