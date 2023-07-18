@@ -237,7 +237,7 @@ func (s *rootSuite) TheApplicationHasAValidEthereumRelaychainHeight() {
 //
 //	"Given the application has a valid servicer"
 func (s *rootSuite) TheApplicationHasAValidServicer() {
-	s.servicer = servicerA
+	s.servicerKey = servicerA
 }
 
 // An Application requests the account balance of a specific address at a specific height
@@ -247,7 +247,7 @@ func (s *rootSuite) TheApplicationHasAValidServicer() {
 	params := fmt.Sprintf("%q: [%q, %q]", "params", s.relaychains[relaychainEth].account, s.relaychains[relaychainEth].height)
 	checkBalanceRelay := fmt.Sprintf("{%s, %s}", `"method": "eth_getBalance", "id": "1", "jsonrpc": "2.0"`, params)
 
-	servicerPrivateKey := s.getServicerPrivateKey(s.servicer)
+	servicerPrivateKey := s.getServicerPrivateKey(s.servicerKey)
 	appPrivateKey := s.getAppPrivateKey(appA)
 
 	s.sendTrustlessRelay(checkBalanceRelay, servicerPrivateKey.Address().String(), appPrivateKey.Address().String())
