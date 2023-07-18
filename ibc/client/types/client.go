@@ -38,6 +38,7 @@ func (cs *ClientState) Validate() error {
 	return nil
 }
 
+//nolint:unused // types defined for future use
 type (
 	statusInnerPayload struct{}
 	statusPayload      struct {
@@ -94,6 +95,7 @@ func (cs *ClientState) Initialise(clientStore modules.ProvableStore, consensusSt
 	return nil
 }
 
+//nolint:unused // types defined for future use
 type (
 	verifyMembershipInnerPayload struct {
 		Height           modules.Height            `json:"height"`
@@ -146,6 +148,7 @@ func (cs *ClientState) VerifyMembership(
 	return nil
 }
 
+//nolint:unused // types defined for future use
 type (
 	verifyNonMembershipInnerPayload struct {
 		Height           modules.Height            `json:"height"`
@@ -196,6 +199,7 @@ func (cs *ClientState) VerifyNonMembership(
 	return nil
 }
 
+//nolint:unused // types defined for future use
 type (
 	checkForMisbehaviourInnerPayload struct {
 		ClientMessage clientMessage `json:"client_message"`
