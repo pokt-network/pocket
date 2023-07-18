@@ -74,24 +74,25 @@ type stateTree struct {
 
 var _ modules.TreeStoreModule = &TreeStore{}
 
-// TreeStore stores a set of merkle trees that
-// it manages. It fulfills the modules.TreeStore interface.
-// * It is responsible for atomic commit or rollback behavior
-// of the underlying trees by utilizing the lazy loading
-// functionality provided by the underlying smt library.
+// TreeStore stores a set of merkle trees that it manages.
+// It fulfills the modules.TreeStore interface
+// * It is responsible for atomic commit or rollback behavior of the underlying
+// trees by utilizing the lazy loading functionality of the smt library.
+// TECHDEBT(#880): TreeStore is exported for testing purposes to avoid import cycle errors.
+// Make it private and export a custom struct with a test build tag when necessary.
 type TreeStore struct {
 	base_modules.IntegrableModule
 
 	logger *modules.Logger
 
-	TreeStoreDir string
+	treeStoreDir string
 	rootTree     *stateTree
 	merkleTrees  map[string]*stateTree
 }
 
-// GetTree returns the root hash and nodeStore for the matching tree
-// stored in the TreeStore. This enables the caller to import the smt
-// and not change the one stored.
+// GetTree returns the root hash and nodeStore for the matching tree stored in the TreeStore.
+// This enables the caller to import the SMT without changing the one stored unless they call
+// `Commit()` to write to the nodestore.
 func (t *TreeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
 	if name == RootTreeName {
 		return t.rootTree.tree.Root(), t.rootTree.nodeStore
