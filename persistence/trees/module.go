@@ -45,7 +45,7 @@ func WithTreeStoreDirectory(path string) modules.TreeStoreOption {
 	return func(m modules.TreeStoreModule) {
 		mod, ok := m.(*TreeStore)
 		if ok {
-			mod.TreeStoreDir = path
+			mod.treeStoreDir = path
 		}
 	}
 }
@@ -53,11 +53,11 @@ func WithTreeStoreDirectory(path string) modules.TreeStoreOption {
 func (t *TreeStore) GetModuleName() string { return modules.TreeStoreSubmoduleName }
 
 func (t *TreeStore) setupTrees() error {
-	if t.TreeStoreDir == ":memory:" {
+	if t.treeStoreDir == ":memory:" {
 		return t.setupInMemory()
 	}
 
-	nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.TreeStoreDir, RootTreeName))
+	nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.treeStoreDir, RootTreeName))
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (t *TreeStore) setupTrees() error {
 	t.merkleTrees = make(map[string]*stateTree, len(stateTreeNames))
 
 	for i := 0; i < len(stateTreeNames); i++ {
-		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.TreeStoreDir, stateTreeNames[i]))
+		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.treeStoreDir, stateTreeNames[i]))
 		if err != nil {
 			return err
 		}
