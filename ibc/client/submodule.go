@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 
+	"github.com/pokt-network/pocket/ibc/client/types"
 	"github.com/pokt-network/pocket/ibc/path"
 	core_types "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -15,7 +16,7 @@ var (
 )
 
 func init() {
-	allowedClientTypes["08-wasm"] = struct{}{}
+	allowedClientTypes[types.WasmClientType] = struct{}{}
 }
 
 type clientManager struct {
@@ -67,8 +68,9 @@ func (c *clientManager) CreateClient(
 	// Generate a unique identifier for the client
 	identifier := path.GenerateClientIdentifier()
 
-	// Retrieve the client store
-	clientStore, err := c.GetBus().GetIBCHost().GetProvableStore(path.KeyClientStorePrefix)
+	// Retrieve the client store prefixed with the client identifier
+	prefixed := path.ApplyPrefix(core_types.CommitmentPrefix(path.KeyClientStorePrefix), identifier)
+	clientStore, err := c.GetBus().GetIBCHost().GetProvableStore(string(prefixed))
 	if err != nil {
 		return "", err
 	}
@@ -105,8 +107,9 @@ func (c *clientManager) UpdateClient(
 		return err
 	}
 
-	// Get the client store
-	clientStore, err := c.GetBus().GetIBCHost().GetProvableStore(path.KeyClientStorePrefix)
+	// Retrieve the client store prefixed with the client identifier
+	prefixed := path.ApplyPrefix(core_types.CommitmentPrefix(path.KeyClientStorePrefix), identifier)
+	clientStore, err := c.GetBus().GetIBCHost().GetProvableStore(string(prefixed))
 	if err != nil {
 		return err
 	}
@@ -138,7 +141,13 @@ func (c *clientManager) UpdateClient(
 	}
 
 	// Update the client
-	consensusHeight := clientState.UpdateState(clientStore, clientMessage)
+	consensusHeight, err := clientState.UpdateState(clientStore, clientMessage)
+	if err != nil {
+		c.logger.Error().Err(err).Str("identifier", identifier).
+			Str("height", consensusHeight.ToString()).
+			Msg("failed to update client state")
+		return err
+	}
 	c.logger.Info().Str("identifier", identifier).
 		Str("height", consensusHeight.ToString()).
 		Msg("client state updated")
@@ -167,8 +176,9 @@ func (c *clientManager) UpgradeClient(
 		return err
 	}
 
-	// Get the client store
-	clientStore, err := c.GetBus().GetIBCHost().GetProvableStore(path.KeyClientStorePrefix)
+	// Retrieve the client store prefixed with the client identifier
+	prefixed := path.ApplyPrefix(core_types.CommitmentPrefix(path.KeyClientStorePrefix), identifier)
+	clientStore, err := c.GetBus().GetIBCHost().GetProvableStore(string(prefixed))
 	if err != nil {
 		return err
 	}
