@@ -6,6 +6,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
+//nolint:unused // types defined for future use
 type (
 	verifyUpgradeAndUpdateStateInnerPayload struct {
 		UpgradeClientState         modules.ClientState    `json:"upgrade_client_state"`
@@ -26,6 +27,7 @@ func (cs *ClientState) VerifyUpgradeAndUpdateState(
 	upgradedConsState modules.ConsensusState,
 	proofUpgradeClient, proofUpgradeConsState []byte,
 ) error {
+	//nolint:gocritic // Commented out code is for future us
 	/*
 		wasmUpgradeClientState, ok := upgradedClient.(*ClientState)
 		if !ok {

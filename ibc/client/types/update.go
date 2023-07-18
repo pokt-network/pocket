@@ -4,6 +4,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
+//nolint:unused // types defined for future use
 type (
 	clientMessage struct {
 		Header       *Header       `json:"header,omitempty"`
@@ -48,6 +49,7 @@ func (cs *ClientState) VerifyClientMessage(clientStore modules.ProvableStore, cl
 	return nil
 }
 
+//nolint:unused // types defined for future use
 type (
 	updateStateInnerPayload struct {
 		ClientMessage clientMessage `json:"client_message"`
@@ -83,6 +85,7 @@ func (cs *ClientState) UpdateState(clientStore modules.ProvableStore, clientMsg 
 	return clientMsg.(*Header).Height, nil
 }
 
+//nolint:unused // types defined for future use
 type (
 	updateStateOnMisbehaviourInnerPayload struct {
 		ClientMessage clientMessage `json:"client_message"`
