@@ -45,6 +45,12 @@ func TestProvableStore_Get(t *testing.T) {
 			expectedValue: nil,
 			expectedError: coreTypes.ErrIBCKeyDoesNotExist("test/key2"),
 		},
+		{
+			name:          "key is nil",
+			key:           nil,
+			expectedValue: nil,
+			expectedError: coreTypes.ErrIBCKeyDoesNotExist("test"),
+		},
 	}
 
 	provableStore := newTestProvableStore(t)
