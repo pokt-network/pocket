@@ -8,7 +8,7 @@ option go_package = "github.com/pokt-network/pocket/ibc/client/types";
 message ClientState {
     bytes data = 1;           // opaque data passed to the wasm client
     bytes wasm_checksum = 2;  // checksum of the wasm client code
-    Height latest_height = 3; // latest height of the client
+    Height recent_height = 3; // latest height of the client
 }
 
 // ConsensusState for a Wasm light client

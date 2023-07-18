@@ -96,7 +96,7 @@ func (c *clientManager) CreateClient(
 	return identifier, nil
 }
 
-// UpdateClient updates an existing client with the given identifer using the
+// UpdateClient updates an existing client with the given identifier using the
 // ClientMessage provided
 func (c *clientManager) UpdateClient(
 	identifier string, clientMessage modules.ClientMessage,
@@ -127,7 +127,11 @@ func (c *clientManager) UpdateClient(
 	// Check for misbehaviour on the source chain
 	misbehaved := clientState.CheckForMisbehaviour(clientStore, clientMessage)
 	if misbehaved {
-		clientState.UpdateStateOnMisbehaviour(clientStore, clientMessage)
+		if err := clientState.UpdateStateOnMisbehaviour(clientStore, clientMessage); err != nil {
+			c.logger.Error().Err(err).Str("identifier", identifier).
+				Msg("failed to freeze client for misbehaviour")
+			return err
+		}
 		c.logger.Info().Str("identifier", identifier).
 			Msg("client frozen for misbehaviour")
 
