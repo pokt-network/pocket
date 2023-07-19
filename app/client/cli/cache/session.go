@@ -1,5 +1,6 @@
 package cache
 
+// TODO: add a TTL for cached sessions, since we know the sessions' length
 import (
 	"encoding/json"
 	"errors"
@@ -34,6 +35,7 @@ func NewSessionCache(databasePath string) (*SessionCache, error) {
 // Get returns the cached session, if found, for an app+chain combination.
 // The caller is responsible to verify that the returned session is valid for the current block height.
 // Get is NOT safe to use concurrently
+// DISCUSS: do we need concurrency here?
 func (s *SessionCache) Get(appAddr, chain string) (*rpc.Session, error) {
 	key := sessionKey(appAddr, chain)
 	bz, err := s.store.Get(key)
