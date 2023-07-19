@@ -433,6 +433,7 @@ func (s *rpcServer) blockToRPCBlock(protoBlock *coreTypes.Block) (*Block, error)
 			},
 			Timestamp:       protoBlock.BlockHeader.GetTimestamp().AsTime().String(),
 			StateTreeHashes: BlockHeader_StateTreeHashes{protoBlock.BlockHeader.GetStateTreeHashes()},
+			ValSetHash:      protoBlock.BlockHeader.GetValSetHash(),
 			NextValSetHash:  protoBlock.BlockHeader.GetNextValSetHash(),
 		},
 		Transactions: txs,

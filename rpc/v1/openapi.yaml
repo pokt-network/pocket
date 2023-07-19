@@ -1502,6 +1502,7 @@ components:
         - quorum_cert
         - timestamp
         - state_tree_hashes
+        - val_set_hash
         - next_val_set_hash
       properties:
         height:
@@ -1523,6 +1524,8 @@ components:
           type: object
           additionalProperties:
             type: string
+        val_set_hash:
+          type: string
         next_val_set_hash:
           type: string
     Coin:
