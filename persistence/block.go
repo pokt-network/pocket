@@ -89,7 +89,7 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 	timestamp := timestamppb.Now()
 
 	// Get the current validator set and next validator set hashes
-	currSetHash, nextSetHash, err := p.getCurrentAndNextValSetHashes(proposerAddr)
+	currSetHash, nextSetHash, err := p.getCurrentAndNextValSetHashes()
 	if err != nil {
 		return nil, err
 	}
@@ -130,8 +130,7 @@ func (p *PostgresContext) insertBlock(block *coreTypes.Block) error {
 	return err
 }
 
-func (p *PostgresContext) getCurrentAndNextValSetHashes(proposerAddr []byte,
-) (currentValSetHash string, nextValSetHash string, err error) {
+func (p *PostgresContext) getCurrentAndNextValSetHashes() (currentValSetHash, nextValSetHash string, err error) {
 	// Get the next validator set
 	nextValSet, err := p.GetValidatorSet(p.Height)
 	if err != nil {
