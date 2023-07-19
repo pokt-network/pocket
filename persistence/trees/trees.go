@@ -327,6 +327,8 @@ func (t *treeStore) Rollback() {
 
 // save commits any pending changes to the trees and serializes the treeStore to a WorldState object
 // with new readers and writers.
+// OPTIMIZE: Consider saving only the root hash of each tree and the tree directory here and then
+// load the trees up in Rollback instead of setting them up here.
 func (t *treeStore) save() (*Worldstate, error) {
 	if err := t.Commit(); err != nil {
 		return nil, err
