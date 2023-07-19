@@ -142,6 +142,7 @@ func validatorId(i int) string {
 func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.MockBus {
 	t.Helper()
 	ctrl := gomock.NewController(t)
+
 	mockBus := mockModules.NewMockBus(ctrl)
 	mockModulesRegistry := mockModules.NewMockModulesRegistry(ctrl)
 
@@ -170,6 +171,5 @@ func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.Moc
 	mockBus.EXPECT().
 		PublishEventToBus(gomock.Any()).
 		AnyTimes()
-
 	return mockBus
 }
