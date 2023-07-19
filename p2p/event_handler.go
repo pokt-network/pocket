@@ -3,10 +3,11 @@ package p2p
 import (
 	"fmt"
 
+	"google.golang.org/protobuf/types/known/anypb"
+
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // CONSIDERATION(#576): making this part of some new `ConnManager`.
@@ -23,20 +24,31 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 			return fmt.Errorf("failed to cast event to ConsensusNewHeightEvent")
 		}
 
-		oldPeerList := m.router.GetPeerstore().GetPeerList()
-		updatedPeerstore, err := m.pstoreProvider.GetStakedPeerstoreAtHeight(consensusNewHeightEvent.Height)
+		if isStaked, err := m.isStakedActor(); err != nil {
+			return err
+		} else if !isStaked {
+			return nil // unstaked actors do not use RainTree and therefore do not need to update this router
+		}
+
+		oldPeerList := m.stakedActorRouter.GetPeerstore().GetPeerList()
+		pstoreProvider, err := m.getPeerstoreProvider()
+		if err != nil {
+			return err
+		}
+
+		updatedPeerstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(consensusNewHeightEvent.Height)
 		if err != nil {
 			return err
 		}
 
 		added, removed := oldPeerList.Delta(updatedPeerstore.GetPeerList())
 		for _, add := range added {
-			if err := m.router.AddPeer(add); err != nil {
+			if err := m.stakedActorRouter.AddPeer(add); err != nil {
 				return err
 			}
 		}
 		for _, rm := range removed {
-			if err := m.router.RemovePeer(rm); err != nil {
+			if err := m.stakedActorRouter.RemovePeer(rm); err != nil {
 				return err
 			}
 		}
@@ -50,13 +62,25 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 		m.logger.Debug().Fields(messaging.TransitionEventToMap(stateMachineTransitionEvent)).Msg("Received state machine transition event")
 
 		if stateMachineTransitionEvent.NewState == string(coreTypes.StateMachineState_P2P_Bootstrapping) {
-			if m.router.GetPeerstore().Size() == 0 {
-				m.logger.Warn().Msg("No peers in addrbook, bootstrapping")
+			staked, err := m.isStakedActor()
+			if err != nil {
+				return err
+			}
+			if staked {
+				// TECHDEBT(#859): this will never happen as the peerstore is
+				// seeded from consensus during P2P module construction.
+				if m.stakedActorRouter.GetPeerstore().Size() == 0 {
+					m.logger.Warn().Msg("No peers in peerstore, bootstrapping")
 
-				if err := m.bootstrap(); err != nil {
-					return err
+					if err := m.bootstrap(); err != nil {
+						return err
+					}
 				}
 			}
+
+			// TECHDEBT(#859): for unstaked actors, unstaked actor (background)
+			// router bootstrapping SHOULD complete before the event below is sent.
+
 			m.logger.Info().Bool("TODO", true).Msg("Advertise self to network")
 			if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_P2P_IsBootstrapped); err != nil {
 				return err

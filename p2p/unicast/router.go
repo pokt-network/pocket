@@ -25,7 +25,7 @@ var _ unicastRouterFactory = &UnicastRouter{}
 type unicastRouterFactory = modules.FactoryWithConfig[*UnicastRouter, *config.UnicastRouterConfig]
 
 type UnicastRouter struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
 	logger *modules.Logger
 	host   libp2pHost.Host

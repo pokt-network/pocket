@@ -63,8 +63,8 @@ func VerifyNonMembership(root ics23.CommitmentRoot, proof *ics23.CommitmentProof
 // in the SMT provided
 func createMembershipProof(tree *smt.SMT, key, value []byte) (*ics23.CommitmentProof, error) {
 	proof, err := tree.Prove(key)
-	if err != nil || proof == nil {
-		return nil, coreTypes.ErrCreatingProof(err)
+	if err != nil {
+		return nil, coreTypes.ErrIBCCreatingProof(err)
 	}
 	return convertSMPToExistenceProof(proof, key, value), nil
 }
@@ -72,8 +72,8 @@ func createMembershipProof(tree *smt.SMT, key, value []byte) (*ics23.CommitmentP
 // createNonMembershipProof generates a CommitmentProof object verifying the membership of an unrealted key at the given key in the SMT provided
 func createNonMembershipProof(tree *smt.SMT, key []byte) (*ics23.CommitmentProof, error) {
 	proof, err := tree.Prove(key)
-	if err != nil || proof == nil {
-		return nil, coreTypes.ErrCreatingProof(err)
+	if err != nil {
+		return nil, coreTypes.ErrIBCCreatingProof(err)
 	}
 	return convertSMPToExclusionProof(proof, key), nil
 }

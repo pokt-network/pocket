@@ -43,6 +43,11 @@ kubectl_check:
 	fi; \
 	}
 
+.PHONY: trigger_ci
+trigger_ci: ## Trigger the CI pipeline by submitting an empty commit; See https://github.com/pokt-network/pocket/issues/900 for details
+	git commit --allow-empty -m "Empty commit"
+	git push
+
 .PHONY: prompt_user
 # Internal helper target - prompt the user before continuing
 prompt_user:
@@ -120,13 +125,17 @@ go_fmt: ## Format all the .go files in the project in place.
 	gofmt -w -s .
 
 .PHONY: install_cli_deps
-install_cli_deps: ## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag' and other tooling
+install_cli_deps: ## Installs `helm`, `tilt` and the underlying `ci_deps`
+	make install_ci_deps
+	curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
+	curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+.PHONY: install_ci_deps
+install_ci_deps: ## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag' and other tools necessary for CI
 	go install "google.golang.org/protobuf/cmd/protoc-gen-go@v1.28" && protoc-gen-go --version
 	go install "github.com/golang/mock/mockgen@v1.6.0" && mockgen --version
 	go install "github.com/favadi/protoc-go-inject-tag@latest"
 	go install "github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0"
-	curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
-	curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 .PHONY: develop_start
 develop_start: ## Run all of the make commands necessary to develop on the project
@@ -155,7 +164,7 @@ rebuild_client_start: docker_check ## Rebuild and run a client daemon which is o
 
 .PHONY: client_connect
 client_connect: docker_check ## Connect to the running client debugging daemon
-	docker exec -it client /bin/bash -c "POCKET_P2P_IS_CLIENT_ONLY=true go run -tags=debug app/client/*.go debug --remote_cli_url=http://validator1:50832"
+	docker exec -it client /bin/bash -c "go run -tags=debug app/client/*.go DebugUI"
 
 .PHONY: build_and_watch
 build_and_watch: ## Continous build Pocket's main entrypoint as files change
@@ -297,7 +306,10 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 	$(PROTOC_SHARED) -I=./consensus/types/proto --go_out=./consensus/types ./consensus/types/proto/*.proto
 
 	# P2P
-	$(PROTOC_SHARED) -I=./p2p/raintree/types/proto --go_out=./p2p/types ./p2p/raintree/types/proto/*.proto
+	$(PROTOC_SHARED) -I=./p2p/types/proto --go_out=./p2p/types ./p2p/types/proto/*.proto
+
+	# IBC
+	$(PROTOC_SHARED) -I=./ibc/types/proto --go_out=./ibc/types ./ibc/types/proto/*.proto
 
 	# echo "View generated proto files by running: make protogen_show"
 
@@ -518,7 +530,7 @@ localnet_up: ## Starts up a k8s LocalNet with all necessary dependencies (tl;dr 
 
 .PHONY: localnet_client_debug
 localnet_client_debug: ## Opens a `client debug` cli to interact with blockchain (e.g. change pacemaker mode, reset to genesis, etc). Though the node binary updates automatiacally on every code change (i.e. hot reloads), if client is already open you need to re-run this command to execute freshly compiled binary.
-	kubectl exec -it deploy/dev-cli-client --container pocket -- p1 debug --remote_cli_url http://pocket-validators:50832
+	kubectl exec -it deploy/dev-cli-client --container pocket -- p1 DebugUI
 
 .PHONY: localnet_shell
 localnet_shell: ## Opens a shell in the pod that has the `client` cli available. The binary updates automatically whenever the code changes (i.e. hot reloads).
