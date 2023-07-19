@@ -130,7 +130,8 @@ func (p *PostgresContext) insertBlock(block *coreTypes.Block) error {
 	return err
 }
 
-func (p *PostgresContext) getCurrentAndNextValSetHashes(proposerAddr []byte) (string, string, error) {
+func (p *PostgresContext) getCurrentAndNextValSetHashes(proposerAddr []byte,
+) (currentValSetHash string, nextValSetHash string, err error) {
 	// Get the next validator set
 	nextValSet, err := p.GetValidatorSet(p.Height)
 	if err != nil {
@@ -141,7 +142,7 @@ func (p *PostgresContext) getCurrentAndNextValSetHashes(proposerAddr []byte) (st
 		return "", "", err
 	}
 	nValSetHash := crypto.SHA3Hash(nextValSetBz)
-	nextValSetHash := hex.EncodeToString(nValSetHash)
+	nextValSetHash = hex.EncodeToString(nValSetHash)
 
 	if p.Height == 0 {
 		return "", nextValSetHash, nil
@@ -157,7 +158,7 @@ func (p *PostgresContext) getCurrentAndNextValSetHashes(proposerAddr []byte) (st
 		return "", "", err
 	}
 	valSetHash := crypto.SHA3Hash(valSetBz)
-	currentValSetHash := hex.EncodeToString(valSetHash)
+	currentValSetHash = hex.EncodeToString(valSetHash)
 
 	return currentValSetHash, nextValSetHash, nil
 }
