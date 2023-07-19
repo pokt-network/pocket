@@ -72,15 +72,15 @@ type stateTree struct {
 	nodeStore kvstore.KVStore
 }
 
-var _ modules.TreeStoreModule = &TreeStore{}
+var _ modules.TreeStoreModule = &treeStore{}
 
-// TreeStore stores a set of merkle trees that it manages.
-// It fulfills the modules.TreeStore interface
+// treeStore stores a set of merkle trees that it manages.
+// It fulfills the modules.treeStore interface
 // * It is responsible for atomic commit or rollback behavior of the underlying
 // trees by utilizing the lazy loading functionality of the smt library.
-// TECHDEBT(#880): TreeStore is exported for testing purposes to avoid import cycle errors.
+// TECHDEBT(#880): treeStore is exported for testing purposes to avoid import cycle errors.
 // Make it private and export a custom struct with a test build tag when necessary.
-type TreeStore struct {
+type treeStore struct {
 	base_modules.IntegrableModule
 
 	logger *modules.Logger
@@ -93,7 +93,7 @@ type TreeStore struct {
 // GetTree returns the root hash and nodeStore for the matching tree stored in the TreeStore.
 // This enables the caller to import the SMT without changing the one stored unless they call
 // `Commit()` to write to the nodestore.
-func (t *TreeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
+func (t *treeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
 	if name == RootTreeName {
 		return t.rootTree.tree.Root(), t.rootTree.nodeStore
 	}
@@ -105,7 +105,7 @@ func (t *TreeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
 
 // Update takes a pgx transaction and a height and updates all of the trees in the TreeStore for that height.
 // It is atomic and handles its own savepoint and rollback creation.
-func (t *TreeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
+func (t *treeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
 	t.logger.Info().Msgf("🌴 updating state trees at height %d", height)
 	txi := t.GetBus().GetPersistenceModule().GetTxIndexer()
 	stateHash, err := t.updateMerkleTrees(pgtx, txi, height)
@@ -118,7 +118,7 @@ func (t *TreeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
 // DebugClearAll is used by the debug cli to completely reset all merkle trees.
 // This should only be called by the debug CLI.
 // TECHDEBT: Move this into a separate file with a debug build flag to avoid accidental usage in prod
-func (t *TreeStore) DebugClearAll() error {
+func (t *treeStore) DebugClearAll() error {
 	if err := t.rootTree.nodeStore.ClearAll(); err != nil {
 		return fmt.Errorf("failed to clear root node store: %w", err)
 	}
@@ -137,7 +137,7 @@ func (t *TreeStore) DebugClearAll() error {
 // * It returns the new state hash capturing the state of all the trees or an error if one occurred.
 // * This function does not commit state to disk. The caller must manually invoke `Commit` to persist
 // changes to disk.
-func (t *TreeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
+func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
 	for treeName := range t.merkleTrees {
 		switch treeName {
 		// Actor Merkle Trees
@@ -219,7 +219,7 @@ func (t *TreeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 	return t.getStateHash(), nil
 }
 
-func (t *TreeStore) Commit() error {
+func (t *treeStore) Commit() error {
 	if err := t.rootTree.tree.Commit(); err != nil {
 		return fmt.Errorf("failed to commit root tree: %w", err)
 	}
@@ -232,7 +232,7 @@ func (t *TreeStore) Commit() error {
 	return nil
 }
 
-func (t *TreeStore) getStateHash() string {
+func (t *treeStore) getStateHash() string {
 	for _, stateTree := range t.merkleTrees {
 		key := []byte(stateTree.name)
 		val := stateTree.tree.Root()
@@ -252,7 +252,7 @@ func (t *TreeStore) getStateHash() string {
 ////////////////////////
 
 // NB: I think this needs to be done manually for all 4 types.
-func (t *TreeStore) updateActorsTree(actorType coreTypes.ActorType, actors []*coreTypes.Actor) error {
+func (t *treeStore) updateActorsTree(actorType coreTypes.ActorType, actors []*coreTypes.Actor) error {
 	for _, actor := range actors {
 		bzAddr, err := hex.DecodeString(actor.GetAddress())
 		if err != nil {
@@ -280,7 +280,7 @@ func (t *TreeStore) updateActorsTree(actorType coreTypes.ActorType, actors []*co
 // Account Tree Helpers //
 //////////////////////////
 
-func (t *TreeStore) updateAccountTrees(accounts []*coreTypes.Account) error {
+func (t *treeStore) updateAccountTrees(accounts []*coreTypes.Account) error {
 	for _, account := range accounts {
 		bzAddr, err := hex.DecodeString(account.GetAddress())
 		if err != nil {
@@ -300,7 +300,7 @@ func (t *TreeStore) updateAccountTrees(accounts []*coreTypes.Account) error {
 	return nil
 }
 
-func (t *TreeStore) updatePoolTrees(pools []*coreTypes.Account) error {
+func (t *treeStore) updatePoolTrees(pools []*coreTypes.Account) error {
 	for _, pool := range pools {
 		bzAddr, err := hex.DecodeString(pool.GetAddress())
 		if err != nil {
@@ -324,7 +324,7 @@ func (t *TreeStore) updatePoolTrees(pools []*coreTypes.Account) error {
 // Data Tree Helpers //
 ///////////////////////
 
-func (t *TreeStore) updateTransactionsTree(indexedTxs []*coreTypes.IndexedTransaction) error {
+func (t *treeStore) updateTransactionsTree(indexedTxs []*coreTypes.IndexedTransaction) error {
 	for _, idxTx := range indexedTxs {
 		txBz := idxTx.GetTx()
 		txHash := crypto.SHA3Hash(txBz)
@@ -335,7 +335,7 @@ func (t *TreeStore) updateTransactionsTree(indexedTxs []*coreTypes.IndexedTransa
 	return nil
 }
 
-func (t *TreeStore) updateParamsTree(params []*coreTypes.Param) error {
+func (t *treeStore) updateParamsTree(params []*coreTypes.Param) error {
 	for _, param := range params {
 		paramBz, err := codec.GetCodec().Marshal(param)
 		paramKey := crypto.SHA3Hash([]byte(param.Name))
@@ -350,7 +350,7 @@ func (t *TreeStore) updateParamsTree(params []*coreTypes.Param) error {
 	return nil
 }
 
-func (t *TreeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
+func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 	for _, flag := range flags {
 		flagBz, err := codec.GetCodec().Marshal(flag)
 		flagKey := crypto.SHA3Hash([]byte(flag.Name))
@@ -365,7 +365,7 @@ func (t *TreeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 	return nil
 }
 
-func (t *TreeStore) updateIBCTree(keys, values [][]byte) error {
+func (t *treeStore) updateIBCTree(keys, values [][]byte) error {
 	if len(keys) != len(values) {
 		return fmt.Errorf("keys and values must be the same length")
 	}

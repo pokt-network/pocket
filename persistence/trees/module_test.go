@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
@@ -35,12 +36,21 @@ func TestTreeStore_Create(t *testing.T) {
 	persistenceMock.EXPECT().NewRWContext(int64(0)).AnyTimes()
 	persistenceMock.EXPECT().GetTxIndexer().AnyTimes()
 
-	treemod, err := trees.Create(mockBus,
-		trees.WithTreeStoreDirectory(":memory:"))
+	treemod, err := trees.Create(mockBus, trees.WithTreeStoreDirectory(":memory:"))
 	assert.NoError(t, err)
-	treemod.GetModuleName()
+
 	got := treemod.GetBus()
 	assert.Equal(t, got, mockBus)
+
+	// root hash should be empty for empty tree
+	root, ns := treemod.GetTree(trees.TransactionsTreeName)
+	require.Equal(t, root, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+
+	// nodestore should have no values in it
+	keys, vals, err := ns.GetAll(nil, false)
+	require.NoError(t, err)
+	require.Empty(t, keys, vals)
+
 }
 
 func TestTreeStore_DebugClearAll(t *testing.T) {
@@ -78,22 +88,45 @@ func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisS
 	persistenceModuleMock := mockModules.NewMockPersistenceModule(ctrl)
 	readCtxMock := mockModules.NewMockPersistenceReadContext(ctrl)
 
-	readCtxMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
-	readCtxMock.EXPECT().GetAllStakedActors(gomock.Any()).DoAndReturn(func(height int64) ([]*coreTypes.Actor, error) {
-		return testutil.Concatenate[*coreTypes.Actor](
-			genesisState.GetValidators(),
-			genesisState.GetServicers(),
-			genesisState.GetFishermen(),
-			genesisState.GetApplications(),
-		), nil
-	}).AnyTimes()
-	persistenceModuleMock.EXPECT().NewReadContext(gomock.Any()).Return(readCtxMock, nil).AnyTimes()
-	readCtxMock.EXPECT().Release().AnyTimes()
+	readCtxMock.EXPECT().
+		GetAllValidators(gomock.Any()).
+		Return(genesisState.GetValidators(), nil).AnyTimes()
 
-	persistenceModuleMock.EXPECT().GetBus().Return(busMock).AnyTimes()
-	persistenceModuleMock.EXPECT().SetBus(busMock).AnyTimes()
-	persistenceModuleMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
-	busMock.RegisterModule(persistenceModuleMock)
+	readCtxMock.EXPECT().
+		GetAllStakedActors(gomock.Any()).
+		DoAndReturn(func(height int64) ([]*coreTypes.Actor, error) {
+			return testutil.Concatenate[*coreTypes.Actor](
+				genesisState.GetValidators(),
+				genesisState.GetServicers(),
+				genesisState.GetFishermen(),
+				genesisState.GetApplications(),
+			), nil
+		}).
+		AnyTimes()
+
+	persistenceModuleMock.EXPECT().
+		NewReadContext(gomock.Any()).
+		Return(readCtxMock, nil).
+		AnyTimes()
+
+	readCtxMock.EXPECT().
+		Release().
+		AnyTimes()
+
+	persistenceModuleMock.EXPECT().
+		GetBus().
+		Return(busMock).
+		AnyTimes()
+	persistenceModuleMock.EXPECT().
+		SetBus(busMock).
+		AnyTimes()
+	persistenceModuleMock.EXPECT().
+		GetModuleName().
+		Return(modules.PersistenceModuleName).
+		AnyTimes()
+
+	busMock.
+		RegisterModule(persistenceModuleMock)
 
 	return persistenceModuleMock
 }
@@ -106,15 +139,35 @@ func validatorId(i int) string {
 func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.MockBus {
 	t.Helper()
 	ctrl := gomock.NewController(t)
+
 	mockBus := mockModules.NewMockBus(ctrl)
-	mockBus.EXPECT().GetRuntimeMgr().Return(runtimeMgr).AnyTimes()
-	mockBus.EXPECT().RegisterModule(gomock.Any()).DoAndReturn(func(m modules.Submodule) {
-		m.SetBus(mockBus)
-	}).AnyTimes()
+	mockBus.EXPECT().
+		GetRuntimeMgr().
+		Return(runtimeMgr).
+		AnyTimes()
+
+	mockBus.EXPECT().
+		RegisterModule(gomock.Any()).
+		DoAndReturn(func(m modules.Submodule) {
+			m.SetBus(mockBus)
+		}).
+		AnyTimes()
+
 	mockModulesRegistry := mockModules.NewMockModulesRegistry(ctrl)
-	mockModulesRegistry.EXPECT().GetModule(peerstore_provider.PeerstoreProviderSubmoduleName).Return(nil, runtime.ErrModuleNotRegistered(peerstore_provider.PeerstoreProviderSubmoduleName)).AnyTimes()
-	mockModulesRegistry.EXPECT().GetModule(modules.CurrentHeightProviderSubmoduleName).Return(nil, runtime.ErrModuleNotRegistered(modules.CurrentHeightProviderSubmoduleName)).AnyTimes()
-	mockBus.EXPECT().GetModulesRegistry().Return(mockModulesRegistry).AnyTimes()
-	mockBus.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
+	mockModulesRegistry.EXPECT().
+		GetModule(peerstore_provider.PeerstoreProviderSubmoduleName).
+		Return(nil, runtime.ErrModuleNotRegistered(peerstore_provider.PeerstoreProviderSubmoduleName)).
+		AnyTimes()
+	mockModulesRegistry.EXPECT().
+		GetModule(modules.CurrentHeightProviderSubmoduleName).
+		Return(nil, runtime.ErrModuleNotRegistered(modules.CurrentHeightProviderSubmoduleName)).
+		AnyTimes()
+	mockBus.EXPECT().
+		GetModulesRegistry().
+		Return(mockModulesRegistry).
+		AnyTimes()
+	mockBus.EXPECT().
+		PublishEventToBus(gomock.Any()).
+		AnyTimes()
 	return mockBus
 }
