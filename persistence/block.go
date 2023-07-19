@@ -7,7 +7,9 @@ import (
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -86,7 +88,8 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 	// TECHDEBT: This will lead to different timestamp in each node's block store because `prepareBlock` is called locally. Needs to be revisisted and decided on a proper implementation.
 	timestamp := timestamppb.Now()
 
-	valSetHash, err := p.GetValidatorSetHash(p.Height)
+	// Get the current validator set and next validator set hashes
+	currSetHash, nextSetHash, err := p.getCurrentAndNextValSetHashes(proposerAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +104,8 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 		QuorumCertificate: quorumCert,
 		Timestamp:         timestamp,
 		StateTreeHashes:   p.stateTrees.GetTreeHashes(),
-		NextValSetHash:    hex.EncodeToString(valSetHash),
+		ValSetHash:        currSetHash,
+		NextValSetHash:    nextSetHash,
 	}
 	block := &coreTypes.Block{
 		BlockHeader:  blockHeader,
@@ -124,4 +128,44 @@ func (p *PostgresContext) insertBlock(block *coreTypes.Block) error {
 
 	_, err := tx.Exec(ctx, types.InsertBlockQuery(blockHeader.Height, blockHeader.StateHash, blockHeader.ProposerAddress, blockHeader.QuorumCertificate))
 	return err
+}
+
+func (p *PostgresContext) getCurrentAndNextValSetHashes(proposerAddr []byte) (string, string, error) {
+	// Get the next validator set
+	nextValSet, err := p.GetValidatorSet(p.Height)
+	if err != nil {
+		return "", "", err
+	}
+	nextValSetBz, err := codec.GetCodec().Marshal(nextValSet)
+	if err != nil {
+		return "", "", err
+	}
+	nValSetHash := crypto.SHA3Hash(nextValSetBz)
+	nextValSetHash := hex.EncodeToString(nValSetHash)
+
+	if p.Height == 0 {
+		return "", nextValSetHash, nil
+	}
+
+	// Get the current validator set
+	valSet, err := p.GetValidatorSet(p.Height - 1)
+	if err != nil {
+		return "", "", err
+	}
+	proposer, err := p.GetValidator(proposerAddr, p.Height-1)
+	if err != nil {
+		return "", "", err
+	}
+	valSet.Proposer = &coreTypes.SimpleValidator{
+		Address: proposer.GetAddress(),
+		PubKey:  proposer.GetPublicKey(),
+	}
+	valSetBz, err := codec.GetCodec().Marshal(valSet)
+	if err != nil {
+		return "", "", err
+	}
+	valSetHash := crypto.SHA3Hash(valSetBz)
+	currentValSetHash := hex.EncodeToString(valSetHash)
+
+	return currentValSetHash, nextValSetHash, nil
 }

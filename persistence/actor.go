@@ -1,12 +1,10 @@
 package persistence
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 func (p *PostgresContext) GetActor(actorType coreTypes.ActorType, address []byte, height int64) (*coreTypes.Actor, error) {
@@ -82,23 +80,45 @@ func (p *PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Acto
 	return
 }
 
-// GetValidatorSetHash returns the validator set hash for a given height
-// the hash is calculated by appending each validators public key to a
-// buffer and hashing the buffer.
-func (p *PostgresContext) GetValidatorSetHash(height int64) ([]byte, error) {
+// GetValidatorSet returns the validator set for a given height
+func (p *PostgresContext) GetValidatorSet(height int64) (*coreTypes.ValidatorSet, error) {
 	validators, err := p.GetAllValidators(height) // sorted by address+height desc
 	if err != nil {
 		return nil, err
 	}
-	buf := new(bytes.Buffer)
+	valSet := new(coreTypes.ValidatorSet)
 	for _, val := range validators {
-		_, err := buf.WriteString(val.GetPublicKey())
-		if err != nil {
-			return nil, err
+		validator := &coreTypes.SimpleValidator{
+			Address: val.GetAddress(),
+			PubKey:  val.GetPublicKey(),
 		}
+		valSet.Validators = append(valSet.Validators, validator)
 	}
-	valHash := crypto.SHA3Hash(buf.Bytes())
-	return valHash, nil
+	return valSet, nil
+}
+
+// GetValidatorSetWithProposer returns the validator set for a given height with
+// the Proposer field set
+//
+// NOTE: This will only succeed when the block has been committed
+func (p *PostgresContext) GetValidatorSetWithProposer(height int64) (*coreTypes.ValidatorSet, error) {
+	valSet, err := p.GetValidatorSet(height)
+	if err != nil {
+		return nil, err
+	}
+	block, err := p.blockStore.GetBlock(uint64(height))
+	if err != nil {
+		return nil, err
+	}
+	proposer, err := p.GetValidator(block.BlockHeader.ProposerAddress, height)
+	if err != nil {
+		return nil, err
+	}
+	valSet.Proposer = &coreTypes.SimpleValidator{
+		Address: proposer.GetAddress(),
+		PubKey:  proposer.GetPublicKey(),
+	}
+	return valSet, nil
 }
 
 func (p *PostgresContext) GetAllServicers(height int64) (sn []*coreTypes.Actor, err error) {

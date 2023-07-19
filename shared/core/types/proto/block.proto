@@ -15,10 +15,21 @@ message BlockHeader {
   bytes quorumCertificate = 6; // the quorum certificate containing signature from 2/3+ validators at this height
   google.protobuf.Timestamp timestamp = 7; // unixnano timestamp of when the block was created
   map<string, string> state_tree_hashes = 8; // map[TreeName]hex(TreeRootHash)
-  string next_val_set_hash = 9; // the hash of the next validator set; needed to ensure the validity of staked validators proposing the next block
+  string val_set_hash = 9; // the hash of the current validator set who were able to sign the current block
+  string next_val_set_hash = 10; // the hash of the next validator set; needed to ensure the validity of staked validators proposing the next block
 }
 
 message Block {
   core.BlockHeader blockHeader = 1;
   repeated bytes transactions = 2;
+}
+
+message ValidatorSet {
+    repeated SimpleValidator validators = 1;
+    SimpleValidator proposer = 2;
+}
+
+message SimpleValidator {
+    string address = 1;
+    string pub_key = 2;
 }

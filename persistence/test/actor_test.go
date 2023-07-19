@@ -1,12 +1,12 @@
 package test
 
 import (
-	"bytes"
 	"encoding/hex"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
@@ -41,38 +41,47 @@ func TestGetAllStakedActors(t *testing.T) {
 	require.Equal(t, genesisStateNumFishermen, actualFishermen)
 }
 
-func TestGetValidatorSetHash(t *testing.T) {
-	currHeight := int64(0)
-	db := NewTestPostgresContext(t, currHeight)
-	validators, err := db.GetAllValidators(currHeight)
-	require.NoError(t, err)
-	require.Len(t, validators, genesisStateNumValidators)
-
-	buf := new(bytes.Buffer)
-	for _, val := range validators {
-		_, err := buf.WriteString(val.PublicKey)
-		require.NoError(t, err)
+func TestGetValidatorSet_Hash(t *testing.T) {
+	expectedHashes := []string{
+		"5831e3e6a8d3beda0adb6027126a4bc3b0181836eebcc45a83dc2970ee9b4468",
+		"1f6faa8782a4608341fef83ee72c9e9cd3f96e042f2ddfdeebda8d971bb2ac13",
 	}
-	expectedHash := crypto.SHA3Hash(buf.Bytes())
 
-	actualHash, err := db.GetValidatorSetHash(currHeight)
+	db := NewTestPostgresContext(t, 0)
+	currValSet, err := db.GetValidatorSet(0)
 	require.NoError(t, err)
-	require.Equal(t, expectedHash, actualHash)
+	currValSetHash := hashValSet(t, currValSet)
+	require.Equal(t, expectedHashes[0], currValSetHash)
 
-	// ensure deterministic
-	require.Equal(t, hex.EncodeToString(expectedHash), "8bc3057b495c988e831052a28946cd5e291e3b4ec51a22680fde12657a277f79")
-	require.Equal(t, hex.EncodeToString(actualHash), "8bc3057b495c988e831052a28946cd5e291e3b4ec51a22680fde12657a277f79")
-
-	// ensure hash remains the same with no changes
-	currHeight = int64(1)
+	currHeight := int64(1)
 	db.Height = currHeight
 
-	actualHash, err = db.GetValidatorSetHash(currHeight)
+	currValSet, err = db.GetValidatorSet(currHeight - 1)
 	require.NoError(t, err)
-	require.Equal(t, expectedHash, actualHash)
+	currValSetHash = hashValSet(t, currValSet)
+	nextValSet, err := db.GetValidatorSet(currHeight)
+	require.NoError(t, err)
+	nextValSetHash := hashValSet(t, nextValSet)
+
+	require.Equal(t, expectedHashes[0], currValSetHash)
+	require.Equal(t, expectedHashes[0], nextValSetHash)
+
+	// ensure hash remains the same with no changes
+	currHeight = int64(2)
+	db.Height = currHeight
+
+	currValSet, err = db.GetValidatorSet(currHeight - 1)
+	require.NoError(t, err)
+	currValSetHash = hashValSet(t, currValSet)
+	nextValSet, err = db.GetValidatorSet(currHeight)
+	require.NoError(t, err)
+	nextValSetHash = hashValSet(t, nextValSet)
+
+	require.Equal(t, expectedHashes[0], currValSetHash)
+	require.Equal(t, expectedHashes[0], nextValSetHash)
 
 	// ensure hash changes with changes
-	currHeight = int64(2)
+	currHeight = int64(3)
 	db.Height = currHeight
 
 	err = db.InsertValidator(
@@ -87,8 +96,23 @@ func TestGetValidatorSetHash(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	actualHash, err = db.GetValidatorSetHash(currHeight)
+	currValSet, err = db.GetValidatorSet(currHeight - 1)
 	require.NoError(t, err)
-	require.NotEqual(t, expectedHash, actualHash)
-	require.Equal(t, hex.EncodeToString(actualHash), "560e954828499c90c5431576b78927cb0f3613435e8d302f0302113806b11d25")
+	currValSetHash = hashValSet(t, currValSet)
+	nextValSet, err = db.GetValidatorSet(currHeight)
+	require.NoError(t, err)
+	nextValSetHash = hashValSet(t, nextValSet)
+
+	require.Equal(t, expectedHashes[0], currValSetHash)
+	require.Equal(t, expectedHashes[1], nextValSetHash)
+}
+
+func hashValSet(t *testing.T, valSet *coreTypes.ValidatorSet) string {
+	t.Helper()
+
+	bz, err := codec.GetCodec().Marshal(valSet)
+	require.NoError(t, err)
+
+	hash := crypto.SHA3Hash(bz)
+	return hex.EncodeToString(hash)
 }
