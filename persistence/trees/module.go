@@ -8,10 +8,10 @@ import (
 	"github.com/pokt-network/smt"
 )
 
-var _ modules.TreeStoreModule = &TreeStore{}
+var _ modules.TreeStoreModule = &treeStore{}
 
-func (*TreeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeStoreModule, error) {
-	m := &TreeStore{}
+func (*treeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeStoreModule, error) {
+	m := &treeStore{}
 
 	bus.RegisterModule(m)
 
@@ -27,13 +27,13 @@ func (*TreeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (m
 }
 
 func Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeStoreModule, error) {
-	return new(TreeStore).Create(bus, options...)
+	return new(treeStore).Create(bus, options...)
 }
 
 // WithLogger assigns a logger for the tree store
 func WithLogger(logger *modules.Logger) modules.TreeStoreOption {
 	return func(m modules.TreeStoreModule) {
-		if mod, ok := m.(*TreeStore); ok {
+		if mod, ok := m.(*treeStore); ok {
 			mod.logger = logger
 		}
 	}
@@ -43,16 +43,16 @@ func WithLogger(logger *modules.Logger) modules.TreeStoreOption {
 // saves its data.
 func WithTreeStoreDirectory(path string) modules.TreeStoreOption {
 	return func(m modules.TreeStoreModule) {
-		mod, ok := m.(*TreeStore)
+		mod, ok := m.(*treeStore)
 		if ok {
 			mod.treeStoreDir = path
 		}
 	}
 }
 
-func (t *TreeStore) GetModuleName() string { return modules.TreeStoreSubmoduleName }
+func (t *treeStore) GetModuleName() string { return modules.TreeStoreSubmoduleName }
 
-func (t *TreeStore) setupTrees() error {
+func (t *treeStore) setupTrees() error {
 	if t.treeStoreDir == ":memory:" {
 		return t.setupInMemory()
 	}
@@ -83,7 +83,7 @@ func (t *TreeStore) setupTrees() error {
 	return nil
 }
 
-func (t *TreeStore) setupInMemory() error {
+func (t *treeStore) setupInMemory() error {
 	nodeStore := kvstore.NewMemKVStore()
 	t.rootTree = &stateTree{
 		name:      RootTreeName,
