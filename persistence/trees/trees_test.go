@@ -19,7 +19,6 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/pokt-network/smt"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -47,22 +46,28 @@ var (
 func TestTreeStore_Update(t *testing.T) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	t.Cleanup(func() {
-		if err := pool.Purge(resource); err != nil {
-			log.Fatalf("could not purge resource: %s", err)
-		}
+		require.NoError(t, pool.Purge(resource))
 	})
 
 	t.Run("should update actor tree and commit", func(t *testing.T) {
 		pmod := newTestPersistenceModule(t, dbUrl)
 		context := NewTestPostgresContext(t, 0, pmod)
 
-		actor, err := createAndInsertDefaultTestApp(t, context)
-		assert.NoError(t, err)
+		require.NoError(t, context.NewSavePoint())
 
-		t.Logf("actor inserted %+v", actor)
-		hash, err := context.ComputeStateHash()
-		assert.NoError(t, err)
-		assert.NotEmpty(t, hash)
+		hash1, err := context.ComputeStateHash()
+		require.NoError(t, err)
+		require.NotEmpty(t, hash1)
+
+		_, err = createAndInsertDefaultTestApp(t, context)
+		require.NoError(t, err)
+
+		require.NoError(t, context.NewSavePoint())
+
+		hash2, err := context.ComputeStateHash()
+		require.NoError(t, err)
+		require.NotEmpty(t, hash2)
+		require.NotEqual(t, hash1, hash2)
 	})
 }
 
@@ -96,14 +101,15 @@ func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.Persiste
 	runtimeMgr := runtime.NewManager(cfg, genesisState)
 
 	bus, err := runtime.CreateBus(runtimeMgr)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	persistenceMod, err := persistence.Create(bus)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	return persistenceMod.(modules.PersistenceModule)
 }
 func createAndInsertDefaultTestApp(t *testing.T, db *persistence.PostgresContext) (*coreTypes.Actor, error) {
+	t.Helper()
 	app := newTestApp(t)
 
 	addrBz, err := hex.DecodeString(app.Address)
@@ -145,6 +151,7 @@ func newTestApp(t *testing.T) *coreTypes.Actor {
 }
 
 func NewTestPostgresContext(t testing.TB, height int64, testPersistenceMod modules.PersistenceModule) *persistence.PostgresContext {
+	t.Helper()
 	rwCtx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
 		log.Fatalf("Error creating new context: %v\n", err)
@@ -164,6 +171,8 @@ func NewTestPostgresContext(t testing.TB, height int64, testPersistenceMod modul
 	return postgresCtx
 }
 
+// TECHDEBT: Extract these test functions out into a central test location
+// REFERENCE: https://www.notion.so/pocketnetwork/Testutils-9cba9010e18447248e9daa8a3b87e3f2#f1d7f404918541bc86ccde07980e3f09
 func NewTestPersistenceModule(t *testing.T, databaseUrl string) modules.PersistenceModule {
 	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
 	defer teardownDeterministicKeygen()

@@ -26,29 +26,26 @@ func TestTreeStore_AtomicUpdates(t *testing.T) {
 		logger:       &zerolog.Logger{},
 		treeStoreDir: ":memory:",
 	}
-	err := ts.setupTrees()
-	require.NoError(t, err)
-	require.NotEmpty(t, ts)
+	require.NoError(t, ts.setupTrees())
+	require.NotEmpty(t, ts.merkleTrees[TransactionsTreeName])
 
 	hash0 := ts.getStateHash()
 	require.NotEmpty(t, hash0)
 
-	err = ts.Savepoint()
-	require.NoError(t, err)
+	require.NoError(t, ts.Savepoint())
 
 	for _, treeName := range stateTreeNames {
 		err := ts.merkleTrees[treeName].tree.Update([]byte("foo"), []byte("bar"))
 		require.NoError(t, err)
 	}
-	err = ts.Commit()
-	require.NoError(t, err)
+
+	require.NoError(t, ts.Commit())
 
 	hash1 := ts.getStateHash()
 	require.NotEmpty(t, hash1)
 	require.NotEqual(t, hash0, hash1)
 
-	err = ts.Savepoint()
-	require.NoError(t, err)
+	require.NoError(t, ts.Savepoint())
 	require.NotEmpty(t, ts.Prev.MerkleTrees)
 	require.NotEmpty(t, ts.Prev.RootTree)
 	require.Equal(t, hash1, hex.EncodeToString(ts.Prev.RootTree.tree.Root()))
@@ -62,8 +59,7 @@ func TestTreeStore_AtomicUpdates(t *testing.T) {
 	}
 
 	for _, treeName := range stateTreeNames {
-		err := ts.merkleTrees[treeName].tree.Update([]byte("fiz"), []byte("buz"))
-		require.NoError(t, err)
+		require.NoError(t, ts.merkleTrees[treeName].tree.Update([]byte("fiz"), []byte("buz")))
 	}
 
 	ts.Rollback()
