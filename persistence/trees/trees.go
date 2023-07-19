@@ -134,7 +134,7 @@ func (t *TreeStore) DebugClearAll() error {
 }
 
 // updateMerkleTrees updates all of the merkle trees in order defined by `numMerkleTrees`
-// * it returns the new state hash capturing the state of all the trees or an error if one occurred.
+// * It returns the new state hash capturing the state of all the trees or an error if one occurred.
 // * This function does not commit state to disk. The caller must manually invoke `Commit` to persist
 // changes to disk.
 func (t *TreeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {

@@ -434,9 +434,13 @@ This is quite **important** because it unlocks a powerful concept **Dependency I
 This enables the developer to define different implementations of a module and to register the one that is needed at runtime. This is because we can only have one module registered with a unique name and also because, by convention, we keep module names defined as constants.
 This is useful not only for prototyping but also for different use cases such as the `p1` CLI and the `pocket` binary where different implementations of the same module are necessary due to the fact that the `p1` CLI doesn't have a persistence module but still needs to know what's going on in the network.
 
-Submodules can be registered the same way full Modules can be, by passing the Submodule to the RegisterModule function. Submodules should typically be registered to the bus for dependency injection reasons. Modules and submodules are all responsible for registering themselves with the Bus. This pattern emerged organically during development and is now considered best practice. Additionally, modules should not maintain pointer references to modules and should instead call the Bus to get a new reference to a module whenever they need to call that module.
+**Registration**: Submodules can be registered the same way full Modules by passing the Submodule to the `RegisterModule` function. Submodules should typically be registered to the bus for dependency injection reasons.
 
-Submodule interfaces are typically defined in the `shared/modules` package with the rest of the module interfaces in a file named `XXX_submodule.go`, where XXX denotes the name of the submodule. That same file should contain the factory function definition for a submodule which should be embedded by the `Submodule` interface type. Factory function definitions should typically not be exported.
+**IMPORTANT**: Modules and Submodules are all responsible for registering themselves with the Bus. This pattern emerged organically during development and is now considered best practice.
+
+**Module Access**: Full Modules should not maintain pointer references to other full Modules. Instead, they should call the Bus to get a new module reference whenever needed.
+
+Submodule interfaces are typically defined in the `shared/modules` package with the rest of the module interfaces in a file named `XXX_submodule.go`, where XXX denotes the name of the Submodule. That same file SHOULD contain the factory function definition for a Submodule where the `Submodule` interface type MUST be embedded. Factory function definitions SHOULD NOT be exported.
 
 For example, in the TreeStore code below, the `treeStoreFactory` is defined and then embedded in the `TreeStoreModule`, which also embeds the Submodule interface. Typically these factory functions should be kept private at the package level.
 
