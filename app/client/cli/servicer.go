@@ -136,12 +136,12 @@ func validateServicer(session *rpc.Session, servicerAddress string) (*rpc.Protoc
 }
 
 // getSessionFromCache uses the client-side session cache to fetch a session for app+chain combination at the provided height, if one has already been retrieved and cached.
-func getSessionFromCache(cache *cache.SessionCache, appAddress, chain string, height int64) (*rpc.Session, error) {
-	if cache == nil {
+func getSessionFromCache(c *cache.SessionCache, appAddress, chain string, height int64) (*rpc.Session, error) {
+	if c == nil {
 		return nil, errNoSessionCache
 	}
 
-	session, err := cache.Get(appAddress, chain)
+	session, err := c.Get(appAddress, chain)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errSessionNotFoundInCache, err.Error())
 	}
