@@ -3,12 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	"github.com/pokt-network/pocket/app/client/cli/flags"
 	pocketLogger "github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/crypto"
 	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
@@ -19,7 +23,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-const cliPath = "/usr/local/bin/client"
+const cliPath = "/usr/local/bin/p1"
 const validatorServiceUrlFormat = "validator-%s-pocket:%d"
 
 var (
@@ -31,13 +35,45 @@ var (
 	// autoStakeSkipStakeForValidatorIds is a list of validator ids that should not be auto-staked
 	// it is used to avoid auto-staking the validators that are already staked as part of genesis.
 	autoStakeSkipStakeForValidatorIds = []string{"001", "002", "003", "004"}
+
+	clusterManagerCmd = &cobra.Command{
+		Use:   "cluster-manager",
+		Short: "Start the Pocket Network Cluster Manager service",
+		Long: `Start the Pocket Network Cluster Manager service which listens for and reacts to events coming over the k8s.io API's watch.Interface#ResultChan().
+
+See the following k8s.io documentation for more information:
+- https://pkg.go.dev/k8s.io/client-go/kubernetes/typed/core/v1@v0.26.1#ServiceInterface
+- https://pkg.go.dev/k8s.io/apimachinery/pkg/watch#Interface,
+- https://pkg.go.dev/k8s.io/apimachinery/pkg/watch#Event`,
+		Run:  runClusterManagerCmd,
+		Args: cobra.ExactArgs(0),
+	}
 )
 
 func init() {
-	rpcURL = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", defaults.Validator1EndpointK8S), defaults.DefaultRPCPort)
+	// setup the `remote_cli_url` flag to be consistent with the CLI except for
+	// the default, which is set to the URL of the first k8s validator's RPC
+	// endpoint.
+	clusterManagerCmd.PersistentFlags().StringVar(
+		&flags.RemoteCLIURL,
+		"remote_cli_url",
+		defaults.Validator1EndpointK8SHostname,
+		"takes a remote endpoint in the form of <protocol>://<host>:<port> (uses RPC Port)",
+	)
+
+	// ensure that the env var can override the flag
+	if err := viper.BindPFlag("remote_cli_url", clusterManagerCmd.PersistentFlags().Lookup("remote_cli_url")); err != nil {
+		log.Fatalf("Error binding remote_cli_url flag: %v", err)
+	}
 }
 
 func main() {
+	if err := clusterManagerCmd.Execute(); err != nil {
+		log.Fatalf("Error executing cluster-manager command: %v", err)
+	}
+}
+
+func runClusterManagerCmd(_ *cobra.Command, _ []string) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err.Error())
@@ -46,6 +82,9 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
+
+	// Monitor for crashed pods and delete them
+	go initCrashedPodsDeleter(clientset)
 
 	validatorKeysMap, err := pocketk8s.FetchValidatorPrivateKeys(clientset)
 	if err != nil {

@@ -5,21 +5,25 @@ package peerstore_provider
 import (
 	"github.com/pokt-network/pocket/logger"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"go.uber.org/multierr"
 )
 
-const ModuleName = "peerstore_provider"
+const PeerstoreProviderSubmoduleName = "peerstore_provider"
 
 // PeerstoreProvider is an interface that provides Peerstore accessors
 type PeerstoreProvider interface {
-	modules.Module
+	modules.Submodule
 
+	// GetStakedPeerstoreAtHeight returns a peerstore containing all staked peers
+	// at a given height. These peers communicate via the p2p module's staked actor
+	// router.
 	GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error)
-	GetP2PConfig() *configs.P2PConfig
+	// GetUnstakedPeerstore returns a peerstore containing all peers which
+	// communicate via the p2p module's unstaked actor router.
+	GetUnstakedPeerstore() (typesP2P.Peerstore, error)
 }
 
 func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (pstore typesP2P.Peerstore, errs error) {

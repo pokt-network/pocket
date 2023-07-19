@@ -4,7 +4,7 @@ package modules
 
 type ModulesRegistry interface {
 	// RegisterModule registers a Module with the ModuleRegistry
-	RegisterModule(module Module)
+	RegisterModule(module InjectableModule)
 	// GetModule returns a Module by name or nil if not found in the ModuleRegistry
-	GetModule(moduleName string) (Module, error)
+	GetModule(moduleName string) (InjectableModule, error)
 }

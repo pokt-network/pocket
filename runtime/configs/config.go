@@ -3,6 +3,7 @@ package configs
 import (
 	"encoding/json"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -28,6 +29,11 @@ type Config struct {
 	Logger      *LoggerConfig      `json:"logger"`
 	RPC         *RPCConfig         `json:"rpc"`
 	Keybase     *KeybaseConfig     `json:"keybase"` // Determines and configures which keybase to use, `file` or `vault`. IMPROVE(#626): See for rationale around proto design. We have proposed a better config design, but did not implement it due to viper limitations
+	Validator   *ValidatorConfig   `json:"validator"`
+	Servicer    *ServicerConfig    `json:"servicer"`
+	Fisherman   *FishermanConfig   `json:"fisherman"`
+	IBC         *IBCConfig         `json:"ibc"`
+	IBCHost     *IBCHostConfig     `json:"ibc_host"`
 }
 
 // ParseConfig parses the config file and returns a Config struct
@@ -93,7 +99,6 @@ func ParseConfig(cfgFile string) *Config {
 func setViperDefaults(cfg *Config) {
 	// convert the config struct to a map with the json tags as keys
 	cfgData, err := json.Marshal(cfg)
-
 	if err != nil {
 		log.Fatalf("[ERROR] failed to marshal config %s", err.Error())
 	}
@@ -152,6 +157,19 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			VaultToken:     defaults.DefaultKeybaseVaultToken,
 			VaultMountPath: defaults.DefaultKeybaseVaultMountPath,
 		},
+		Validator: &ValidatorConfig{},
+		// INCOMPLETE(#858): use defaultServicerConfig once the default configuration issue is resolved, i.e. once configuring fisherman disables default servicer
+		Servicer:  &ServicerConfig{},
+		Fisherman: &FishermanConfig{},
+		IBC: &IBCConfig{
+			Enabled:   defaults.DefaultIBCEnabled,
+			StoresDir: defaults.DefaultIBCStoresDir,
+			Host: &IBCHostConfig{
+				BulkStoreCacher: &BulkStoreCacherConfig{
+					MaxHeightCached: defaults.DefaultIBCCacheMaxHeightCached,
+				},
+			},
+		},
 	}
 
 	for _, option := range options {
@@ -171,6 +189,7 @@ func WithPK(pk string) func(*Config) {
 		cfg.PrivateKey = pk
 		cfg.Consensus.PrivateKey = pk
 		cfg.P2P.PrivateKey = pk
+		cfg.IBC.Host.PrivateKey = pk
 	}
 }
 
@@ -178,5 +197,49 @@ func WithPK(pk string) func(*Config) {
 func WithNodeSchema(schema string) func(*Config) {
 	return func(cfg *Config) {
 		cfg.Persistence.NodeSchema = schema
+	}
+}
+
+// CreateTempConfig creates a temporary config for testing purposes only
+func CreateTempConfig(cfg *Config) (*Config, error) {
+	tmpfile, err := os.CreateTemp("", "test_config_*.json")
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(tmpfile.Name())
+
+	content, err := json.Marshal(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := tmpfile.Write(content); err != nil {
+		return nil, err
+	}
+
+	if err := tmpfile.Close(); err != nil {
+		return nil, err
+	}
+
+	return ParseConfig(tmpfile.Name()), nil
+}
+
+// INCOMPLETE(#858): enable default servicer config once the default config is adjusted based on user-defined config
+// nolint:unused // Use the servicer default config once #858 is resolved: see above description
+func defaultServicerConfig() *ServicerConfig {
+	return &ServicerConfig{
+		Enabled:                   true,
+		RelayMiningVolumeAccuracy: 0.2,
+		Services: map[string]*ServiceConfig{
+			// TODO(#831): Design how Chain/Service IDs should be described/defined.
+			"POKT-LocalNet": {
+				Url:         "http://localhost",
+				TimeoutMsec: 5000,
+				BasicAuth: &BasicAuth{
+					UserName: "user",
+					Password: "password",
+				},
+			},
+		},
 	}
 }

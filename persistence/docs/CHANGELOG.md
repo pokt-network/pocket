@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.60] - 2023-06-26
+
+- Add place-holder for local context and servicer token usage support methods
+
+## [0.0.0.59] - 2023-06-14
+
+- Refactors the persistence treeStore to be an IntegratableModule
+
+## [0.0.0.58] - 2023-06-07
+
+- Adds a logger to TreeStore
+
+## [0.0.0.57] - 2023-06-07
+
+- Refactors the stateTrees implementation off of the PersistenceContext and into its in module
+- Implements the new Update and Commit pattern with the SMT trees in the trees module
+
+## [0.0.0.57] - 2023-06-06
+
+- Uses ":memory:" to signify when connecting to an in-memory database
+
+## [0.0.0.56] - 2023-06-02
+
+- Renamed an error used by Badger / KVStore
+- Improve comments used for mock generation
+
+## [0.0.0.55] - 2023-06-01
+
+- Integrate lazy loading SMT (release v0.5.0) into V1
+
+## [0.0.0.54] - 2023-05-24
+
+- Adds the BlockStore interface
+- Updates the PersistenceContext struct to use BlockStore interface
+
 ## [0.0.0.53] - 2023-05-16
 
 - Refactors BlockStore into an independent component

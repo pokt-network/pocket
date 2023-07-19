@@ -3,7 +3,7 @@
 - [KeyPair Interface](#keypair-interface)
   - [KeyPair Code Structure](#keypair-code-structure)
 - [Encryption and Armouring](#encryption-and-armouring)
-- [Child Key Generation](#slip-0010-hd-child-key-generation)
+- [SLIP-0010 HD Child Key Generation](#slip-0010-hd-child-key-generation)
 
 _DOCUMENT: Note that this README is a WIP and does not exhaustively document all the current types in this package_
 
@@ -39,6 +39,8 @@ shared
 
 The passphrase provided or `""` (default) is used for encrypting and armouring new or imported keys.
 
+Keys are encrypted using the `secretbox` library based on the NaCl (libsodium) primitives. Secretbox uses the `XSalsa20` stream cipher and `Poly1305` message authentication suite to encrypt and authenticate the key.
+
 The following flowchart shows this process:
 
 ```mermaid
@@ -49,13 +51,11 @@ flowchart LR
     subgraph S[scrypt lib]
         B["key(salt, pass, ...)"]
     end
-    subgraph AES-GCM
+    subgraph SecretBox
         direction TB
-        D["Cipher(key)"]
-        E["GCM(block)"]
-        F["Seal(plaintext, nonce)"]
-        D--Block-->E
-        E--Nonce-->F
+        D["Read(rand.Reader)"]
+        F["Seal(nonce, plaintext, key)"]
+        D--Nonce-->F
     end
     subgraph Armour
         direction LR
@@ -65,8 +65,8 @@ flowchart LR
         H --> armoured
     end
     C--Salt-->S
-    S--Key-->AES-GCM
-    AES-GCM--encryptedPrivateKey-->Armour
+    S--Key-->SecretBox
+    SecretBox--encryptedPrivateKey-->Armour
     C--Salt-->Armour
     kdf --> Armour
     hint --> Armour
@@ -90,19 +90,17 @@ flowchart LR
     subgraph S[scrypt lib]
         E["key(salt, pass, ...)"]
     end
-    subgraph AES-GCM
+    subgraph SecretBox
         direction TB
-        F["Cipher(key)"]
-        G["GCM(block)"]
-        H["Open(encryptedBytes, nonce)"]
-        F--Block-->G
-        G--Nonce-->H
+        F["encryptedBytes[:nonceSize]"]
+        H["Open(encryptedBytes[nonceSize:], nonce)"]
+        F--Nonce-->H
     end
     encryptedArmouredPrivateKey --Unmarshal--> U
     B--Salt-->S
-    C--encryptedBytes-->AES-GCM
-    S--Key-->AES-GCM
-    AES-GCM-->PrivateKey
+    C--encryptedBytes-->SecretBox
+    S--Key-->SecretBox
+    SecretBox-->PrivateKey
 ```
 
 ## SLIP-0010 HD Child Key Generation
@@ -111,6 +109,7 @@ flowchart LR
 
 The keys are generated using the BIP-44 path `m/44'/635'/%d'` where `%d` is the index of the child key - this allows for the deterministic generation of up to `2147483647` hardened ed25519 child keys per master key.
 Master key derivation is done as follows:
+
 ```mermaid
 flowchart LR
     subgraph HMAC
@@ -133,6 +132,7 @@ flowchart LR
 ```
 
 Child keys are derived from their parents as follows:
+
 ```mermaid
 flowchart LR
     subgraph HCHILD["HMAC-CHILD"]

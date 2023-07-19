@@ -12,7 +12,7 @@ import (
 var _ modules.RPCModule = &rpcModule{}
 
 type rpcModule struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 	base_modules.InterruptableModule
 
 	logger *modules.Logger

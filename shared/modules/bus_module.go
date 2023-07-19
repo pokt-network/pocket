@@ -21,7 +21,7 @@ type Bus interface {
 
 	// Dependency Injection / Service Discovery
 	GetModulesRegistry() ModulesRegistry
-	RegisterModule(module Module)
+	RegisterModule(module Submodule)
 
 	// Pocket modules
 	GetPersistenceModule() PersistenceModule
@@ -32,7 +32,17 @@ type Bus interface {
 	GetLoggerModule() LoggerModule
 	GetRPCModule() RPCModule
 	GetStateMachineModule() StateMachineModule
+	GetIBCModule() IBCModule
+
+	// Pocket submodules
+	GetCurrentHeightProvider() CurrentHeightProvider
 
 	// Runtime
 	GetRuntimeMgr() RuntimeMgr
+
+	// Submodules
+	GetTreeStore() TreeStoreModule
+	GetIBCHost() IBCHostSubmodule
+	GetBulkStoreCacher() BulkStoreCacher
+	GetEventLogger() EventLogger
 }

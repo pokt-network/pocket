@@ -43,6 +43,7 @@ privateKeySecretKeyRef:
 | config.consensus.pacemaker_config.manual | bool | `true` |  |
 | config.consensus.pacemaker_config.timeout_msec | int | `10000` |  |
 | config.consensus.private_key | string | `""` |  |
+| config.fisherman.enabled | bool | `false` |  |
 | config.logger.format | string | `"json"` |  |
 | config.logger.level | string | `"debug"` |  |
 | config.p2p.hostname | string | `""` |  |
@@ -67,6 +68,7 @@ privateKeySecretKeyRef:
 | config.rpc.port | string | `"50832"` |  |
 | config.rpc.timeout | int | `30000` |  |
 | config.rpc.use_cors | bool | `false` |  |
+| config.servicer.enabled | bool | `false` |  |
 | config.telemetry.address | string | `"0.0.0.0:9000"` |  |
 | config.telemetry.enabled | bool | `true` |  |
 | config.telemetry.endpoint | string | `"/metrics"` |  |
@@ -103,7 +105,7 @@ privateKeySecretKeyRef:
 | persistence.accessModes | list | `["ReadWriteOnce"]` | persistent Volume Access Modes |
 | persistence.annotations | object | `{}` | annotations of the persistent volume claim |
 | persistence.dataSource | object | `{}` | custom data source of the persistent volume claim |
-| persistence.enabled | bool | `true` | enable persistent volume claim |
+| persistence.enabled | bool | `false` | enable persistent volume claim |
 | persistence.existingClaim | string | `""` | name of an existing PVC to use for persistence |
 | persistence.reclaimPolicy | string | `"Delete"` | persistent volume reclaim policy |
 | persistence.selector | object | `{}` | selector to match an existing Persistent Volume |
@@ -127,4 +129,5 @@ privateKeySecretKeyRef:
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
+| serviceMonitor.enabled | bool | `false` | enable service monitor |
 | tolerations | list | `[]` |  |

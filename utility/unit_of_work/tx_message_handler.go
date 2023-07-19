@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"math/big"
 
+	ibcTypes "github.com/pokt-network/pocket/ibc/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -11,6 +12,7 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
+// handleMessage handles the message by applying the underlying business logic associated with it.
 func (u *baseUtilityUnitOfWork) handleMessage(msg typesUtil.Message) (err coreTypes.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageSend:
@@ -25,6 +27,10 @@ func (u *baseUtilityUnitOfWork) handleMessage(msg typesUtil.Message) (err coreTy
 		return u.handleUnpauseMessage(x)
 	case *typesUtil.MessageChangeParameter:
 		return u.handleMessageChangeParameter(x)
+	case *ibcTypes.UpdateIBCStore:
+		return u.handleUpdateIBCStore(x)
+	case *ibcTypes.PruneIBCStore:
+		return u.handlePruneIBCStore(x)
 	default:
 		return coreTypes.ErrUnknownMessage(x)
 	}
@@ -219,66 +225,18 @@ func (u *baseUtilityUnitOfWork) handleMessageChangeParameter(message *typesUtil.
 	return u.updateParam(message.ParameterKey, v)
 }
 
-// REFACTOR: This can be moved over into utility/types/message.go
-func (u *baseUtilityUnitOfWork) getSignerCandidates(msg typesUtil.Message) ([][]byte, coreTypes.Error) {
-	switch x := msg.(type) {
-	case *typesUtil.MessageSend:
-		return u.getMessageSendSignerCandidates(x)
-	case *typesUtil.MessageStake:
-		return u.getMessageStakeSignerCandidates(x)
-	case *typesUtil.MessageUnstake:
-		return u.getMessageUnstakeSignerCandidates(x)
-	case *typesUtil.MessageUnpause:
-		return u.getMessageUnpauseSignerCandidates(x)
-	case *typesUtil.MessageChangeParameter:
-		return u.getMessageChangeParameterSignerCandidates(x)
-	default:
-		return nil, coreTypes.ErrUnknownMessage(x)
+func (u *baseUtilityUnitOfWork) handleUpdateIBCStore(message *ibcTypes.UpdateIBCStore) coreTypes.Error {
+	if err := u.persistenceRWContext.SetIBCStoreEntry(message.Key, message.Value); err != nil {
+		return coreTypes.ErrIBCUpdatingStore(err)
 	}
+	return nil
 }
 
-func (u *baseUtilityUnitOfWork) getMessageStakeSignerCandidates(msg *typesUtil.MessageStake) ([][]byte, coreTypes.Error) {
-	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
-	if er != nil {
-		return nil, coreTypes.ErrNewPublicKeyFromBytes(er)
+func (u *baseUtilityUnitOfWork) handlePruneIBCStore(message *ibcTypes.PruneIBCStore) coreTypes.Error {
+	if err := u.persistenceRWContext.SetIBCStoreEntry(message.Key, nil); err != nil {
+		return coreTypes.ErrIBCUpdatingStore(err)
 	}
-	candidates := make([][]byte, 0)
-	candidates = append(candidates, msg.OutputAddress, pk.Address())
-	return candidates, nil
-}
-
-func (u *baseUtilityUnitOfWork) getMessageEditStakeSignerCandidates(msg *typesUtil.MessageEditStake) ([][]byte, coreTypes.Error) {
-	output, err := u.getActorOutputAddress(msg.ActorType, msg.Address)
-	if err != nil {
-		return nil, err
-	}
-	candidates := make([][]byte, 0)
-	candidates = append(candidates, output, msg.Address)
-	return candidates, nil
-}
-
-func (u *baseUtilityUnitOfWork) getMessageUnstakeSignerCandidates(msg *typesUtil.MessageUnstake) ([][]byte, coreTypes.Error) {
-	output, err := u.getActorOutputAddress(msg.ActorType, msg.Address)
-	if err != nil {
-		return nil, err
-	}
-	candidates := make([][]byte, 0)
-	candidates = append(candidates, output, msg.Address)
-	return candidates, nil
-}
-
-func (u *baseUtilityUnitOfWork) getMessageUnpauseSignerCandidates(msg *typesUtil.MessageUnpause) ([][]byte, coreTypes.Error) {
-	output, err := u.getActorOutputAddress(msg.ActorType, msg.Address)
-	if err != nil {
-		return nil, err
-	}
-	candidates := make([][]byte, 0)
-	candidates = append(candidates, output, msg.Address)
-	return candidates, nil
-}
-
-func (u *baseUtilityUnitOfWork) getMessageSendSignerCandidates(msg *typesUtil.MessageSend) ([][]byte, coreTypes.Error) {
-	return [][]byte{msg.FromAddress}, nil
+	return nil
 }
 
 func (u *baseUtilityUnitOfWork) checkBelowMaxChains(actorType coreTypes.ActorType, chains []string) coreTypes.Error {

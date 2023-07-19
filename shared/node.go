@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/consensus"
+	"github.com/pokt-network/pocket/ibc"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
@@ -47,6 +48,7 @@ func (m *Node) Create(bus modules.Bus, options ...modules.ModuleOption) (modules
 		logger.Create,
 		rpc.Create,
 		p2p.Create,
+		ibc.Create,
 	} {
 		if _, err := mod(bus); err != nil {
 			return nil, err
@@ -94,6 +96,10 @@ func (node *Node) Start() error {
 	}
 
 	if err := node.GetBus().GetRPCModule().Start(); err != nil {
+		return err
+	}
+
+	if err := node.GetBus().GetIBCModule().Start(); err != nil {
 		return err
 	}
 
@@ -177,7 +183,10 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
 	case messaging.ConsensusNewHeightEventType:
-		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
+		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
+		err_ibc := node.GetBus().GetIBCModule().HandleEvent(message.Content)
+		// TODO: Remove this lib once we move to Go 1.2
+		return multierr.Combine(err_p2p, err_ibc)
 	case messaging.StateMachineTransitionEventType:
 		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)

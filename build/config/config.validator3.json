@@ -1,0 +1,61 @@
+{
+  "root_directory": "/go/src/github.com/pocket-network",
+  "private_key": "25b385b367a827eaafcdb1003bd17a25f2ecc0d10d41f138846f52ae1015aa941041a9c76539791fef9bee5b4fcd5bf4a1a489e0790c44cbdfa776b901e13b50",
+  "network_id": "localnet",
+  "consensus": {
+    "max_mempool_bytes": 500000000,
+    "pacemaker_config": {
+      "timeout_msec": 10000,
+      "manual": true,
+      "debug_time_between_steps_msec": 1000
+    },
+    "private_key": "25b385b367a827eaafcdb1003bd17a25f2ecc0d10d41f138846f52ae1015aa941041a9c76539791fef9bee5b4fcd5bf4a1a489e0790c44cbdfa776b901e13b50",
+    "server_mode_enabled": true
+  },
+  "utility": {
+    "max_mempool_transaction_bytes": 1073741824,
+    "max_mempool_transactions": 9000
+  },
+  "persistence": {
+    "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
+    "node_schema": "validator3",
+    "block_store_path": "/var/blockstore",
+    "tx_indexer_path": "/var/txindexer",
+    "trees_store_dir": "/var/trees",
+    "max_conns_count": 50,
+    "min_conns_count": 1,
+    "max_conn_lifetime": "5m",
+    "max_conn_idle_time": "1m",
+    "health_check_period": "30s"
+  },
+  "p2p": {
+    "hostname": "validator3",
+    "port": 42069,
+    "use_rain_tree": true,
+    "is_empty_connection_type": false,
+    "private_key": "25b385b367a827eaafcdb1003bd17a25f2ecc0d10d41f138846f52ae1015aa941041a9c76539791fef9bee5b4fcd5bf4a1a489e0790c44cbdfa776b901e13b50",
+    "max_mempool_count": 100000
+  },
+  "telemetry": {
+    "enabled": true,
+    "address": "0.0.0.0:9000",
+    "endpoint": "/metrics"
+  },
+  "logger": {
+    "level": "debug",
+    "format": "pretty"
+  },
+  "rpc": {
+    "enabled": true,
+    "port": "50832",
+    "timeout": 30000,
+    "use_cors": false
+  },
+  "ibc": {
+    "enabled": true,
+    "stores_dir": "/var/ibc",
+    "host": {
+        "private_key": "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e"
+    }
+  }
+}

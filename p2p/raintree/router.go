@@ -2,89 +2,113 @@ package raintree
 
 import (
 	"fmt"
-	"log"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/config"
-	"github.com/pokt-network/pocket/p2p/providers"
-	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
+	"github.com/pokt-network/pocket/p2p/protocol"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/p2p/unicast"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
-	telemetry "github.com/pokt-network/pocket/telemetry"
-	"google.golang.org/protobuf/proto"
+	"github.com/pokt-network/pocket/telemetry"
 )
 
 var (
-	_ typesP2P.Router            = &rainTreeRouter{}
-	_ modules.IntegratableModule = &rainTreeRouter{}
-	_ rainTreeFactory            = &rainTreeRouter{}
+	_ typesP2P.Router          = &rainTreeRouter{}
+	_ modules.IntegrableModule = &rainTreeRouter{}
+	_ rainTreeFactory          = &rainTreeRouter{}
 )
 
 type rainTreeFactory = modules.FactoryWithConfig[typesP2P.Router, *config.RainTreeConfig]
 
 type rainTreeRouter struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
+	unicast.UnicastRouter
 
 	logger *modules.Logger
-	// host represents a libp2p network node, it encapsulates a libp2p peerstore
+	// handler is the function to call when a message is received.
+	handler typesP2P.MessageHandler
+	// host represents a libp2p libp2pNetwork node, it encapsulates a libp2p peerstore
 	// & connection manager. `libp2p.New` configures and starts listening
 	// according to options.
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
 	host libp2pHost.Host
 	// selfAddr is the pocket address representing this host.
-	selfAddr              cryptoPocket.Address
-	peersManager          *rainTreePeersManager
-	pstoreProvider        peerstore_provider.PeerstoreProvider
-	currentHeightProvider providers.CurrentHeightProvider
-	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
+	selfAddr     cryptoPocket.Address
+	peersManager *rainTreePeersManager
 }
 
-func NewRainTreeRouter(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
+func Create(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
 	return new(rainTreeRouter).Create(bus, cfg)
 }
 
-func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
-	routerLogger := logger.Global.CreateLoggerForModule("router")
-	routerLogger.Info().Msg("Initializing rainTreeRouter")
-
+func (*rainTreeRouter) Create(
+	bus modules.Bus,
+	cfg *config.RainTreeConfig,
+) (typesP2P.Router, error) {
+	rainTreeLogger := logger.Global.CreateLoggerForModule("rainTreeRouter")
 	if err := cfg.IsValid(); err != nil {
 		return nil, err
 	}
 
 	rtr := &rainTreeRouter{
-		host:                  cfg.Host,
-		selfAddr:              cfg.Addr,
-		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(cfg.MaxNonces)),
-		pstoreProvider:        cfg.PeerstoreProvider,
-		currentHeightProvider: cfg.CurrentHeightProvider,
-		logger:                routerLogger,
+		host:     cfg.Host,
+		selfAddr: cfg.Addr,
+		logger:   rainTreeLogger,
+		handler:  cfg.Handler,
 	}
-	rtr.SetBus(bus)
+	bus.RegisterModule(rtr)
 
-	if err := rtr.setupDependencies(); err != nil {
+	currentHeightProvider := bus.GetCurrentHeightProvider()
+	pstoreProvider, err := rtr.getPeerstoreProvider()
+	if err != nil {
+		return nil, err
+	}
+
+	height := currentHeightProvider.CurrentHeight()
+	pstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(height)
+	if err != nil {
+		return nil, fmt.Errorf("getting staked peerstore at height %d: %w", height, err)
+	}
+	rainTreeLogger.Info().Fields(map[string]any{
+		"address":        cfg.Addr,
+		"host_id":        cfg.Host.ID(),
+		"protocol_id":    protocol.BackgroundProtocolID,
+		"current_height": height,
+		"peerstore_size": pstore.Size(),
+	}).Msg("initializing raintree router")
+
+	if err := rtr.setupDependencies(pstore); err != nil {
 		return nil, err
 	}
 
 	return typesP2P.Router(rtr), nil
 }
 
+func (rtr *rainTreeRouter) Close() error {
+	return nil
+}
+
+func (rtr *rainTreeRouter) GetModuleName() string {
+	return typesP2P.StakedActorRouterSubmoduleName
+}
+
 // NetworkBroadcast implements the respective member of `typesP2P.Router`.
 func (rtr *rainTreeRouter) Broadcast(data []byte) error {
-	return rtr.broadcastAtLevel(data, rtr.peersManager.GetMaxNumLevels(), crypto.GetNonce())
+	return rtr.broadcastAtLevel(data, rtr.peersManager.GetMaxNumLevels())
 }
 
 // broadcastAtLevel recursively sends to both left and right target peers
 // from the starting level, demoting until level == 0.
 // (see: https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p)
-func (rtr *rainTreeRouter) broadcastAtLevel(data []byte, level uint32, nonce uint64) error {
+func (rtr *rainTreeRouter) broadcastAtLevel(data []byte, level uint32) error {
 	// This is handled either by the cleanup layer or redundancy layer
 	if level == 0 {
 		return nil
@@ -92,10 +116,16 @@ func (rtr *rainTreeRouter) broadcastAtLevel(data []byte, level uint32, nonce uin
 	msg := &typesP2P.RainTreeMessage{
 		Level: level,
 		Data:  data,
-		Nonce: nonce,
 	}
 	msgBz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
+		return err
+	}
+
+	// TECHDEBT(#810, #811): remove once `bus.GetPeerstoreProvider()` is available.
+	// Pre-handling the error from `rtr.getPeerstoreProvider()` before it is called
+	// downstream in a context without an error return value.
+	if _, err = rtr.getPeerstoreProvider(); err != nil {
 		return err
 	}
 
@@ -118,7 +148,7 @@ func (rtr *rainTreeRouter) broadcastAtLevel(data []byte, level uint32, nonce uin
 // (see: https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p)
 func (rtr *rainTreeRouter) demote(rainTreeMsg *typesP2P.RainTreeMessage) error {
 	if rainTreeMsg.Level > 0 {
-		if err := rtr.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
+		if err := rtr.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1); err != nil {
 			return err
 		}
 	}
@@ -130,7 +160,6 @@ func (rtr *rainTreeRouter) Send(data []byte, address cryptoPocket.Address) error
 	msg := &typesP2P.RainTreeMessage{
 		Level: 0, // Direct send that does not need to be propagated
 		Data:  data,
-		Nonce: crypto.GetNonce(),
 	}
 
 	bz, err := codec.GetCodec().Marshal(msg)
@@ -151,15 +180,14 @@ func (rtr *rainTreeRouter) sendInternal(data []byte, address cryptoPocket.Addres
 
 	peer := rtr.peersManager.GetPeerstore().GetPeer(address)
 	if peer == nil {
-		return fmt.Errorf("no known peer with pokt address %s", address)
+		return fmt.Errorf("%w: with pokt address %s", typesP2P.ErrUnknownPeer, address)
 	}
 
 	// debug logging
 	hostname := rtr.getHostname()
 	utils.LogOutgoingMsg(rtr.logger, hostname, peer)
 
-	if err := utils.Libp2pSendToPeer(rtr.host, data, peer); err != nil {
-		rtr.logger.Debug().Err(err).Msg("from libp2pSendInternal")
+	if err := utils.Libp2pSendToPeer(rtr.host, protocol.RaintreeProtocolID, data, peer); err != nil {
 		return err
 	}
 
@@ -181,8 +209,11 @@ func (rtr *rainTreeRouter) sendInternal(data []byte, address cryptoPocket.Addres
 	return nil
 }
 
-// HandleNetworkData implements the respective member of `typesP2P.Router`.
-func (rtr *rainTreeRouter) HandleNetworkData(data []byte) ([]byte, error) {
+// handleRainTreeMsg deserializes a RainTree message to extract the `PocketEnvelope`
+// bytes contained within, continues broadcast propagation, if applicable, and
+// passes them off to the application by calling the configured `rtr.handler`.
+// Intended to be called in a go routine.
+func (rtr *rainTreeRouter) handleRainTreeMsg(rainTreeMsgBz []byte) error {
 	blockHeightInt := rtr.GetBus().GetConsensusModule().CurrentHeight()
 	blockHeight := fmt.Sprintf("%d", blockHeightInt)
 
@@ -196,48 +227,42 @@ func (rtr *rainTreeRouter) HandleNetworkData(data []byte) ([]byte, error) {
 		)
 
 	var rainTreeMsg typesP2P.RainTreeMessage
-	if err := proto.Unmarshal(data, &rainTreeMsg); err != nil {
-		return nil, err
+	if err := proto.Unmarshal(rainTreeMsgBz, &rainTreeMsg); err != nil {
+		// TECHDEBT: add telemetry
+		return err
 	}
 
-	networkMessage := messaging.PocketEnvelope{}
-	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
-		rtr.logger.Error().Err(err).Msg("Error decoding network message")
-		return nil, err
+	if err := rtr.validateRainTreeMsg(&rainTreeMsg); err != nil {
+		// TECHDEBT: add telemetry
+		return fmt.Errorf("validating raintree message: %w", err)
 	}
 
 	// Continue RainTree propagation
 	if rainTreeMsg.Level > 0 {
-		if err := rtr.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
-			return nil, err
+		if err := rtr.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1); err != nil {
+			return err
 		}
 	}
 
-	// Avoids this node from processing a messages / transactions is has already processed at the
-	// application layer. The logic above makes sure it is only propagated and returns.
-	// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
-	if contains := rtr.nonceDeduper.Contains(rainTreeMsg.Nonce); contains {
-		log.Printf("RainTree message with nonce %d already processed, skipping\n", rainTreeMsg.Nonce)
-		rtr.GetBus().
-			GetTelemetryModule().
-			GetEventMetricsAgent().
-			EmitEvent(
-				telemetry.P2P_EVENT_METRICS_NAMESPACE,
-				telemetry.P2P_BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME,
-				telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_NONCE_LABEL, rainTreeMsg.Nonce,
-				telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
-			)
-
-		return nil, nil
+	// There was no error, but we don't need to forward this to the app-specific bus.
+	// For example, the message has already been handled by the application.
+	if rainTreeMsg.Data == nil {
+		rtr.logger.Debug().Msg("no data in RainTree message")
+		return nil
 	}
 
-	// Add the nonce to the deduper
-	if err := rtr.nonceDeduper.Push(rainTreeMsg.Nonce); err != nil {
-		return nil, err
+	// Call configured message handler with the serialized `PocketEnvelope`.
+	if err := rtr.handler(rainTreeMsg.Data); err != nil {
+		return fmt.Errorf("handling raintree message: %w", err)
 	}
+	return nil
+}
 
-	// Return the data back to the caller so it can be handled by the app specific bus
-	return rainTreeMsg.Data, nil
+// validateRainTreeMsg ensures that the `data` contained within the RainTree message
+// is a valid `PocketEnvelope` by attempting to deserialize it.
+func (rtr *rainTreeRouter) validateRainTreeMsg(rainTreeMsg *typesP2P.RainTreeMessage) error {
+	networkMessage := messaging.PocketEnvelope{}
+	return proto.Unmarshal(rainTreeMsg.Data, &networkMessage)
 }
 
 // GetPeerstore implements the respective member of `typesP2P.Router`.
@@ -266,6 +291,7 @@ func (rtr *rainTreeRouter) AddPeer(peer typesP2P.Peer) error {
 	return nil
 }
 
+// RemovePeer implements the respective member of `typesP2P.Router`.
 func (rtr *rainTreeRouter) RemovePeer(peer typesP2P.Peer) error {
 	rtr.peersManager.HandleEvent(
 		typesP2P.PeerManagerEvent{
@@ -287,14 +313,32 @@ func shouldSendToTarget(target target) bool {
 	return !target.isSelf
 }
 
-func (rtr *rainTreeRouter) setupDependencies() error {
-	pstore, err := rtr.pstoreProvider.GetStakedPeerstoreAtHeight(rtr.currentHeightProvider.CurrentHeight())
+// setupUnicastRouter configures and assigns `rtr.UnicastRouter`.
+func (rtr *rainTreeRouter) setupUnicastRouter() error {
+	unicastRouterCfg := config.UnicastRouterConfig{
+		Logger:         rtr.logger,
+		Host:           rtr.host,
+		ProtocolID:     protocol.RaintreeProtocolID,
+		MessageHandler: rtr.handleRainTreeMsg,
+		PeerHandler:    rtr.AddPeer,
+	}
+
+	unicastRouter, err := unicast.Create(rtr.GetBus(), &unicastRouterCfg)
 	if err != nil {
+		return fmt.Errorf("setting up unicast router: %w", err)
+	}
+
+	rtr.UnicastRouter = *unicastRouter
+	return nil
+}
+
+func (rtr *rainTreeRouter) setupDependencies(pstore typesP2P.Peerstore) error {
+	if err := rtr.setupUnicastRouter(); err != nil {
 		return err
 	}
 
 	if err := rtr.setupPeerManager(pstore); err != nil {
-		return err
+		return fmt.Errorf("setting up peer manager: %w", err)
 	}
 
 	if err := utils.PopulateLibp2pHost(rtr.host, pstore); err != nil {

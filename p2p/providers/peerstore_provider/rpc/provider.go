@@ -7,63 +7,60 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pokt-network/pocket/app/client/cli/flags"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/rpc"
-	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/runtime/configs"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 var (
-	_       peerstore_provider.PeerstoreProvider = &rpcPeerstoreProvider{}
-	rpcHost string
+	_ peerstore_provider.PeerstoreProvider = &rpcPeerstoreProvider{}
+	_ rpcPeerstoreProviderFactory          = &rpcPeerstoreProvider{}
 )
 
-func init() {
-	// by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
-	rpcHost = runtime.GetEnv("RPC_HOST", defaults.DefaultRPCHost)
-}
+type rpcPeerstoreProviderOption func(*rpcPeerstoreProvider)
+type rpcPeerstoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, rpcPeerstoreProviderOption]
 
 type rpcPeerstoreProvider struct {
-	base_modules.IntegratableModule
-	base_modules.InterruptableModule
+	base_modules.IntegrableModule
 
 	rpcURL    string
-	p2pCfg    *configs.P2PConfig
 	rpcClient *rpc.ClientWithResponses
 }
 
-func NewRPCPeerstoreProvider(options ...modules.ModuleOption) *rpcPeerstoreProvider {
-	rabp := &rpcPeerstoreProvider{
-		rpcURL: fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
-	}
-
-	for _, o := range options {
-		o(rabp)
-	}
-
-	rabp.initRPCClient()
-
-	return rabp
-}
-
-func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+func Create(
+	bus modules.Bus,
+	options ...rpcPeerstoreProviderOption,
+) (peerstore_provider.PeerstoreProvider, error) {
 	return new(rpcPeerstoreProvider).Create(bus, options...)
 }
 
-func (*rpcPeerstoreProvider) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return NewRPCPeerstoreProvider(options...), nil
+func (*rpcPeerstoreProvider) Create(
+	bus modules.Bus,
+	options ...rpcPeerstoreProviderOption,
+) (peerstore_provider.PeerstoreProvider, error) {
+	rpcPSP := &rpcPeerstoreProvider{
+		rpcURL: flags.RemoteCLIURL,
+	}
+	bus.RegisterModule(rpcPSP)
+
+	for _, o := range options {
+		o(rpcPSP)
+	}
+
+	rpcPSP.initRPCClient()
+
+	return rpcPSP, nil
 }
 
 func (*rpcPeerstoreProvider) GetModuleName() string {
-	return peerstore_provider.ModuleName
+	return peerstore_provider.PeerstoreProviderSubmoduleName
 }
 
-func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
+func (rpcPSP *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 	defer cancel()
 
@@ -71,7 +68,7 @@ func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typ
 		h         int64              = int64(height)
 		actorType rpc.ActorTypesEnum = "validator"
 	)
-	response, err := rabp.rpcClient.GetV1P2pStakedActorsAddressBookWithResponse(ctx, &rpc.GetV1P2pStakedActorsAddressBookParams{Height: &h, ActorType: &actorType})
+	response, err := rpcPSP.rpcClient.GetV1P2pStakedActorsAddressBookWithResponse(ctx, &rpc.GetV1P2pStakedActorsAddressBookParams{Height: &h, ActorType: &actorType})
 	if err != nil {
 		return nil, err
 	}
@@ -91,36 +88,26 @@ func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typ
 		})
 	}
 
-	return peerstore_provider.ActorsToPeerstore(rabp, coreActors)
+	return peerstore_provider.ActorsToPeerstore(rpcPSP, coreActors)
 }
 
-func (rabp *rpcPeerstoreProvider) GetP2PConfig() *configs.P2PConfig {
-	if rabp.p2pCfg == nil {
-		return rabp.GetBus().GetRuntimeMgr().GetConfig().P2P
-	}
-	return rabp.p2pCfg
+func (rpcPSP *rpcPeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
+	return peerstore_provider.GetUnstakedPeerstore(rpcPSP.GetBus())
 }
 
-func (rabp *rpcPeerstoreProvider) initRPCClient() {
-	rpcClient, err := rpc.NewClientWithResponses(rabp.rpcURL)
+func (rpcPSP *rpcPeerstoreProvider) initRPCClient() {
+	rpcClient, err := rpc.NewClientWithResponses(rpcPSP.rpcURL)
 	if err != nil {
 		log.Fatalf("could not create RPC client: %v", err)
 	}
-	rabp.rpcClient = rpcClient
+	rpcPSP.rpcClient = rpcClient
 }
 
 // options
 
-// WithP2PConfig allows to specify a custom P2P config
-func WithP2PConfig(p2pCfg *configs.P2PConfig) modules.ModuleOption {
-	return func(rabp modules.InitializableModule) {
-		rabp.(*rpcPeerstoreProvider).p2pCfg = p2pCfg
-	}
-}
-
 // WithCustomRPCURL allows to specify a custom RPC URL
-func WithCustomRPCURL(rpcURL string) modules.ModuleOption {
-	return func(rabp modules.InitializableModule) {
-		rabp.(*rpcPeerstoreProvider).rpcURL = rpcURL
+func WithCustomRPCURL(rpcURL string) rpcPeerstoreProviderOption {
+	return func(rpcPSP *rpcPeerstoreProvider) {
+		rpcPSP.rpcURL = rpcURL
 	}
 }

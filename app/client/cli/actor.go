@@ -6,10 +6,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/spf13/cobra"
+
+	"github.com/pokt-network/pocket/app/client/cli/flags"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	"github.com/spf13/cobra"
 )
 
 func init() {
@@ -43,7 +45,6 @@ type (
 func NewActorCommands() []*cobra.Command {
 	actorCmdDefs := []actorCmdDef{
 		{"Application", coreTypes.ActorType_ACTOR_TYPE_APP},
-		{"Servicer", coreTypes.ActorType_ACTOR_TYPE_SERVICER},
 		{"Fisherman", coreTypes.ActorType_ACTOR_TYPE_FISH},
 		{"Validator", coreTypes.ActorType_ACTOR_TYPE_VAL},
 	}
@@ -100,7 +101,7 @@ If no changes are desired for the parameter, just enter the current param value 
 				return err
 			}
 
-			if !nonInteractive {
+			if !flags.NonInteractive {
 				pwd = readPassphrase(pwd)
 			}
 
@@ -169,7 +170,9 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			pwd = readPassphrase(pwd)
+			if !flags.NonInteractive {
+				pwd = readPassphrase(pwd)
+			}
 
 			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
 			if err != nil {
@@ -231,7 +234,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			if !nonInteractive {
+			if !flags.NonInteractive {
 				pwd = readPassphrase(pwd)
 			}
 			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
@@ -282,7 +285,9 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			pwd = readPassphrase(pwd)
+			if !flags.NonInteractive {
+				pwd = readPassphrase(pwd)
+			}
 
 			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
 			if err != nil {

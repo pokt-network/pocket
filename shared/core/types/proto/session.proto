@@ -11,7 +11,7 @@ import "actor.proto";
 message Session {
     string id = 1; // a universally unique ID for the session
     int64 session_number = 2; // a monotonically increasing number representing the # on the chain
-    int64 session_height = 3; // the block height at which this session started
+    int64 session_height = 3; // the height at which the session starts
     int64 num_session_blocks = 4; // the number of blocks the session is valid from
      // CONSIDERATION: Should we add a `RelayChain` enum and use it across the board?
      // CONSIDERATION: Should a single session support multiple relay chains?
@@ -20,6 +20,7 @@ message Session {
     // CONSIDERATION: Should a single session support multiple geo zones?
     string geo_zone = 6; // the target geographic region where the actors are present
     core.Actor application = 7; // the application that is being served
+    // IMPROVE: `map<string, core.Actor>` with the address as the key can simplify and optimize the logic on the clients
     repeated core.Actor servicers = 8; // the set of servicers that are serving the application
     repeated core.Actor fishermen = 9; // the set of fishermen that are fishing for servicers
 }

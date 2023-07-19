@@ -3,8 +3,10 @@ package cli
 import (
 	"fmt"
 
-	"github.com/pokt-network/pocket/rpc"
 	"github.com/spf13/cobra"
+
+	"github.com/pokt-network/pocket/app/client/cli/flags"
+	"github.com/pokt-network/pocket/rpc"
 )
 
 func init() {
@@ -96,7 +98,7 @@ func consensusCommands() []*cobra.Command {
 }
 
 func getConsensusState(cmd *cobra.Command) (*rpc.GetV1ConsensusStateResponse, error) {
-	client, err := rpc.NewClientWithResponses(remoteCLIURL)
+	client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 	if err != nil {
 		return nil, nil
 	}

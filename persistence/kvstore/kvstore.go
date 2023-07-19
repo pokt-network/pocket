@@ -25,7 +25,7 @@ type KVStore interface {
 }
 
 const (
-	BadgerKeyNotFoundError = "Key not found"
+	KeyNotFoundError = "Key not found"
 )
 
 var (
@@ -59,76 +59,70 @@ func NewMemKVStore() KVStore {
 }
 
 func (store *badgerKVStore) Set(key, value []byte) error {
-	tx := store.db.NewTransaction(true)
-	defer tx.Discard()
-
-	if err := tx.Set(key, value); err != nil {
-		return err
-	}
-
-	return tx.Commit()
+	return store.db.Update(func(tx *badger.Txn) error {
+		return tx.Set(key, value)
+	})
 }
 
 func (store *badgerKVStore) Get(key []byte) ([]byte, error) {
-	tx := store.db.NewTransaction(false)
-	defer tx.Discard()
+	var val []byte
+	if err := store.db.View(func(tx *badger.Txn) error {
+		item, err := tx.Get(key)
+		if err != nil {
+			return err
+		}
 
-	item, err := tx.Get(key)
-	if err != nil {
+		val, err = item.ValueCopy(nil)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
 		return nil, err
 	}
-
-	value, err := item.ValueCopy(nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, err
-	}
-
-	return value, nil
+	return val, nil
 }
 
 func (store *badgerKVStore) Delete(key []byte) error {
-	tx := store.db.NewTransaction(true)
-	defer tx.Discard()
-
-	return tx.Delete(key)
+	return store.db.Update(func(tx *badger.Txn) error {
+		return tx.Delete(key)
+	})
 }
 
 func (store *badgerKVStore) GetAll(prefix []byte, descending bool) (keys, values [][]byte, err error) {
-	// INVESTIGATE: research `badger.views` for further improvements and optimizations
-	// Reference https://pkg.go.dev/github.com/dgraph-io/badger#readme-prefix-scans
-	txn := store.db.NewTransaction(false)
-	defer txn.Discard()
-
-	opt := badger.DefaultIteratorOptions
-	opt.Prefix = prefix
-	opt.Reverse = descending
-	if descending {
-		prefix = prefixEndBytes(prefix)
-	}
-	it := txn.NewIterator(opt)
-	defer it.Close()
-
-	keys = make([][]byte, 0)
-	values = make([][]byte, 0)
-
-	for it.Seek(prefix); it.Valid(); it.Next() {
-		item := it.Item()
-		err = item.Value(func(v []byte) error {
-			b := make([]byte, len(v))
-			copy(b, v)
-			keys = append(keys, item.Key())
-			values = append(values, b)
-			return nil
-		})
-		if err != nil {
-			return
+	if err := store.db.View(func(tx *badger.Txn) error {
+		opt := badger.DefaultIteratorOptions
+		opt.Prefix = prefix
+		opt.Reverse = descending
+		if descending {
+			prefix = prefixEndBytes(prefix)
 		}
+		it := tx.NewIterator(opt)
+		defer it.Close()
+
+		keys = make([][]byte, 0)
+		values = make([][]byte, 0)
+
+		for it.Seek(prefix); it.Valid(); it.Next() {
+			item := it.Item()
+			err = item.Value(func(v []byte) error {
+				b := make([]byte, len(v))
+				copy(b, v)
+				keys = append(keys, item.Key())
+				values = append(values, b)
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, nil, err
 	}
-	return
+
+	return keys, values, nil
 }
 
 func (store *badgerKVStore) Exists(key []byte) (bool, error) {

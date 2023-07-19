@@ -30,10 +30,12 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "cannot decode tx bytes")
 	}
 
+	// Validate the transaction and add it to the mempool
 	if err := s.GetBus().GetUtilityModule().HandleTransaction(txBz); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
+	// Broadcast the transaction to the rest of the network if it passed the basic validation above
 	if err := s.broadcastMessage(txBz); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -80,9 +82,14 @@ func (s *rpcServer) PostV1ClientGetSession(ctx echo.Context) error {
 	})
 }
 
-// TECHDEBT: This will need to be changed when the HandleRelay function is actually implemented
-// because it copies data structures from v0. For example, AATs are no longer necessary in v1.
 func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
+	utility := s.GetBus().GetUtilityModule()
+	_, err := utility.GetServicerModule()
+
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, "node is not a servicer")
+	}
+
 	var body RelayRequest
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
@@ -97,39 +104,18 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 		Id:   body.Meta.Geozone.Id,
 		Name: body.Meta.Geozone.Name,
 	}
-	aat := &coreTypes.AAT{
-		Version:              body.Meta.Token.Version,
-		ApplicationPublicKey: body.Meta.Token.AppPubKey,
-		ClientPublicKey:      body.Meta.Token.ClientPubKey,
-		ApplicationSignature: body.Meta.Token.AppSignature,
-	}
 	relayMeta := &coreTypes.RelayMeta{
 		BlockHeight:       body.Meta.BlockHeight,
 		ServicerPublicKey: body.Meta.ServicerPubKey,
 		RelayChain:        chain,
 		GeoZone:           geozone,
-		Token:             aat,
 		Signature:         body.Meta.Signature,
 	}
 
-	payload := &coreTypes.RelayPayload{
-		Data:     body.Payload.Data,
-		Method:   body.Payload.Method,
-		HttpPath: body.Payload.Path,
-	}
+	relayRequest := buildJsonRPCRelayPayload(&body)
+	relayRequest.Meta = relayMeta
 
-	headers := make(map[string]string)
-	for _, header := range body.Payload.Headers {
-		headers[header.Name] = header.Value
-	}
-	payload.Headers = headers
-
-	relayRequest := &coreTypes.Relay{
-		Payload: payload,
-		Meta:    relayMeta,
-	}
-
-	relayResponse, err := s.GetBus().GetUtilityModule().HandleRelay(relayRequest)
+	relayResponse, err := utility.HandleRelay(relayRequest)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -228,4 +214,34 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 	}
 
 	return ctx.JSON(http.StatusOK, response)
+}
+
+// TECHDEBT: handle other relay payload types, e.g. JSON, GRPC, etc.
+func buildJsonRPCRelayPayload(body *RelayRequest) *coreTypes.Relay {
+	payload := &coreTypes.Relay_JsonRpcPayload{
+		JsonRpcPayload: &coreTypes.JSONRPCPayload{
+			JsonRpc: body.Payload.Jsonrpc,
+			Method:  body.Payload.Method,
+		},
+	}
+
+	if body.Payload.Id != nil {
+		payload.JsonRpcPayload.Id = []byte(*body.Payload.Id)
+	}
+
+	if body.Payload.Parameters != nil {
+		payload.JsonRpcPayload.Parameters = *body.Payload.Parameters
+	}
+
+	if body.Payload.Headers != nil {
+		headers := make(map[string]string)
+		for _, header := range *body.Payload.Headers {
+			headers[header.Name] = header.Value
+		}
+		payload.JsonRpcPayload.Headers = headers
+	}
+
+	return &coreTypes.Relay{
+		RelayPayload: payload,
+	}
 }

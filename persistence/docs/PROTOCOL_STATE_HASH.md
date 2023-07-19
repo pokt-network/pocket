@@ -10,6 +10,7 @@ Alternative implementation of the persistence module are free to choose their ow
   - [Block Proto](#block-proto)
   - [Trees](#trees)
 - [Compute State Hash](#compute-state-hash)
+  - [IBC State Tree](#ibc-state-tree)
 - [Store Block (Commit)](#store-block-commit)
 - [Failed Commitments](#failed-commitments)
 
@@ -23,14 +24,14 @@ This document defines how Pocket V1 takes a snapshot of its world state. An intr
 
 ### Infrastructural Components
 
-| Component             | Data Type                             | Implementation Options - Examples                      | Implementation Selected - Current | Example             | Use Case                                                                         |
-| --------------------- | ------------------------------------- | ------------------------------------------------------ | --------------------------------- | ------------------- | -------------------------------------------------------------------------------- |
-| Data Tables           | SQL Database / Engine                 | MySQL, SQLite, PostgreSQL                              | PostgresSQL                       | Validator SQL Table | Validating & updating information when applying a transaction                    |
-| Merkle Trees          | Merkle Trie backed by Key-Value Store | Celestia's SMT, Libra's JMT, Cosmos' IAVL, Verkle Tree | Celestia's SMT                    | Fisherman Trie      | Maintains the state of all account based trees                                   |
-| Blocks                | Serialization Codec                   | Amino, Protobuf, Thrift, Avro                          | Protobuf                          | Block protobuf      | Serialized and inserted into the Block Store                                     |
-| Objects (e.g. Actors) | Serialization Codec                   | Amino, Protobuf, Thrift, Avro                          | Protobuf                          | Servicer protobuf   | Serialized and inserted into the corresponding Tree                              |
-| Block Store           | Key Value Store                       | LevelDB, BadgerDB, RocksDB, BoltDB                     | BadgerDb                          | Block Store         | Maintains a key-value store of the blockchain blocks                             |
-| Transaction Indexer   | Key Value Store                       | LevelDB, BadgerDB, RocksDB, BoltDB                     | BadgerDB                          | Tx Indexer          | Indexes transactions in different ways for fast queries, presence checks, etc... |
+| Component             | Data Type                             | Implementation Options - Examples                      | Implementation Selected - Current   | Example             | Use Case                                                                         |
+| --------------------- | ------------------------------------- | ------------------------------------------------------ | ----------------------------------- | ------------------- | -------------------------------------------------------------------------------- |
+| Data Tables           | SQL Database / Engine                 | MySQL, SQLite, PostgreSQL                              | PostgresSQL                         | Validator SQL Table | Validating & updating information when applying a transaction                    |
+| Merkle Trees          | Merkle Trie backed by Key-Value Store | Celestia's SMT, Libra's JMT, Cosmos' IAVL, Verkle Tree | Pocket's SMT (Forked from Celestia) | Fisherman Trie      | Maintains the state of all account based trees                                   |
+| Blocks                | Serialization Codec                   | Amino, Protobuf, Thrift, Avro                          | Protobuf                            | Block protobuf      | Serialized and inserted into the Block Store                                     |
+| Objects (e.g. Actors) | Serialization Codec                   | Amino, Protobuf, Thrift, Avro                          | Protobuf                            | Servicer protobuf   | Serialized and inserted into the corresponding Tree                              |
+| Block Store           | Key Value Store                       | LevelDB, BadgerDB, RocksDB, BoltDB                     | BadgerDb                            | Block Store         | Maintains a key-value store of the blockchain blocks                             |
+| Transaction Indexer   | Key Value Store                       | LevelDB, BadgerDB, RocksDB, BoltDB                     | BadgerDB                            | Tx Indexer          | Indexes transactions in different ways for fast queries, presence checks, etc... |
 
 ### Block Proto
 
@@ -39,8 +40,6 @@ The block protobuf that is serialized and store in the block store can be found 
 ### Trees
 
 An individual Merkle Tree is created for each type of actor, record or data type. Each of these is backed by its own key-value store.
-
-Note that the order in which the trees are defined (found in `persistence/state.go`) is important since it determines how the state hash is computed. _TODO(#361): Consider specifying the oder in a `.proto` `enum` rather than a `.go` `iota`._
 
 **Actor Merkle Trees**:
 
@@ -71,8 +70,8 @@ This flow shows the interaction between the `PostgresDB` and `MerkleTrees` liste
 3. Serialize each record using the corresponding underlying protobuf
 4. Insert the serialized record into the corresponding tree (which is back by a key-value store)
 5. Compute the root hash of each tree
-6. Aggregate all the root hashes by concatenating them together
-7. Compute the new `stateHash` by taking a hash of the concatenated hash list
+6. Insert the name of the tree and its root hash into the root tree
+7. Compute the new `stateHash` by hex encoding the root tree's root hash
 
 ```mermaid
 sequenceDiagram
@@ -89,14 +88,31 @@ sequenceDiagram
         end
         P->>+PKV: GetRoot()
         PKV->>-P: rootHash
+        P->>P: rootTree.Update(stateTreeName, rootHash)
     end
 
-    P->>P: stateHash = hash(concat(rootHashes))
+    P->>P: stateHash = hex(rootTree.Root())
+
     activate P
     deactivate P
 ```
 
-_IMPORTANT: The order in which the `rootHashes` are concatenated is based on the definition in which the trees are ordered in within `state.go`._
+### IBC State Tree
+
+When the new state hash is computed, the different state trees read the updates from their respective Postgres tables and update the trees accordingly.
+
+`IBCMessage` objects are inserted into the `ibc_entries` table in two ways., depending on the IBC messages' type: 1. `UpdateIBCStore`: the `key` and `value` fields are inserted with the height into the table 2. `PruneIBCStore`: the `key` with a `nil` value is inserted into the table
+
+For each entry in the `ibc_message` table depending on the entries `value` field the tree will perform one of two operations:
+
+- `value == nil`
+  - This is a `PruneIBCStore` message and thus the tree will delete the entry with the given `key`
+  - `ibcTree.Delete(key)`
+- `value != nil`
+  - This is an `UpdateIBCStore` message and thus the tree will update the entry with the given `key` to have the given `value`
+  - `ibcTree.Update(key, value)`
+
+_Note: Prior to insertion the `key` and `value` fields of the messages are hexadecimally encoded into strings._
 
 ## Store Block (Commit)
 

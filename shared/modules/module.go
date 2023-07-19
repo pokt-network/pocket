@@ -5,15 +5,20 @@ import (
 )
 
 type Module interface {
-	InitializableModule
-	IntegratableModule
+	InjectableModule
+	IntegrableModule
 	InterruptableModule
 	ModuleFactoryWithOptions
 }
 
-// IntegratableModule is a module that integrates with the bus.
+type Submodule interface {
+	InjectableModule
+	IntegrableModule
+}
+
+// IntegrableModule is a module that integrates with the bus.
 // Essentially it's a module that is capable of communicating with the `bus` (see `shared/modules/bus_module.go`) for additional details.
-type IntegratableModule interface {
+type IntegrableModule interface {
 	// SetBus sets the bus for the module.
 	//
 	// Generally it is called by the `bus` itself whenever a module is registered via `bus.RegisterModule(module modules.Module)`
@@ -23,7 +28,7 @@ type IntegratableModule interface {
 	GetBus() Bus
 }
 
-// InitializableModule is a module that has some basic lifecycle logic. Specifically, it can be started and stopped.
+// InjectableModule is a module that has some basic lifecycle logic. Specifically, it can be started and stopped.
 type InterruptableModule interface {
 	// Start starts the module and executes any logic that is required at the beginning of the module's lifecycle.
 	Start() error
@@ -41,13 +46,13 @@ type InterruptableModule interface {
 // where there is no configuration, which is often the case for sub-modules that are used
 // and configured at runtime.
 //
-// It accepts an InitializableModule as a parameter, because in order to create a module with these options,
-// at a minimum, the module must implement the InitializableModule interface.
+// It accepts an InjectableModule as a parameter, because in order to create a module with these options,
+// at a minimum, the module must implement the InjectableModule interface.
 //
 // Example:
 //
 //	func WithFoo(foo string) ModuleOption {
-//	  return func(m InitializableModule) {
+//	  return func(m InjectableModule) {
 //	    m.(*MyModule).foo = foo
 //	  }
 //	}
@@ -59,16 +64,13 @@ type InterruptableModule interface {
 //	  }
 //	  return m, nil
 //	}
-type ModuleOption func(InitializableModule)
+type ModuleOption func(InjectableModule)
 
-// InitializableModule is a module that can be created via the standardized `Create` method and that has a name
+// InjectableModule is a module that can be created via the standardized `Create` method and that has a name
 // that can be used to identify it (see `shared\modules\modules_registry_module.go`) for additional details.
-type InitializableModule interface {
+type InjectableModule interface {
 	// GetModuleName returns the name of the module.
 	GetModuleName() string
-
-	// Create creates a new instance of the module.
-	Create(bus Bus, options ...ModuleOption) (Module, error)
 }
 
 // KeyholderModule is a module that can provide a private key.

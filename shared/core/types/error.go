@@ -31,6 +31,16 @@ func (se *stdErr) Code() Code {
 	return se.CodeError
 }
 
+func (se *stdErr) Is(target error) bool {
+	err, ok := target.(*stdErr)
+	if !ok {
+		return false
+	}
+	codeEq := se.Code() == err.Code()
+	msgEq := se.Error() == err.Error()
+	return codeEq && msgEq
+}
+
 func NewError(code Code, msg string) Error {
 	return &stdErr{
 		CodeError: code,
@@ -38,7 +48,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 135
+// NextCode: 149
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -53,6 +63,7 @@ const (
 	CodeNewPublicKeyFromBytesError       Code = 8
 	CodeNewAddressFromBytesError         Code = 9
 	CodeSignatureVerificationFailedError Code = 10
+	CodeRetrievingSignableBytesError     Code = 137
 	CodeHexDecodeFromStringError         Code = 11
 	CodeInvalidHashLengthError           Code = 12
 	CodeEmptyNetworkIDError              Code = 13
@@ -74,6 +85,7 @@ const (
 	CodeEmptyNonceError                  Code = 30
 	CodeEmptyPublicKeyError              Code = 31
 	CodeEmptySignatureError              Code = 32
+	CodeEmptySignatureStructureError     Code = 136
 	CodeDuplicateTransactionError        Code = 35
 	CodeTransactionSignError             Code = 36
 	CodeGetAllValidatorsError            Code = 37
@@ -137,6 +149,7 @@ const (
 	CodeEmptyParamValueError              Code = 93
 	CodeGetOutputAddressError             Code = 94
 	CodeTransactionAlreadyCommittedError  Code = 95
+	CodeTransactionNotCommittedError      Code = 135
 	CodeInitGenesisParamsError            Code = 96
 	CodeGetAllFishermenError              Code = 97
 	CodeGetAllServicersError              Code = 98
@@ -174,6 +187,17 @@ const (
 	CodeUnknownActorType                  Code = 130
 	CodeUnknownMessageType                Code = 131
 	CodeProposalBlockNotSet               Code = 133
+	CodeIBCHostAlreadyExists              Code = 138
+	CodeIBCHostDoesNotExist               Code = 139
+	CodeIBCInvalidID                      Code = 140
+	CodeIBCInvalidPath                    Code = 141
+	CodeIBCCreatingProofError             Code = 142
+	CodeIBCUnknownMessageTypeError        Code = 143
+	CodeNilFieldError                     Code = 144
+	CodeIBCUpdatingStoreError             Code = 145
+	CodeIBCStoreAlreadyExistsError        Code = 146
+	CodeIBCStoreDoesNotExistError         Code = 147
+	CodeIBCKeyDoesNotExistError           Code = 148
 )
 
 const (
@@ -226,11 +250,13 @@ const (
 	InvalidNonceError                 = "the nonce field is invalid; cannot be converted to big.Int"
 	NewPublicKeyFromBytesError        = "unable to convert the raw bytes to a valid public key"
 	SignatureVerificationFailedError  = "the public key / signature combination is not valid for the msg"
+	RetrievingSignableBytesError      = "error retrieving signable bytes"
 	ProtoFromAnyError                 = "an error occurred getting the structure from the protobuf any"
 	NewFeeFromStringError             = "the fee string is unable to be converted to a valid base 10 number"
 	EmptyNonceError                   = "the nonce in the transaction is empty"
 	EmptyPublicKeyError               = "the public key field is empty"
 	EmptySignatureError               = "the signature field is empty"
+	EmptySignatureStructureError      = "the signature structure is empty"
 	TransactionSignError              = "an error occurred signing the transaction"
 	InterfaceConversionError          = "an error occurred converting the interface to an expected type: "
 	SetStatusPausedBeforeError        = "an error occurred setting the actor status that were paused before"
@@ -249,6 +275,7 @@ const (
 	GetOutputAddressError             = "an error occurred getting the output address using operator"
 	GetHeightError                    = "an error occurred when getting the height from the store"
 	TransactionAlreadyCommittedError  = "the transaction is already committed"
+	TransactionNotCommittedError      = "the transaction is not committed"
 	NewSavePointError                 = "an error occurred creating the save point"
 	RollbackSavePointError            = "an error occurred rolling back to save point"
 	NewPersistenceContextError        = "an error occurred creating the persistence context"
@@ -306,6 +333,17 @@ const (
 	NegativeAmountError               = "the amount is negative"
 	UnknownActorTypeError             = "the actor type is not recognized"
 	UnknownMessageTypeError           = "the message being by the utility message is not recognized"
+	IBCHostAlreadyExistsError         = "an ibc host already exists"
+	IBCHostDoesNotExistError          = "an ibc host does not exist"
+	IBCInvalidIDError                 = "invalid ibc identifier"
+	IBCInvalidPathError               = "invalid ibc path"
+	IBCCreatingProofError             = "an error occurred creating the CommitmentProof"
+	IBCUnknownMessageTypeError        = "the ibc message type is not recognized"
+	NilFieldError                     = "field cannot be nil"
+	IBCUpdatingStoreError             = "an error occurred updating the ibc store postgres database"
+	IBCStoreAlreadyExistsError        = "ibc store already exists in the store manager"
+	IBCStoreDoesNotExistError         = "ibc store does not exist in the store manager"
+	IBCKeyDoesNotExistError           = "key does not exist in the ibc store"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -596,8 +634,16 @@ func ErrEmptySignature() Error {
 	return NewError(CodeEmptySignatureError, EmptySignatureError)
 }
 
+func ErrEmptySignatureStructure() Error {
+	return NewError(CodeEmptySignatureStructureError, EmptySignatureStructureError)
+}
+
 func ErrSignatureVerificationFailed() Error {
 	return NewError(CodeSignatureVerificationFailedError, SignatureVerificationFailedError)
+}
+
+func ErrRetrievingSignableBytes(err error) Error {
+	return NewError(CodeRetrievingSignableBytesError, fmt.Sprintf("%s: %s", RetrievingSignableBytesError, err.Error()))
 }
 
 func ErrDecodeMessage(err error) Error {
@@ -610,6 +656,10 @@ func ErrProtoFromAny(err error) Error {
 
 func ErrTransactionAlreadyCommitted() Error {
 	return NewError(CodeTransactionAlreadyCommittedError, TransactionAlreadyCommittedError)
+}
+
+func ErrTransactionNotCommitted() Error {
+	return NewError(CodeTransactionNotCommittedError, TransactionNotCommittedError)
 }
 
 func ErrTransactionSign(err error) Error {
@@ -666,7 +716,6 @@ func ErrMissingRequiredArg(value string) error {
 
 func ErrSocketRequestTimedOut(addr string, nonce uint32) error {
 	return NewError(CodeSocketRequestTimedOutError, fmt.Sprintf("%s: %s, %d", SocketRequestTimedOutError, addr, nonce))
-
 }
 
 func ErrUndefinedSocketType(socketType string) error {
@@ -828,4 +877,48 @@ func ErrUnknownActorType(actorType string) Error {
 
 func ErrUnknownMessageType(messageType any) Error {
 	return NewError(CodeUnknownMessageType, fmt.Sprintf("%s: %v", UnknownMessageTypeError, messageType))
+}
+
+func ErrIBCHostAlreadyExists() Error {
+	return NewError(CodeIBCHostAlreadyExists, IBCHostAlreadyExistsError)
+}
+
+func ErrIBCHostDoesNotExist() Error {
+	return NewError(CodeIBCHostDoesNotExist, IBCHostDoesNotExistError)
+}
+
+func ErrIBCInvalidID(identifier, msg string) Error {
+	return NewError(CodeIBCInvalidID, fmt.Sprintf("%s: %s (%s)", IBCInvalidIDError, identifier, msg))
+}
+
+func ErrIBCInvalidPath(path string) Error {
+	return NewError(CodeIBCInvalidPath, fmt.Sprintf("%s: %s", IBCInvalidPathError, path))
+}
+
+func ErrIBCCreatingProof(err error) Error {
+	return NewError(CodeIBCCreatingProofError, fmt.Sprintf("%s: %s", IBCCreatingProofError, err.Error()))
+}
+
+func ErrIBCUnknownMessageType(messageType string) Error {
+	return NewError(CodeIBCUnknownMessageTypeError, fmt.Sprintf("%s: %s", IBCUnknownMessageTypeError, messageType))
+}
+
+func ErrNilField(field string) Error {
+	return NewError(CodeNilFieldError, fmt.Sprintf("%s: %s", NilFieldError, field))
+}
+
+func ErrIBCUpdatingStore(err error) Error {
+	return NewError(CodeIBCUpdatingStoreError, fmt.Sprintf("%s: %s", IBCUpdatingStoreError, err.Error()))
+}
+
+func ErrIBCStoreAlreadyExists(name string) Error {
+	return NewError(CodeIBCStoreAlreadyExistsError, fmt.Sprintf("%s: %s", IBCStoreAlreadyExistsError, name))
+}
+
+func ErrIBCStoreDoesNotExist(name string) Error {
+	return NewError(CodeIBCStoreDoesNotExistError, fmt.Sprintf("%s: %s", IBCStoreDoesNotExistError, name))
+}
+
+func ErrIBCKeyDoesNotExist(key string) Error {
+	return NewError(CodeIBCKeyDoesNotExistError, fmt.Sprintf("%s: %s", IBCKeyDoesNotExistError, key))
 }

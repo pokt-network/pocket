@@ -6,19 +6,15 @@ import (
 	"os"
 
 	"github.com/manifoldco/promptui"
-	"github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/p2p"
-	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
-	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
-	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
-	rpcABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/runtime/defaults"
-	"github.com/pokt-network/pocket/shared/messaging"
-	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"github.com/pokt-network/pocket/app/client/cli/helpers"
+	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/shared/messaging"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // TECHDEBT: Lowercase variables / constants that do not need to be exported.
@@ -33,9 +29,6 @@ const (
 )
 
 var (
-	// A P2P module is initialized in order to broadcast a message to the local network
-	p2pMod modules.P2PModule
-
 	items = []string{
 		PromptPrintNodeState,
 		PromptTriggerNextView,
@@ -45,42 +38,28 @@ var (
 		PromptSendMetadataRequest,
 		PromptSendBlockRequest,
 	}
-
-	genesisPath string = runtime.GetEnv("GENESIS_PATH", "build/config/genesis.json")
-	rpcHost     string
 )
 
-// NOTE: this is required by the linter, otherwise a simple string constant would have been enough
-type cliContextKey string
-
-const busCLICtxKey = "bus"
-
 func init() {
-	dbg := NewDebugCommand()
-	dbg.AddCommand(NewDebugSubCommands()...)
+	dbgUI := newDebugUICommand()
+	dbgUI.AddCommand(newDebugUISubCommands()...)
+	rootCmd.AddCommand(dbgUI)
+
+	dbg := newDebugCommand()
+	dbg.AddCommand(debugCommands()...)
 	rootCmd.AddCommand(dbg)
-
-	// by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
-	validator1Endpoint := defaults.Validator1EndpointDockerCompose
-	if runtime.IsProcessRunningInsideKubernetes() {
-		validator1Endpoint = defaults.Validator1EndpointK8S
-	}
-
-	rpcHost = runtime.GetEnv("RPC_HOST", validator1Endpoint)
 }
 
-// NewDebugSubCommands builds out the list of debug subcommands by matching the
+// newDebugUISubCommands builds out the list of debug subcommands by matching the
 // handleSelect dispatch to the appropriate command.
 // * To add a debug subcommand, you must add it to the `items` array and then
 // write a function handler to match for it in `handleSelect`.
-func NewDebugSubCommands() []*cobra.Command {
+func newDebugUISubCommands() []*cobra.Command {
 	commands := make([]*cobra.Command, len(items))
 	for idx, promptItem := range items {
 		commands[idx] = &cobra.Command{
-			Use: promptItem,
-			PersistentPreRun: func(cmd *cobra.Command, args []string) {
-				persistentPreRun(cmd, args)
-			},
+			Use:               promptItem,
+			PersistentPreRunE: helpers.P2PDependenciesPreRunE,
 			Run: func(cmd *cobra.Command, args []string) {
 				handleSelect(cmd, cmd.Use)
 			},
@@ -90,74 +69,65 @@ func NewDebugSubCommands() []*cobra.Command {
 	return commands
 }
 
-// NewDebugCommand returns the cobra CLI for the Debug command.
-func NewDebugCommand() *cobra.Command {
+// newDebugUICommand returns the cobra CLI for the Debug UI interface.
+func newDebugUICommand() *cobra.Command {
 	return &cobra.Command{
-		Use:   "debug",
-		Short: "Debug utility for rapid development",
-		Args:  cobra.MaximumNArgs(0),
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			persistentPreRun(cmd, args)
+		Aliases:           []string{"dui"},
+		Use:               "DebugUI",
+		Short:             "Debug selection ui for rapid development",
+		Args:              cobra.MaximumNArgs(0),
+		PersistentPreRunE: helpers.P2PDependenciesPreRunE,
+		RunE:              runDebug,
+	}
+}
+
+// newDebugCommand returns the cobra CLI for the Debug command.
+func newDebugCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:               "Debug",
+		Aliases:           []string{"d"},
+		Short:             "Debug utility for rapid development",
+		Args:              cobra.MaximumNArgs(1),
+		PersistentPreRunE: helpers.P2PDependenciesPreRunE,
+	}
+}
+
+func debugCommands() []*cobra.Command {
+	cmds := []*cobra.Command{
+		{
+			Use:     "TriggerView",
+			Aliases: []string{"next", "trigger", "view"},
+			Short:   "Trigger the next view in consensus",
+			Long:    "Sends a message to all visible nodes on the network to start the next view (height/step/round) in consensus",
+			Args:    cobra.ExactArgs(0),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				m := &messaging.DebugMessage{
+					Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
+					Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
+					Message: nil,
+				}
+				broadcastDebugMessage(cmd, m)
+				return nil
+			},
 		},
-		RunE: runDebug,
+		{
+			Use:     "TogglePacemakerMode",
+			Short:   "Toggle the pacemaker",
+			Long:    "Toggle the consensus pacemaker either on or off so the chain progresses on its own or loses liveness",
+			Aliases: []string{"togglePaceMaker"},
+			Args:    cobra.ExactArgs(0),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				m := &messaging.DebugMessage{
+					Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
+					Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
+					Message: nil,
+				}
+				broadcastDebugMessage(cmd, m)
+				return nil
+			},
+		},
 	}
-}
-
-// persistentPreRun is called by both debug and debug sub-commands before runs
-func persistentPreRun(cmd *cobra.Command, _ []string) {
-	// TECHDEBT: this is to keep backwards compatibility with localnet
-	configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
-	rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
-
-	runtimeMgr := runtime.NewManagerFromFiles(
-		configPath, genesisPath,
-		runtime.WithClientDebugMode(),
-		runtime.WithRandomPK(),
-	)
-
-	bus := runtimeMgr.GetBus()
-	setValueInCLIContext(cmd, busCLICtxKey, bus)
-
-	setupPeerstoreProvider(*runtimeMgr, rpcURL)
-	setupCurrentHeightProvider(*runtimeMgr, rpcURL)
-	setupAndStartP2PModule(*runtimeMgr)
-}
-
-func setupPeerstoreProvider(rm runtime.Manager, rpcURL string) {
-	bus := rm.GetBus()
-	modulesRegistry := bus.GetModulesRegistry()
-	pstoreProvider := rpcABP.NewRPCPeerstoreProvider(
-		rpcABP.WithP2PConfig(rm.GetConfig().P2P),
-		rpcABP.WithCustomRPCURL(rpcURL),
-	)
-	modulesRegistry.RegisterModule(pstoreProvider)
-}
-
-func setupCurrentHeightProvider(rm runtime.Manager, rpcURL string) {
-	bus := rm.GetBus()
-	modulesRegistry := bus.GetModulesRegistry()
-	currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
-		rpcCHP.WithCustomRPCURL(rpcURL),
-	)
-	modulesRegistry.RegisterModule(currentHeightProvider)
-}
-
-func setupAndStartP2PModule(rm runtime.Manager) {
-	bus := rm.GetBus()
-	mod, err := p2p.Create(bus)
-	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
-	}
-
-	var ok bool
-	p2pMod, ok = mod.(modules.P2PModule)
-	if !ok {
-		logger.Global.Fatal().Msgf("unexpected P2P module type: %T", mod)
-	}
-
-	if err := p2pMod.Start(); err != nil {
-		logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
-	}
+	return cmds
 }
 
 func runDebug(cmd *cobra.Command, args []string) (err error) {
@@ -257,7 +227,7 @@ func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage)
 
 	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
 	// broadcast. The reason it cannot be done right now is because this client is not in the
-	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
+	// address book of the actual validator nodes, so `validator1` never receives the message.
 	// p2pMod.Broadcast(anyProto)
 
 	pstore, err := fetchPeerstore(cmd)
@@ -269,7 +239,7 @@ func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage)
 		if err != nil {
 			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 		}
-		if err := p2pMod.Send(addr, anyProto); err != nil {
+		if err := helpers.P2PMod.Send(addr, anyProto); err != nil {
 			logger.Global.Error().Err(err).Msg("Failed to send debug message")
 		}
 	}
@@ -299,28 +269,26 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 		logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 	}
 
-	if err := p2pMod.Send(validatorAddress, anyProto); err != nil {
+	if err := helpers.P2PMod.Send(validatorAddress, anyProto); err != nil {
 		logger.Global.Error().Err(err).Msg("Failed to send debug message")
 	}
 }
 
 // fetchPeerstore retrieves the providers from the CLI context and uses them to retrieve the address book for the current height
 func fetchPeerstore(cmd *cobra.Command) (typesP2P.Peerstore, error) {
-	bus, ok := getValueFromCLIContext[modules.Bus](cmd, busCLICtxKey)
+	bus, ok := helpers.GetValueFromCLIContext[modules.Bus](cmd, helpers.BusCLICtxKey)
 	if !ok || bus == nil {
 		return nil, errors.New("retrieving bus from CLI context")
 	}
-	modulesRegistry := bus.GetModulesRegistry()
-	pstoreProvider, err := modulesRegistry.GetModule(peerstore_provider.ModuleName)
+	// TECHDEBT(#810, #811): use `bus.GetPeerstoreProvider()` after peerstore provider
+	// is retrievable as a proper submodule
+	pstoreProvider, err := bus.GetModulesRegistry().GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
 	if err != nil {
 		return nil, errors.New("retrieving peerstore provider")
 	}
-	currentHeightProvider, err := modulesRegistry.GetModule(current_height_provider.ModuleName)
-	if err != nil {
-		return nil, errors.New("retrieving currentHeightProvider")
-	}
+	currentHeightProvider := bus.GetCurrentHeightProvider()
 
-	height := currentHeightProvider.(current_height_provider.CurrentHeightProvider).CurrentHeight()
+	height := currentHeightProvider.CurrentHeight()
 	pstore, err := pstoreProvider.(peerstore_provider.PeerstoreProvider).GetStakedPeerstoreAtHeight(height)
 	if err != nil {
 		return nil, fmt.Errorf("retrieving peerstore at height %d", height)

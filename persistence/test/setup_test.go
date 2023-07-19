@@ -11,8 +11,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
+
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/types"
+	ptypes "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
@@ -22,8 +25,6 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 	"github.com/pokt-network/pocket/shared/utils"
-	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 )
 
 var (
@@ -99,9 +100,9 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 		Persistence: &configs.PersistenceConfig{
 			PostgresUrl:       databaseUrl,
 			NodeSchema:        testSchema,
-			BlockStorePath:    "",
-			TxIndexerPath:     "",
-			TreesStoreDir:     "",
+			BlockStorePath:    ":memory:",
+			TxIndexerPath:     ":memory:",
+			TreesStoreDir:     ":memory:",
 			MaxConnsCount:     5,
 			MinConnsCount:     1,
 			MaxConnLifetime:   "5m",
@@ -139,7 +140,7 @@ func fuzzSingleProtocolActor(
 	f *testing.F,
 	newTestActor func() (*coreTypes.Actor, error),
 	getTestActor func(db *persistence.PostgresContext, address string) (*coreTypes.Actor, error),
-	protocolActorSchema types.ProtocolActorSchema,
+	protocolActorSchema ptypes.ProtocolActorSchema,
 ) {
 	// Clear the genesis state.
 	clearAllState()
@@ -193,9 +194,9 @@ func fuzzSingleProtocolActor(
 					newStakedTokens = getRandomBigIntString()
 				case 1:
 					switch protocolActorSchema.GetActorSpecificColName() {
-					case types.ServiceURLCol:
+					case ptypes.ServiceURLCol:
 						serviceUrl = getRandomServiceURL()
-					case types.UnusedCol:
+					case ptypes.UnusedCol:
 						serviceUrl = ""
 					default:
 						t.Error("Unexpected actor specific column name")

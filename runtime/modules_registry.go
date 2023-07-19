@@ -10,22 +10,22 @@ var _ modules.ModulesRegistry = &modulesRegistry{}
 
 type modulesRegistry struct {
 	m        sync.Mutex
-	registry map[string]modules.Module
+	registry map[string]modules.InjectableModule
 }
 
-func NewModulesRegistry() *modulesRegistry {
+func NewModulesRegistry() modules.ModulesRegistry {
 	return &modulesRegistry{
-		registry: make(map[string]modules.Module),
+		registry: make(map[string]modules.InjectableModule),
 	}
 }
 
-func (m *modulesRegistry) RegisterModule(module modules.Module) {
+func (m *modulesRegistry) RegisterModule(module modules.InjectableModule) {
 	m.m.Lock()
 	defer m.m.Unlock()
 	m.registry[module.GetModuleName()] = module
 }
 
-func (m *modulesRegistry) GetModule(moduleName string) (modules.Module, error) {
+func (m *modulesRegistry) GetModule(moduleName string) (modules.InjectableModule, error) {
 	m.m.Lock()
 	defer m.m.Unlock()
 	if mod, ok := m.registry[moduleName]; ok {

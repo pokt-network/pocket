@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.24] - 2023-06-21
+
+- Update handlers to use the new relay payload types
+
+## [0.0.0.23] - 2023-06-19
+
+- Remove AAT reference from handlers
+- Update openapi spec and handler code with JSONRPC fields 
+
+## [0.0.0.22] - 2023-06-06
+
+- Adds RPC PostV1QueryNodeRoles
+
+## [0.0.0.21] - 2023-06-02
+
+- Add a few clarifying comments
+- Use `utilityModule.GetIndexedTransaction` instead of `utilityUnitOfWork.HydrateTxId` which only retrieves indexed transactions instead of applying the underlying business logic
+
+## [0.0.0.20] - 2023-06-01
+
+- Removed AAT type from rpc handlers
+
+## [0.0.0.19] - 2023-05-24
+
+- Updates rpc handlers to use updated BlockStore interface
+
 ## [0.0.0.18] - 2023-05-04
 
 - Add parity with V0's RPC spec

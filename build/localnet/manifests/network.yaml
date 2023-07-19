@@ -34,3 +34,39 @@ spec:
     - port: 9000
       targetPort: 9000
       name: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pocket-fishermen
+  annotations:
+    prometheus.io/scrape: "false"
+    prometheus.io/port: "9000"
+spec:
+  selector:
+    pokt.network/purpose: fisherman
+  ports:
+    - port: 50832
+      targetPort: 50832
+      name: rpc
+    - port: 9000
+      targetPort: 9000
+      name: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pocket-servicers
+  annotations:
+    prometheus.io/scrape: "false"
+    prometheus.io/port: "9000"
+spec:
+  selector:
+    pokt.network/purpose: servicer
+  ports:
+    - port: 50832
+      targetPort: 50832
+      name: rpc
+    - port: 9000
+      targetPort: 9000
+      name: metrics

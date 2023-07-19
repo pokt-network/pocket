@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.49] - 2023-06-14
+
+- Updated keybase to use Secretbox encryption rather than AES-GCM, changing backup binary
+
+## [0.0.0.48] - 2023-06-13
+
+- Added `-count=1` to tilt e2e-test execution to break the go test cache
+
+## [0.0.0.47] - 2023-06-13
+
+- Replaced `RPC_HOST` with `POCKET_REMOTE_CLI_URL` or `--pocket-remote-cli-url` where appropriate
+- Added `remote-cli-url` flag to cluster manager & refactored
+
+## [0.0.0.46] - 2023-06-06
+
+- Renames config files and actor hostnames
+- Adds servicer and fisherman nodes to localnet deployments
+- Removes hard-coded default namespace
+
+## [0.0.0.45] - 2023-06-01
+
+- Added 2 applications to genesis.json in LocalNet configuration
+- Added 2 servicers to genesis.json in LocalNet configuration
+
+## [0.0.0.44] - 2023-05-25
+
+- Update docker file to use `p1` as the binary name for the user facing client
+
+## [0.0.0.43] - 2023-05-18
+
+- Added functionality to `cluster-manager` to delete crashed pods so StatefulSetController would recreate them with a new version.
+
 ## [0.0.0.42] - 2023-05-12
 
 - Added private keys for all (except fisherman) actors

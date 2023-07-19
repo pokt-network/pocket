@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dev-cli-client
-  namespace: default
+  # namespace: default # default namespace commented out to allow user override
   labels:
     app: v1-cli-client
 spec:
@@ -38,8 +38,6 @@ spec:
               memory: "512Mi"
               cpu: "4"
           env:
-            - name: POCKET_P2P_IS_CLIENT_ONLY
-              value: "true"
             - name: CONFIG_PATH
               value: "/var/pocket/config/config.json"
             - name: GENESIS_PATH
@@ -74,10 +72,11 @@ spec:
             - name: POCKET_PERSISTENCE_NODE_SCHEMA
               value: validator1
               # Any host that is visible and connected to the cluster can be arbitrarily selected as the RPC host
-            - name: RPC_HOST
-              value: pocket-full-nodes
-              # TECHDEBT(#678): debug client requires hostname to participate
-              # in P2P networking.
+            - name: POCKET_REMOTE_CLI_URL
+              # CONSIDERATION: Should we use a validator or full node for this?
+              value: http://pocket-validators:50832
+              # value: http://full-node-001-pocket:50832
+              # TECHDEBT(#678): debug client requires hostname to participate in P2P networking.
             - name: POCKET_P2P_HOSTNAME
               value: "127.0.0.1"
           volumeMounts:

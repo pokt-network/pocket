@@ -42,6 +42,7 @@ func (m *p2pModule) configureBootstrapNodes() error {
 }
 
 // bootstrap attempts to bootstrap from a bootstrap node
+// TECHDEBT(#859): refactor bootstrapping.
 func (m *p2pModule) bootstrap() error {
 	var pstore typesP2P.Peerstore
 
@@ -58,14 +59,22 @@ func (m *p2pModule) bootstrap() error {
 			continue
 		}
 
-		pstoreProvider := rpcABP.NewRPCPeerstoreProvider(
-			rpcABP.WithP2PConfig(
-				m.GetBus().GetRuntimeMgr().GetConfig().P2P,
-			),
+		pstoreProvider, err := rpcABP.Create(
+			m.GetBus(),
 			rpcABP.WithCustomRPCURL(bootstrapNode),
 		)
+		if err != nil {
+			return fmt.Errorf("creating RPC peerstore provider: %w", err)
+		}
 
-		currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(rpcCHP.WithCustomRPCURL(bootstrapNode))
+		currentHeightProvider, err := rpcCHP.Create(
+			m.GetBus(),
+			rpcCHP.WithCustomRPCURL(bootstrapNode),
+		)
+		if err != nil {
+			m.logger.Warn().Err(err).Str("endpoint", bootstrapNode).Msg("Error getting current height from bootstrap node")
+			continue
+		}
 
 		pstore, err = pstoreProvider.GetStakedPeerstoreAtHeight(currentHeightProvider.CurrentHeight())
 		if err != nil {
@@ -76,14 +85,14 @@ func (m *p2pModule) bootstrap() error {
 
 	for _, peer := range pstore.GetPeerList() {
 		m.logger.Debug().Str("address", peer.GetAddress().String()).Msg("Adding peer to router")
-		if err := m.router.AddPeer(peer); err != nil {
+		if err := m.stakedActorRouter.AddPeer(peer); err != nil {
 			m.logger.Error().Err(err).
 				Str("pokt_address", peer.GetAddress().String()).
 				Msg("adding peer")
 		}
 	}
 
-	if m.router.GetPeerstore().Size() == 0 {
+	if m.stakedActorRouter.GetPeerstore().Size() == 0 {
 		return fmt.Errorf("bootstrap failed")
 	}
 	return nil

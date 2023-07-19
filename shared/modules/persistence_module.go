@@ -1,8 +1,10 @@
 package modules
 
-//go:generate mockgen -destination=./mocks/persistence_module_mock.go github.com/pokt-network/pocket/shared/modules PersistenceModule,PersistenceRWContext,PersistenceReadContext,PersistenceWriteContext
+//go:generate mockgen -destination=./mocks/persistence_module_mock.go github.com/pokt-network/pocket/shared/modules PersistenceModule,PersistenceRWContext,PersistenceReadContext,PersistenceWriteContext,PersistenceLocalContext
 
 import (
+	"math/big"
+
 	"github.com/pokt-network/pocket/persistence/blockstore"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/runtime/genesis"
@@ -18,19 +20,31 @@ type PersistenceModule interface {
 
 	// Context operations
 	NewRWContext(height int64) (PersistenceRWContext, error)
+	// TODO(#406): removing height from "NewReadContext" input and passing it to specific methods seems a better choice.
+	//	This could prevent confusion when retrieving the value of a parameter for a height less than the current height,
+	//		e.g. when getting the App Token sessions multiplier for the starting height of a session.
 	NewReadContext(height int64) (PersistenceReadContext, error)
 	ReleaseWriteContext() error // The module can maintain many read contexts, but only one write context can exist at a time
 
-	// BlockStore operations
+	// BlockStore maps a block height to an *coreTypes.IndexedTransaction
 	GetBlockStore() blockstore.BlockStore
+
 	NewWriteContext() PersistenceRWContext
 
 	// Indexer operations
 	GetTxIndexer() indexer.TxIndexer
 	TransactionExists(transactionHash string) (bool, error)
 
+	// TreeStore operations
+	GetTreeStore() TreeStoreModule
+
 	// Debugging / development only
 	HandleDebugMessage(*messaging.DebugMessage) error
+
+	// GetLocalContext returns a local persistence context that can be used to store/retrieve node-specific, i.e. off-chain, data
+	// The module can maintain a single (i.e. a singleton) local context for both read and write operations: subsequent calls to GetLocalContext return
+	// the same local context.
+	GetLocalContext() (PersistenceLocalContext, error)
 }
 
 // Interface defining the context within which the node can operate with the persistence layer.
@@ -129,6 +143,17 @@ type PersistenceWriteContext interface {
 	// Flag Operations
 	InitFlags() error
 	SetFlag(paramName string, value any, enabled bool) error
+
+	// IBC Operations
+	// SetIBCStoreEntry sets the key-value pair in the ibc_entries table at the current height the
+	// key-value pairs represent the same key-value pairings in the IBC state tree. This table is
+	// used for data retrieval purposes and to update the state tree from the mempool of IBC transactions.
+	SetIBCStoreEntry(key, value []byte) error
+	// SetIBCEvent stores an IBC event in the persistence context at the current height
+	SetIBCEvent(event *coreTypes.IBCEvent) error
+
+	// Relay Operations
+	RecordRelayService(applicationAddress string, key []byte, relay *coreTypes.Relay, response *coreTypes.RelayResponse) error
 }
 
 type PersistenceReadContext interface {
@@ -219,4 +244,27 @@ type PersistenceReadContext interface {
 	GetIntFlag(paramName string, height int64) (int, bool, error)
 	GetStringFlag(paramName string, height int64) (string, bool, error)
 	GetBytesFlag(paramName string, height int64) ([]byte, bool, error)
+
+	// IBC Queries
+	// GetIBCStoreEntry returns the value of the key at the given height from the ibc_entries table
+	GetIBCStoreEntry(key []byte, height int64) ([]byte, error)
+	// GetIBCEvent returns the matching IBC events for any topic at the height provied
+	GetIBCEvents(height uint64, topic string) ([]*coreTypes.IBCEvent, error)
+}
+
+// PersistenceLocalContext defines the set of operations specific to local persistence.
+//
+//	This context should be used for node-specific data, e.g. records of served relays.
+//	This is in contrast to PersistenceRWContext which should be used to store on-chain data.
+type PersistenceLocalContext interface {
+	// StoreServicedRelay stores record of a serviced relay and its response in the local context.
+	// The stored service relays will be used to:
+	//	a) check the number of tokens used per session, and
+	//	b) prepare claim/proof messages once the session is over
+	// The "relayDigest" and "relayReqResBytes" parameters will be used as key and leaf contents in the constructed SMT, respectively.
+	StoreServicedRelay(session *coreTypes.Session, relayDigest, relayReqResBytes []byte) error
+	// GetSessionTokensUsed returns the number of tokens that have been used for the provided session.
+	//    It returns the count of tokens used by the servicer instance
+	//	for the application associated with the session
+	GetSessionTokensUsed(*coreTypes.Session) (*big.Int, error)
 }

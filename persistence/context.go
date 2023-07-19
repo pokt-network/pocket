@@ -31,7 +31,7 @@ type PostgresContext struct {
 	//                 Need to simply access them via the bus.
 	blockStore blockstore.BlockStore
 	txIndexer  indexer.TxIndexer
-	stateTrees *stateTrees
+	stateTrees modules.TreeStoreModule
 
 	networkId string
 }
@@ -50,7 +50,7 @@ func (p *PostgresContext) RollbackToSavePoint(bytes []byte) error {
 // IMPROVE(#361): Guarantee the integrity of the state
 // Full details in the thread from the PR review: https://github.com/pokt-network/pocket/pull/285#discussion_r1018471719
 func (p *PostgresContext) ComputeStateHash() (string, error) {
-	stateHash, err := p.updateMerkleTrees()
+	stateHash, err := p.stateTrees.Update(p.tx, uint64(p.Height))
 	if err != nil {
 		return "", err
 	}
@@ -68,8 +68,8 @@ func (p *PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
 		return err
 	}
 
-	// Store block in the KV store
-	if err := p.storeBlock(block); err != nil {
+	// Save the block in the BlockStore at the current height
+	if err := p.blockStore.StoreBlock(uint64(p.Height), block); err != nil {
 		return err
 	}
 
