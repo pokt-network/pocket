@@ -97,30 +97,6 @@ func (p *PostgresContext) GetValidatorSet(height int64) (*coreTypes.ValidatorSet
 	return valSet, nil
 }
 
-// GetValidatorSetWithProposer returns the validator set for a given height with
-// the Proposer field set
-//
-// NOTE: This will only succeed when the block has been committed
-func (p *PostgresContext) GetValidatorSetWithProposer(height int64) (*coreTypes.ValidatorSet, error) {
-	valSet, err := p.GetValidatorSet(height)
-	if err != nil {
-		return nil, err
-	}
-	block, err := p.blockStore.GetBlock(uint64(height))
-	if err != nil {
-		return nil, err
-	}
-	proposer, err := p.GetValidator(block.BlockHeader.ProposerAddress, height)
-	if err != nil {
-		return nil, err
-	}
-	valSet.Proposer = &coreTypes.SimpleValidator{
-		Address: proposer.GetAddress(),
-		PubKey:  proposer.GetPublicKey(),
-	}
-	return valSet, nil
-}
-
 func (p *PostgresContext) GetAllServicers(height int64) (sn []*coreTypes.Actor, err error) {
 	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.ServicerActor.GetAllQuery(height))

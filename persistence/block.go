@@ -152,14 +152,6 @@ func (p *PostgresContext) getCurrentAndNextValSetHashes(proposerAddr []byte) (st
 	if err != nil {
 		return "", "", err
 	}
-	proposer, err := p.GetValidator(proposerAddr, p.Height-1)
-	if err != nil {
-		return "", "", err
-	}
-	valSet.Proposer = &coreTypes.SimpleValidator{
-		Address: proposer.GetAddress(),
-		PubKey:  proposer.GetPublicKey(),
-	}
 	valSetBz, err := codec.GetCodec().Marshal(valSet)
 	if err != nil {
 		return "", "", err

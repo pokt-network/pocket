@@ -26,7 +26,6 @@ message Block {
 
 message ValidatorSet {
     repeated SimpleValidator validators = 1;
-    SimpleValidator proposer = 2;
 }
 
 message SimpleValidator {
