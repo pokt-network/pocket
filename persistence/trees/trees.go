@@ -1,7 +1,7 @@
 // package trees maintains a set of sparse merkle trees
 // each backed by the `KVStore` interface. It offers an atomic
 // commit and rollback mechanism for interacting with
-// that core resource map of merkle trees.
+// its core resource - a set of merkle trees.
 // `Commit` must be called after any `Update` calls to persist changes.
 // `Savepoint` is first called to create a new anchor in time.
 // `Update` is called, which will fetch and apply the changes to their
