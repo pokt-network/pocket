@@ -220,6 +220,7 @@ type PersistenceReadContext interface {
 	// Validator Queries
 	GetValidator(address []byte, height int64) (*coreTypes.Actor, error)
 	GetAllValidators(height int64) ([]*coreTypes.Actor, error)
+	GetValidatorSet(height int64) (*coreTypes.ValidatorSet, error)
 	GetValidatorExists(address []byte, height int64) (exists bool, err error)
 	GetValidatorStakeAmount(height int64, address []byte) (string, error)
 	GetValidatorsReadyToUnstake(height int64, status int32) (validators []*moduleTypes.UnstakingActor, err error)

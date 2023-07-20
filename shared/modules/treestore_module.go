@@ -33,4 +33,6 @@ type TreeStoreModule interface {
 	DebugClearAll() error
 	// GetTree returns the specified tree's root and nodeStore in order to be imported elsewhere
 	GetTree(name string) ([]byte, kvstore.KVStore)
+	// GetTreeHashes returns a map of tree names to their root hashes
+	GetTreeHashes() map[string]string
 }
