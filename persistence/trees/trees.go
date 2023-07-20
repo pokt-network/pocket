@@ -222,13 +222,13 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 // Commit commits changes in the sub-trees to the root tree and then commits updates for each sub-tree.
 func (t *treeStore) Commit() error {
 	if err := t.rootTree.tree.Commit(); err != nil {
-		t.logger.Err(err).Msg("failed to commit root tree: changes to sub-trees will not be committed - this should be investigated")
+		t.logger.Err(err).Msg("TECHDEBT: failed to commit root tree: changes to sub-trees will not be committed - this should be investigated")
 		return fmt.Errorf("failed to commit root tree: %w", err)
 	}
 
 	for name, treeStore := range t.merkleTrees {
 		if err := treeStore.tree.Commit(); err != nil {
-			t.logger.Err(err).Msgf("failed to commit to %s tree: changes will not be saved - this should be investigated", name)
+			t.logger.Err(err).Msgf("TECHDEBT: failed to commit to %s tree: changes will not be saved - this should be investigated", name)
 			return fmt.Errorf("failed to commit %s: %w", name, err)
 		}
 	}
