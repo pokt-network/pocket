@@ -41,7 +41,7 @@ type ClientManager interface {
 	UpdateClient(identifier string, clientMessage ClientMessage) error
 
 	// UpgradeClient upgrades an existing client with the given identifier using the
-	// ClientState and ConsentusState provided. It can only do so if the new client
+	// ClientState and ConsenusState provided. It can only do so if the new client
 	// was committed to by the old client at the specified upgrade height
 	UpgradeClient(
 		identifier string,
@@ -60,7 +60,7 @@ type ClientManager interface {
 	// GetHostConsensusState returns the ConsensusState at the given height for the host chain
 	GetHostConsensusState(height Height) (ConsensusState, error)
 
-	// GetHostClientState returns the ClientState at the provieded height for the host chain
+	// GetHostClientState returns the ClientState at the provided height for the host chain
 	GetHostClientState(height Height) (ClientState, error)
 
 	// GetCurrentHeight returns the current IBC client height of the network
