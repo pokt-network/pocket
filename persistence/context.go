@@ -81,11 +81,6 @@ func (p *PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
 		return err
 	}
 
-	// Commit the tree store updates
-	if err := p.stateTrees.Commit(); err != nil {
-		return err
-	}
-
 	// Commit the SQL transaction
 	ctx := context.TODO()
 	if err := p.tx.Commit(ctx); err != nil {
