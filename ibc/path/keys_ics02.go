@@ -16,10 +16,16 @@ func FullClientStateKey(clientID string) []byte {
 	return fullClientKey(clientID, KeyClientState)
 }
 
-// ClientStatePath takes a client identifier and returns a Path string where it can be accessed
+// clientStatePath takes a client identifier and returns a Path string where it can be accessed
 // within the client store
-func ClientStatePath(clientID string) string {
+func clientStatePath(clientID string) string {
 	return clientPath(clientID, KeyClientState)
+}
+
+// ClientStateKey takes a client identifier and returns a key where it can be accessed
+// within the client store
+func ClientStateKey(clientID string) []byte {
+	return []byte(clientStatePath(clientID))
 }
 
 // consensusStatePath returns the suffix store key for the consensus state at a
