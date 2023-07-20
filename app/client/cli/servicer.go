@@ -72,6 +72,8 @@ Will prompt the user for the *application* account passphrase`,
 			Aliases: []string{},
 			Args:    cobra.ExactArgs(4),
 			RunE: func(cmd *cobra.Command, args []string) error {
+				defer sessionCache.Stop()
+
 				applicationAddr := args[0]
 				servicerAddr := args[1]
 				chain := args[2]

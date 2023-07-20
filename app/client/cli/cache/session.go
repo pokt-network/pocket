@@ -67,6 +67,11 @@ func (s *SessionCache) Set(session *rpc.Session) error {
 	return nil
 }
 
+// Stop call stop on the backing store. No calls should be made to Get or Set after calling Stop.
+func (s *SessionCache) Stop() error {
+	return s.store.Stop()
+}
+
 // sessionKey returns a key to get/set a session, based on application's address and the relay chain.
 //
 //	The height is not used as part of the key, because for each app+chain combination only one session, i.e. the current one, is of interest.
