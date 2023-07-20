@@ -118,8 +118,8 @@ func TestTreeStore_SaveAndLoad(t *testing.T) {
 		logger:       &zerolog.Logger{},
 		treeStoreDir: tmpDir,
 	}
-	ts.setupTrees()
-	require.NotEmpty(t, ts)
+	require.NoError(t, ts.Start())
+	require.NotNil(t, ts.rootTree.tree)
 
 	for _, treeName := range stateTreeNames {
 		err := ts.merkleTrees[treeName].tree.Update([]byte("foo"), []byte("bar"))
@@ -132,18 +132,29 @@ func TestTreeStore_SaveAndLoad(t *testing.T) {
 	hash1 := ts.getStateHash()
 	require.NotEmpty(t, hash1)
 
-	require.NoError(t, ts.Savepoint())
+	w, err := ts.save()
+	require.NoError(t, err)
+	require.NotNil(t, w)
+	require.NotNil(t, w.rootHash)
+	require.NotNil(t, w.merkleRoots)
+
+	// Stop the first tree store so that it's databases are no longer used
+	require.NoError(t, ts.Stop())
 
 	// declare a second TreeStore with no trees then load the first worldstate into it
 	ts2 := &treeStore{
-		logger:       &zerolog.Logger{},
+		logger:       logger.Global.CreateLoggerForModule(modules.TreeStoreSubmoduleName),
 		treeStoreDir: tmpDir,
 	}
+	// TODO IN THIS COMMIT do we need to start this treestore?
+	// require.NoError(t, ts2.Start())
 
 	// Load sets a tree store to the provided worldstate
-	err = ts2.Load(ts.prevState)
+	err = ts2.Load(w)
 	require.NoError(t, err)
 
 	hash2 := ts2.getStateHash()
+
+	// Assert that hash is unchanged from save and load
 	require.Equal(t, hash1, hash2)
 }

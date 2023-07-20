@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -24,30 +25,31 @@ const (
 	serviceURLFormat = "node%d.consensus:42069"
 )
 
+// DISCUSS: This is duplicated from inside trees package. Is it worth exporting or is it better as duplicate code?
+var stateTreeNames = []string{
+	"root",
+	"app",
+	"val",
+	"fish",
+	"servicer",
+	"account",
+	"pool",
+	"transactions",
+	"params",
+	"flags",
+	"ibc",
+}
+
 func TestTreeStore_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
 	mockBus := createMockBus(t, mockRuntimeMgr)
-	genesisStateMock := createMockGenesisState(nil)
-	persistenceMock := preparePersistenceMock(t, mockBus, genesisStateMock)
-
-	mockBus.EXPECT().
-		GetPersistenceModule().
-		Return(persistenceMock).
-		AnyTimes()
-	persistenceMock.EXPECT().
-		GetBus().
-		AnyTimes().
-		Return(mockBus)
-	persistenceMock.EXPECT().
-		NewRWContext(int64(0)).
-		AnyTimes()
-	persistenceMock.EXPECT().
-		GetTxIndexer().
-		AnyTimes()
 
 	treemod, err := trees.Create(mockBus, trees.WithTreeStoreDirectory(":memory:"))
 	assert.NoError(t, err)
+
+	require.NoError(t, treemod.Start())
+
 	got := treemod.GetBus()
 	assert.Equal(t, got, mockBus)
 
@@ -59,6 +61,37 @@ func TestTreeStore_Create(t *testing.T) {
 	keys, vals, err := ns.GetAll(nil, false)
 	require.NoError(t, err)
 	require.Empty(t, keys, vals)
+}
+
+func TestTreeStore_StartAndStop(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
+	mockBus := createMockBus(t, mockRuntimeMgr)
+
+	treemod, err := trees.Create(
+		mockBus,
+		trees.WithTreeStoreDirectory(":memory:"),
+		trees.WithLogger(&zerolog.Logger{}))
+	assert.NoError(t, err)
+
+	// GetTree should return nil for each tree if Start has not been called
+	for _, v := range stateTreeNames {
+		root, ns := treemod.GetTree(v)
+		require.Empty(t, root)
+		require.Empty(t, ns)
+	}
+	// Should start without error
+	require.NoError(t, treemod.Start())
+
+	// Should stop without error
+	require.NoError(t, treemod.Stop())
+
+	// Should error if node store is called after Stop
+	for _, treeName := range stateTreeNames {
+		_, nodestore := treemod.GetTree(treeName)
+		_, _, err = nodestore.GetAll([]byte(""), false)
+		require.Error(t, err, "%s tree failed to return an error when expected", treeName)
+	}
 }
 
 func TestTreeStore_DebugClearAll(t *testing.T) {

@@ -120,10 +120,19 @@ type worldState struct {
 // `Commit()` to write to the nodestore.
 func (t *treeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
 	if name == RootTreeName {
-		return t.rootTree.tree.Root(), t.rootTree.nodeStore
+		if t.rootTree != nil {
+			if t.rootTree.tree != nil {
+				return t.rootTree.tree.Root(), t.rootTree.nodeStore
+			}
+			return nil, nil
+		}
+		return nil, nil
 	}
 	if tree, ok := t.merkleTrees[name]; ok {
-		return tree.tree.Root(), tree.nodeStore
+		if tree != nil {
+			return tree.tree.Root(), tree.nodeStore
+		}
+		return nil, nil
 	}
 	return nil, nil
 }
