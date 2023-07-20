@@ -28,6 +28,8 @@ message ValidatorSet {
     repeated ValidatorIdentity validators = 1;
 }
 
+// DISCUSS(M5): Should we include voting power in this identity?
+// Ignoring voting_power/stake for leader election? Is this needed - I dont think so
 message ValidatorIdentity {
     string address = 1;
     string pub_key = 2;
