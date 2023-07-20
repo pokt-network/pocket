@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	testRelaychainEth    = "ETH-Goerli"
-	testSessionHeight    = 8
-	testCurrentHeight    = 9
+	testRelaychainEth = "ETH-Goerli"
+	testSessionHeight = 8
+	testCurrentHeight = 9
 )
 
 func TestGetSessionFromCache(t *testing.T) {
