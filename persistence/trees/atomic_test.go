@@ -3,15 +3,16 @@ package trees
 import (
 	"encoding/hex"
 	"fmt"
+	"io"
+	"os"
 	"testing"
 
 	"github.com/pokt-network/pocket/logger"
 	mock_types "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/shared/modules"
-	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
 
 	"github.com/golang/mock/gomock"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,8 +27,8 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	mockTxIndexer := mock_types.NewMockTxIndexer(ctrl)
-	mockBus := mockModules.NewMockBus(ctrl)
-	mockPersistenceMod := mockModules.NewMockPersistenceModule(ctrl)
+	mockBus := mock_modules.NewMockBus(ctrl)
+	mockPersistenceMod := mock_modules.NewMockPersistenceModule(ctrl)
 
 	mockBus.EXPECT().GetPersistenceModule().AnyTimes().Return(mockPersistenceMod)
 	mockPersistenceMod.EXPECT().GetTxIndexer().AnyTimes().Return(mockTxIndexer)
@@ -95,7 +96,7 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 	hash3 := ts.getStateHash()
 	require.Equal(t, hash3, hash2)
 	require.Equal(t, hash3, h1)
-	ts.Rollback()
+	require.NoError(t, ts.Rollback())
 
 	// confirm it's not in the tree
 	v, err := ts.merkleTrees[TransactionsTreeName].tree.Get([]byte("fiz"))
@@ -104,18 +105,94 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 }
 
 func TestTreeStore_SaveAndLoad(t *testing.T) {
+	t.Parallel()
+	t.Run("should save a backup in a directory", func(t *testing.T) {
+		ts := newTestTreeStore(t)
+		tmpdir := t.TempDir()
+		// assert that the directory is empty before backup
+		ok, err := isEmpty(tmpdir)
+		require.NoError(t, err)
+		require.True(t, ok)
+
+		// Trigger a backup
+		require.NoError(t, ts.Backup(tmpdir))
+
+		// assert that the directory is not empty after Backup has returned
+		ok, err = isEmpty(tmpdir)
+		require.NoError(t, err)
+		require.False(t, ok)
+	})
+	t.Run("should load a backup and maintain TreeStore hash integrity", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		tmpDir := t.TempDir()
+
+		mockTxIndexer := mock_types.NewMockTxIndexer(ctrl)
+		mockBus := mock_modules.NewMockBus(ctrl)
+		mockPersistenceMod := mock_modules.NewMockPersistenceModule(ctrl)
+
+		mockBus.EXPECT().GetPersistenceModule().AnyTimes().Return(mockPersistenceMod)
+		mockPersistenceMod.EXPECT().GetTxIndexer().AnyTimes().Return(mockTxIndexer)
+
+		ts := &treeStore{
+			logger:       logger.Global.CreateLoggerForModule(modules.TreeStoreSubmoduleName),
+			treeStoreDir: tmpDir,
+		}
+		require.NoError(t, ts.Start())
+		require.NotNil(t, ts.rootTree.tree)
+
+		for _, treeName := range stateTreeNames {
+			err := ts.merkleTrees[treeName].tree.Update([]byte("foo"), []byte("bar"))
+			require.NoError(t, err)
+		}
+
+		err := ts.Commit()
+		require.NoError(t, err)
+
+		hash1 := ts.getStateHash()
+		require.NotEmpty(t, hash1)
+
+		w, err := ts.save()
+		require.NoError(t, err)
+		require.NotNil(t, w)
+		require.NotNil(t, w.rootHash)
+		require.NotNil(t, w.merkleRoots)
+
+		// Stop the first tree store so that it's databases are no longer used
+		require.NoError(t, ts.Stop())
+
+		// declare a second TreeStore with no trees then load the first worldstate into it
+		ts2 := &treeStore{
+			logger:       logger.Global.CreateLoggerForModule(modules.TreeStoreSubmoduleName),
+			treeStoreDir: tmpDir,
+		}
+
+		// Load sets a tree store to the provided worldstate
+		err = ts2.Load(w)
+		require.NoError(t, err)
+
+		hash2 := ts2.getStateHash()
+
+		// Assert that hash is unchanged from save and load
+		require.Equal(t, hash1, hash2)
+	})
+}
+
+// creates a new tree store with a tmp directory for nodestore persistence
+// and then starts the tree store and returns its pointer.
+func newTestTreeStore(t *testing.T) *treeStore {
+	t.Helper()
 	ctrl := gomock.NewController(t)
 	tmpDir := t.TempDir()
 
 	mockTxIndexer := mock_types.NewMockTxIndexer(ctrl)
-	mockBus := mockModules.NewMockBus(ctrl)
-	mockPersistenceMod := mockModules.NewMockPersistenceModule(ctrl)
+	mockBus := mock_modules.NewMockBus(ctrl)
+	mockPersistenceMod := mock_modules.NewMockPersistenceModule(ctrl)
 
 	mockBus.EXPECT().GetPersistenceModule().AnyTimes().Return(mockPersistenceMod)
 	mockPersistenceMod.EXPECT().GetTxIndexer().AnyTimes().Return(mockTxIndexer)
 
 	ts := &treeStore{
-		logger:       &zerolog.Logger{},
+		logger:       logger.Global.CreateLoggerForModule(modules.TreeStoreSubmoduleName),
 		treeStoreDir: tmpDir,
 	}
 	require.NoError(t, ts.Start())
@@ -132,29 +209,19 @@ func TestTreeStore_SaveAndLoad(t *testing.T) {
 	hash1 := ts.getStateHash()
 	require.NotEmpty(t, hash1)
 
-	w, err := ts.save()
-	require.NoError(t, err)
-	require.NotNil(t, w)
-	require.NotNil(t, w.rootHash)
-	require.NotNil(t, w.merkleRoots)
+	return ts
+}
 
-	// Stop the first tree store so that it's databases are no longer used
-	require.NoError(t, ts.Stop())
-
-	// declare a second TreeStore with no trees then load the first worldstate into it
-	ts2 := &treeStore{
-		logger:       logger.Global.CreateLoggerForModule(modules.TreeStoreSubmoduleName),
-		treeStoreDir: tmpDir,
+func isEmpty(dir string) (bool, error) {
+	f, err := os.Open(dir)
+	if err != nil {
+		return false, err
 	}
-	// TODO IN THIS COMMIT do we need to start this treestore?
-	// require.NoError(t, ts2.Start())
+	defer f.Close()
 
-	// Load sets a tree store to the provided worldstate
-	err = ts2.Load(w)
-	require.NoError(t, err)
-
-	hash2 := ts2.getStateHash()
-
-	// Assert that hash is unchanged from save and load
-	require.Equal(t, hash1, hash2)
+	_, err = f.Readdirnames(1) // Or f.Readdir(1)
+	if err == io.EOF {
+		return true, nil
+	}
+	return false, err // Either not empty or error, suits both cases
 }

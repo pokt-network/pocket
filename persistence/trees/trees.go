@@ -15,9 +15,11 @@ package trees
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"hash"
 	"log"
+	"path/filepath"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pokt-network/pocket/persistence/indexer"
@@ -379,7 +381,10 @@ func (t *treeStore) save() (*worldState, error) {
 
 	w := &worldState{
 		treeStoreDir: t.treeStoreDir,
-		merkleTrees:  map[string]*stateTree{},
+		merkleRoots:  make(map[string][]byte),
+		merkleTrees:  make(map[string]*stateTree),
+		rootHash:     t.rootTree.tree.Root(),
+		rootTree:     t.rootTree,
 	}
 
 	for treeName := range t.merkleTrees {
@@ -401,6 +406,20 @@ func (t *treeStore) save() (*worldState, error) {
 	}
 
 	return w, nil
+}
+
+// Backup creates a new backup of each tree in the tree store to the provided directory.
+// Each tree is backed up in an eponymous file in the provided backupDir.
+func (t *treeStore) Backup(backupDir string) error {
+	errs := []error{}
+	for _, st := range t.merkleTrees {
+		treePath := filepath.Join(backupDir, st.name)
+		if err := st.nodeStore.Backup(treePath); err != nil {
+			t.logger.Err(err).Msgf("failed to backup %s tree: %+v", st.name, err)
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
 }
 
 ////////////////////////

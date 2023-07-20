@@ -2,6 +2,9 @@ package kvstore
 
 import (
 	"encoding/hex"
+	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -330,10 +333,74 @@ func TestKVStore_ClearAll(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestKVStore_Backup(t *testing.T) {
+	t.Run("should backup an in-memory database", func(t *testing.T) {
+		store := NewMemKVStore()
+		require.NotNil(t, store)
+
+		tmpdir := t.TempDir()
+		path := filepath.Join(tmpdir, "TestKVStore_Backup_InMemory.bak")
+		require.NoError(t, store.Backup(path))
+
+		empty, err := isEmpty(t, tmpdir)
+		require.NoError(t, err)
+		require.False(t, empty)
+
+		// open the directory and assert on individual files
+		dir, err := os.Open(tmpdir)
+		require.NoError(t, err)
+		defer dir.Close()
+
+		files, err := dir.Readdir(0) // 0 means read all directory entries
+		require.NoError(t, err)
+		require.Equal(t, len(files), 1)
+	})
+	t.Run("should backup an on-disk store database", func(t *testing.T) {
+		tmpdir := t.TempDir()
+		kvpath := filepath.Join(tmpdir, "TestKVStore_Backup_OnDisk_Source.bak")
+		store, err := NewKVStore(kvpath)
+		require.NoError(t, err)
+		require.NotNil(t, store)
+
+		backupDir := t.TempDir()
+		path := filepath.Join(backupDir, "TestKVStore_Backup_OnDisk_Destination.bak")
+		require.NoError(t, store.Backup(path))
+
+		empty, err := isEmpty(t, backupDir)
+		require.NoError(t, err)
+		require.False(t, empty)
+
+		// open the directory and assert on individual files
+		dir, err := os.Open(backupDir)
+		require.NoError(t, err)
+		defer dir.Close()
+
+		files, err := dir.Readdir(0) // 0 means read all directory entries
+		require.NoError(t, err)
+		require.NoError(t, err)
+		require.Equal(t, len(files), 1)
+	})
+}
+
 func setupStore(t *testing.T, store KVStore) {
 	t.Helper()
 	err := store.Set([]byte("foo"), []byte("bar"))
 	require.NoError(t, err)
 	err = store.Set([]byte("baz"), []byte("bin"))
 	require.NoError(t, err)
+}
+
+func isEmpty(t *testing.T, dir string) (bool, error) {
+	t.Helper()
+	f, err := os.Open(dir)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	_, err = f.Readdirnames(1)
+	if err == io.EOF {
+		return true, nil
+	}
+	return false, err
 }

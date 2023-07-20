@@ -104,7 +104,7 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		trees.WithTreeStoreDirectory(persistenceCfg.TreesStoreDir),
 		trees.WithLogger(m.logger))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create TreeStoreModule: %w", err)
+		return nil, fmt.Errorf("failed to create %s: %w", modules.TreeStoreSubmoduleName, err)
 	}
 
 	m.config = persistenceCfg

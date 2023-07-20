@@ -2,21 +2,27 @@ package trees
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/smt"
-	"go.uber.org/multierr"
 )
 
 var _ modules.TreeStoreModule = &treeStore{}
 
+// Create returns a TreeStoreSubmodule that has been setup with the provided TreeStoreOptions, started,
+// and then registered to the bus.
 func (*treeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeStoreModule, error) {
 	m := &treeStore{}
 
 	for _, option := range options {
 		option(m)
+	}
+
+	if err := m.Start(); err != nil {
+		return nil, fmt.Errorf("failed to start %s: %w", modules.TreeStoreSubmoduleName, err)
 	}
 
 	bus.RegisterModule(m)
@@ -66,11 +72,12 @@ func (t *treeStore) Stop() error {
 			errs = append(errs, err)
 		}
 	}
-	return multierr.Combine(errs...)
+	return errors.Join(errs...)
 }
 
 func (t *treeStore) GetModuleName() string { return modules.TreeStoreSubmoduleName }
 
+// setupTrees is called by Start and it loads the treestore at the given directory
 func (t *treeStore) setupTrees() error {
 	if t.treeStoreDir == ":memory:" {
 		return t.setupInMemory()
