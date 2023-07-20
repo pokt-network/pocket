@@ -59,6 +59,16 @@ type ClientManager interface {
 
 	// GetHostConsensusState returns the ConsensusState at the given height for the host chain
 	GetHostConsensusState(height Height) (ConsensusState, error)
+
+	// GetHostClientState returns the ClientState at the provieded height for the host chain
+	GetHostClientState(height Height) (ClientState, error)
+
+	// GetCurrentHeight returns the current IBC client height of the network
+	GetCurrentHeight() (Height, error)
+
+	// VerifyHostClientState verifies the client state for a client running on a
+	// counterparty chain is valid, checking against the current host client state
+	VerifyHostClientState(ClientState) error
 }
 
 // ClientState is an interface that defines the methods required by a clients
@@ -69,6 +79,8 @@ type ClientManager interface {
 type ClientState interface {
 	proto.Message
 
+	GetData() []byte
+	GetWasmChecksum() []byte
 	ClientType() string
 	GetLatestHeight() Height
 	Validate() error
@@ -155,6 +167,7 @@ type ClientState interface {
 type ConsensusState interface {
 	proto.Message
 
+	GetData() []byte
 	ClientType() string
 	GetTimestamp() uint64
 	ValidateBasic() error
@@ -171,6 +184,7 @@ type ConsensusState interface {
 type ClientMessage interface {
 	proto.Message
 
+	GetData() []byte
 	ClientType() string
 	ValidateBasic() error
 }

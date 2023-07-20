@@ -6,6 +6,7 @@ option go_package = "github.com/pokt-network/pocket/ibc/client/light_client/type
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
+import "proofs.proto";
 import "wasm.proto";
 import "block.proto";
 
@@ -26,7 +27,7 @@ message PocketClientState {
     google.protobuf.Duration max_clock_drift = 5;  // the max duration a new header's time can be in the future
     Height latest_height = 6;                      // the latest height the client was updated to
     uint64 frozen_height = 7;                      // the height at which the client was frozen due to a misbehaviour
-    bytes proof_specs = 8;                         // ics23 proof spec used in verifying proofs
+    ProofSpec proof_spec = 8;                      // ics23 proof spec used in verifying proofs
     // RESEARCH: Figure out exactly what this is for in tendermint, why it is needed and if we need it also
     // repeated string upgrade_path = 9;           // the upgrade path for the new client state
 }
