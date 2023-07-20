@@ -51,6 +51,15 @@ func TestPostgresContext_GetValidatorSet(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 	nextValSet, err := db.GetValidatorSet(0)
 	require.NoError(t, err)
+
+	// ensure validator set is ordered lexicographically
+	for i, val := range nextValSet.Validators {
+		if i == 0 {
+			continue
+		}
+		require.True(t, val.Address > nextValSet.Validators[i-1].Address)
+	}
+
 	nextValSetHash := hashValSet(t, nextValSet)
 	require.Equal(t, expectedHashes[0], nextValSetHash)
 
@@ -61,9 +70,27 @@ func TestPostgresContext_GetValidatorSet(t *testing.T) {
 
 	currValSet, err := db.GetValidatorSet(currHeight - 1)
 	require.NoError(t, err)
+
+	// ensure validator set is ordered lexicographically
+	for i, val := range currValSet.Validators {
+		if i == 0 {
+			continue
+		}
+		require.True(t, val.Address > nextValSet.Validators[i-1].Address)
+	}
+
 	currValSetHash := hashValSet(t, currValSet)
 	nextValSet, err = db.GetValidatorSet(currHeight)
 	require.NoError(t, err)
+
+	// ensure validator set is ordered lexicographically
+	for i, val := range nextValSet.Validators {
+		if i == 0 {
+			continue
+		}
+		require.True(t, val.Address > nextValSet.Validators[i-1].Address)
+	}
+
 	nextValSetHash = hashValSet(t, nextValSet)
 
 	require.Equal(t, expectedHashes[0], currValSetHash)
@@ -75,9 +102,27 @@ func TestPostgresContext_GetValidatorSet(t *testing.T) {
 
 	currValSet, err = db.GetValidatorSet(currHeight - 1)
 	require.NoError(t, err)
+
+	// ensure validator set is ordered lexicographically
+	for i, val := range currValSet.Validators {
+		if i == 0 {
+			continue
+		}
+		require.True(t, val.Address > nextValSet.Validators[i-1].Address)
+	}
+
 	currValSetHash = hashValSet(t, currValSet)
 	nextValSet, err = db.GetValidatorSet(currHeight)
 	require.NoError(t, err)
+
+	// ensure validator set is ordered lexicographically
+	for i, val := range nextValSet.Validators {
+		if i == 0 {
+			continue
+		}
+		require.True(t, val.Address > nextValSet.Validators[i-1].Address)
+	}
+
 	nextValSetHash = hashValSet(t, nextValSet)
 
 	require.Equal(t, expectedHashes[0], currValSetHash)
@@ -102,9 +147,28 @@ func TestPostgresContext_GetValidatorSet(t *testing.T) {
 
 	currValSet, err = db.GetValidatorSet(currHeight - 1)
 	require.NoError(t, err)
+
+	// ensure validator set is ordered lexicographically
+	for i, val := range currValSet.Validators {
+		if i == 0 {
+			continue
+		}
+		require.True(t, val.Address > nextValSet.Validators[i-1].Address)
+	}
+
 	currValSetHash = hashValSet(t, currValSet)
 	nextValSet, err = db.GetValidatorSet(currHeight)
 	require.NoError(t, err)
+	t.Log(nextValSet.Validators)
+
+	// ensure validator set is ordered lexicographically
+	for i, val := range currValSet.Validators {
+		if i == 0 {
+			continue
+		}
+		require.True(t, val.Address > nextValSet.Validators[i-1].Address)
+	}
+
 	nextValSetHash = hashValSet(t, nextValSet)
 
 	require.Equal(t, expectedHashes[0], currValSetHash)

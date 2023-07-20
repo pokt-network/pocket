@@ -82,7 +82,7 @@ func (p *PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Acto
 
 // GetValidatorSet returns the validator set for a given height
 func (p *PostgresContext) GetValidatorSet(height int64) (*coreTypes.ValidatorSet, error) {
-	validators, err := p.GetAllValidators(height) // sorted by address+height desc
+	validators, err := p.GetAllValidators(height) // sorted by address asc
 	if err != nil {
 		return nil, err
 	}
