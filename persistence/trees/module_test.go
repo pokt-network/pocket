@@ -31,10 +31,20 @@ func TestTreeStore_Create(t *testing.T) {
 	genesisStateMock := createMockGenesisState(nil)
 	persistenceMock := preparePersistenceMock(t, mockBus, genesisStateMock)
 
-	mockBus.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
-	persistenceMock.EXPECT().GetBus().AnyTimes().Return(mockBus)
-	persistenceMock.EXPECT().NewRWContext(int64(0)).AnyTimes()
-	persistenceMock.EXPECT().GetTxIndexer().AnyTimes()
+	mockBus.EXPECT().
+		GetPersistenceModule().
+		Return(persistenceMock).
+		AnyTimes()
+	persistenceMock.EXPECT().
+		GetBus().
+		AnyTimes().
+		Return(mockBus)
+	persistenceMock.EXPECT().
+		NewRWContext(int64(0)).
+		AnyTimes()
+	persistenceMock.EXPECT().
+		GetTxIndexer().
+		AnyTimes()
 
 	treemod, err := trees.Create(mockBus, trees.WithTreeStoreDirectory(":memory:"))
 	assert.NoError(t, err)
@@ -50,7 +60,6 @@ func TestTreeStore_Create(t *testing.T) {
 	keys, vals, err := ns.GetAll(nil, false)
 	require.NoError(t, err)
 	require.Empty(t, keys, vals)
-
 }
 
 func TestTreeStore_DebugClearAll(t *testing.T) {
@@ -91,7 +100,6 @@ func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisS
 	readCtxMock.EXPECT().
 		GetAllValidators(gomock.Any()).
 		Return(genesisState.GetValidators(), nil).AnyTimes()
-
 	readCtxMock.EXPECT().
 		GetAllStakedActors(gomock.Any()).
 		DoAndReturn(func(height int64) ([]*coreTypes.Actor, error) {
@@ -103,16 +111,13 @@ func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisS
 			), nil
 		}).
 		AnyTimes()
-
 	persistenceModuleMock.EXPECT().
 		NewReadContext(gomock.Any()).
 		Return(readCtxMock, nil).
 		AnyTimes()
-
 	readCtxMock.EXPECT().
 		Release().
 		AnyTimes()
-
 	persistenceModuleMock.EXPECT().
 		GetBus().
 		Return(busMock).
@@ -124,7 +129,6 @@ func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisS
 		GetModuleName().
 		Return(modules.PersistenceModuleName).
 		AnyTimes()
-
 	busMock.
 		RegisterModule(persistenceModuleMock)
 
@@ -139,21 +143,19 @@ func validatorId(i int) string {
 func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.MockBus {
 	t.Helper()
 	ctrl := gomock.NewController(t)
-
 	mockBus := mockModules.NewMockBus(ctrl)
+	mockModulesRegistry := mockModules.NewMockModulesRegistry(ctrl)
+
 	mockBus.EXPECT().
 		GetRuntimeMgr().
 		Return(runtimeMgr).
 		AnyTimes()
-
 	mockBus.EXPECT().
 		RegisterModule(gomock.Any()).
 		DoAndReturn(func(m modules.Submodule) {
 			m.SetBus(mockBus)
 		}).
 		AnyTimes()
-
-	mockModulesRegistry := mockModules.NewMockModulesRegistry(ctrl)
 	mockModulesRegistry.EXPECT().
 		GetModule(peerstore_provider.PeerstoreProviderSubmoduleName).
 		Return(nil, runtime.ErrModuleNotRegistered(peerstore_provider.PeerstoreProviderSubmoduleName)).
@@ -169,5 +171,6 @@ func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.Moc
 	mockBus.EXPECT().
 		PublishEventToBus(gomock.Any()).
 		AnyTimes()
+
 	return mockBus
 }
