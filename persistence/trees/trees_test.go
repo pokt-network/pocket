@@ -19,5 +19,5 @@ func TestTreeStore_DebugClearAll(t *testing.T) {
 }
 
 func TestTreeStore_GetTreeHashes(t *testing.T) {
-	t.Skip("TODO: Write test case for GetTreeHashes method")
+	t.Skip("TODO: Write test case for GetTreeHashes method") // context: https://github.com/pokt-network/pocket/pull/915#discussion_r1267313664
 }

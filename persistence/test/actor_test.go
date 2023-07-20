@@ -41,32 +41,35 @@ func TestGetAllStakedActors(t *testing.T) {
 	require.Equal(t, genesisStateNumFishermen, actualFishermen)
 }
 
-func TestGetValidatorSet_Hash(t *testing.T) {
+func TestPostgresContext_GetValidatorSet(t *testing.T) {
 	expectedHashes := []string{
 		"5831e3e6a8d3beda0adb6027126a4bc3b0181836eebcc45a83dc2970ee9b4468",
 		"1f6faa8782a4608341fef83ee72c9e9cd3f96e042f2ddfdeebda8d971bb2ac13",
 	}
 
+	// Ensure genesis next val set hash is correct
 	db := NewTestPostgresContext(t, 0)
-	currValSet, err := db.GetValidatorSet(0)
+	nextValSet, err := db.GetValidatorSet(0)
 	require.NoError(t, err)
-	currValSetHash := hashValSet(t, currValSet)
-	require.Equal(t, expectedHashes[0], currValSetHash)
+	nextValSetHash := hashValSet(t, nextValSet)
+	require.Equal(t, expectedHashes[0], nextValSetHash)
 
+	// Ensure next val set hash for genesis == curr val set hash for height 1
+	// and next val set hash remains the same with no changes
 	currHeight := int64(1)
 	db.Height = currHeight
 
-	currValSet, err = db.GetValidatorSet(currHeight - 1)
+	currValSet, err := db.GetValidatorSet(currHeight - 1)
 	require.NoError(t, err)
-	currValSetHash = hashValSet(t, currValSet)
-	nextValSet, err := db.GetValidatorSet(currHeight)
+	currValSetHash := hashValSet(t, currValSet)
+	nextValSet, err = db.GetValidatorSet(currHeight)
 	require.NoError(t, err)
-	nextValSetHash := hashValSet(t, nextValSet)
+	nextValSetHash = hashValSet(t, nextValSet)
 
 	require.Equal(t, expectedHashes[0], currValSetHash)
 	require.Equal(t, expectedHashes[0], nextValSetHash)
 
-	// ensure hash remains the same with no changes
+	// ensure both hashes remain the same with no changes
 	currHeight = int64(2)
 	db.Height = currHeight
 
@@ -80,7 +83,8 @@ func TestGetValidatorSet_Hash(t *testing.T) {
 	require.Equal(t, expectedHashes[0], currValSetHash)
 	require.Equal(t, expectedHashes[0], nextValSetHash)
 
-	// ensure hash changes with changes
+	// ensure next val set hash changes when we add a new validator  at current
+	// height but the current val set hash remains the same
 	currHeight = int64(3)
 	db.Height = currHeight
 

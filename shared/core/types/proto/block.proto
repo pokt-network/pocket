@@ -25,10 +25,10 @@ message Block {
 }
 
 message ValidatorSet {
-    repeated SimpleValidator validators = 1;
+    repeated ValidatorIdentity validators = 1;
 }
 
-message SimpleValidator {
+message ValidatorIdentity {
     string address = 1;
     string pub_key = 2;
 }

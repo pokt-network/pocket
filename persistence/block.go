@@ -130,34 +130,37 @@ func (p *PostgresContext) insertBlock(block *coreTypes.Block) error {
 	return err
 }
 
+// getValidatorSetHashes returns the present (current p.Height-1) and next (p.Height) validator set hashes
 func (p *PostgresContext) getCurrentAndNextValSetHashes() (currentValSetHash, nextValSetHash string, err error) {
 	// Get the next validator set
-	nextValSet, err := p.GetValidatorSet(p.Height)
+	nextValSetHash, err = p.hashValidatorSet(p.Height)
 	if err != nil {
 		return "", "", err
 	}
-	nextValSetBz, err := codec.GetCodec().Marshal(nextValSet)
-	if err != nil {
-		return "", "", err
-	}
-	nValSetHash := crypto.SHA3Hash(nextValSetBz)
-	nextValSetHash = hex.EncodeToString(nValSetHash)
 
 	if p.Height == 0 {
 		return "", nextValSetHash, nil
 	}
 
 	// Get the current validator set
-	valSet, err := p.GetValidatorSet(p.Height - 1)
+	currentValSetHash, err = p.hashValidatorSet(p.Height - 1)
 	if err != nil {
 		return "", "", err
+	}
+
+	return currentValSetHash, nextValSetHash, nil
+}
+
+// hashValidatorSet hashes the validator set at the given height
+func (p *PostgresContext) hashValidatorSet(height int64) (string, error) {
+	valSet, err := p.GetValidatorSet(height)
+	if err != nil {
+		return "", err
 	}
 	valSetBz, err := codec.GetCodec().Marshal(valSet)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 	valSetHash := crypto.SHA3Hash(valSetBz)
-	currentValSetHash = hex.EncodeToString(valSetHash)
-
-	return currentValSetHash, nextValSetHash, nil
+	return hex.EncodeToString(valSetHash), nil
 }

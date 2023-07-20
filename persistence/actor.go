@@ -88,12 +88,13 @@ func (p *PostgresContext) GetValidatorSet(height int64) (*coreTypes.ValidatorSet
 	}
 	valSet := new(coreTypes.ValidatorSet)
 	for _, val := range validators {
-		validator := &coreTypes.SimpleValidator{
+		validator := &coreTypes.ValidatorIdentity{
 			Address: val.GetAddress(),
 			PubKey:  val.GetPublicKey(),
 		}
 		valSet.Validators = append(valSet.Validators, validator)
 	}
+	// Assumption: Validators are sorted by address based on return value from `p.GetAllValidators`
 	return valSet, nil
 }
 
