@@ -83,7 +83,7 @@ func TestPostgresContext_GetValidatorSet(t *testing.T) {
 	require.Equal(t, expectedHashes[0], currValSetHash)
 	require.Equal(t, expectedHashes[0], nextValSetHash)
 
-	// ensure next val set hash changes when we add a new validator  at current
+	// ensure next val set hash changes when we add a new validator at current
 	// height but the current val set hash remains the same
 	currHeight = int64(3)
 	db.Height = currHeight
