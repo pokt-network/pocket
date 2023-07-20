@@ -17,6 +17,7 @@ Please note that this repository is under very active development and breaking c
   - [Profiling](#profiling)
 - [Code Organization](#code-organization)
 - [Maintaining Documentation](#maintaining-documentation)
+- [Code Review Guidelines](#code-review-guidelines)
 - [Documentation Resources and Implementation](#documentation-resources-and-implementation)
   - [Your Project Dashboard](#your-project-dashboard)
   - [Github Labels](#github-labels)
@@ -319,6 +320,18 @@ Documentation files currently found by the following command `find . -name "*.md
 To keep the Wiki organized, a comment is added at the end of each `.md` file. For example, you can find the following one at the end of this file `<!-- GITHUB_WIKI: guides/development/readme -->`. The structure of the comment indicates the category (guides), subcategory(ies) (development) and filename (readme): `<!-- GITHUB_WIKI: <category>/<subcategory 1>/.../<filename>`. You can see the example output in the [Wiki Page](https://github.com/pokt-network/pocket/wiki/Development-Readme).
 
 If you are adding a new `.md` file for documentation please included a similar comment. Use your best judgment for the category and subcategory if its a new directory. Otherwise, copy the comment from a similar file in the directory and choose a relevant filename.
+
+## Code Review Guidelines
+
+- [Code Quality](./CODE_REVIEW_GUIDELINES.md#code-quality)
+- [Code Reviews](./CODE_REVIEW_GUIDELINES.md#code-reviews)
+- [Code Review Guidelines](./CODE_REVIEW_GUIDELINES.md#code-review-guidelines)
+  - [Expectations](./CODE_REVIEW_GUIDELINES.md#expectations)
+- [Best Practices](./CODE_REVIEW_GUIDELINES.md#best-practices)
+  - [Reviewing](./CODE_REVIEW_GUIDELINES.md#reviewing)
+  - [Starting a Review](./CODE_REVIEW_GUIDELINES.md#starting-a-review)
+  - [Finishing a Review](./CODE_REVIEW_GUIDELINES.md#finishing-a-review)
+  - [Merging](./CODE_REVIEW_GUIDELINES.md#merging)
 
 ## Documentation Resources and Implementation
 
