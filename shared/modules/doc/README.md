@@ -434,7 +434,20 @@ This is quite **important** because it unlocks a powerful concept **Dependency I
 This enables the developer to define different implementations of a module and to register the one that is needed at runtime. This is because we can only have one module registered with a unique name and also because, by convention, we keep module names defined as constants.
 This is useful not only for prototyping but also for different use cases such as the `p1` CLI and the `pocket` binary where different implementations of the same module are necessary due to the fact that the `p1` CLI doesn't have a persistence module but still needs to know what's going on in the network.
 
-**Registration**: Submodules can be registered the same way full Modules by passing the Submodule to the `RegisterModule` function. Submodules should typically be registered to the bus for dependency injection reasons.
+**Registration**: Submodules can be registered the same way full Modules by passing the Submodule to the `RegisterModule` function. Submodules should typically be registered to the bus for dependency injection reasons. Registration should occur _after_ processing the module's options.
+
+```go
+func (*treeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeStoreModule, error) {
+	m := &treeStore{}
+
+	for _, option := range options {
+		option(m)
+	}
+
+	bus.RegisterModule(m)
+	// ...
+}
+```
 
 **IMPORTANT**: Modules and Submodules are all responsible for registering themselves with the Bus. This pattern emerged organically during development and is now considered best practice.
 
