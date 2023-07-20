@@ -56,7 +56,7 @@ which protoc-go-inject-tag && echo "protoc-go-inject-tag Installed"
 # protoc-go-inject-tag Installed
 
 go version
-# go version go1.18.1 darwin/arm64
+# go version go1.20.5 darwin/arm64
 
 mockgen --version
 # v1.6.0

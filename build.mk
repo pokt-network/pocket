@@ -2,7 +2,7 @@ OS = $(shell uname | tr A-Z a-z)
 GOARCH = $(shell go env GOARCH)
 
 ## The expected golang version; crashes if the local env is different
-GOLANG_VERSION ?= 1.18
+GOLANG_VERSION ?= 1.20
 
 ## Build variables
 BUILD_DIR ?= bin
