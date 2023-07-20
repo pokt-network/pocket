@@ -6,18 +6,17 @@ _This document is a living document and will be updated as the team learns and g
 
 - [Code Quality](#code-quality)
 - [Code Reviews](#code-reviews)
-- [Code Review Guidelines](#code-review-guidelines)
+  - [Code Review Guidelines](#code-review-guidelines)
   - [Expectations](#expectations)
-- [Best Practices](#best-practices)
-  - [Starting a Review](#starting-a-review)
+  - [Best Practices](#best-practices)
     - [Smaller PRs](#smaller-prs)
     - [Ordering Commits](#ordering-commits)
     - [Approving PRs](#approving-prs)
   - [Review Comments](#review-comments)
-  - [A](#a)
-  - [B](#b)
+  - [Figure 1: Inline Github Comment](#figure-1-inline-github-comment)
+  - [Figure 2: Line Comment Dialog](#figure-2-line-comment-dialog)
   - [Finishing a Review](#finishing-a-review)
-  - [C](#c)
+  - [Figure 3: Submitting A Review](#figure-3-submitting-a-review)
   - [Merging](#merging)
 
 ## Code Quality
@@ -43,7 +42,7 @@ Broadly speaking, code reviews involve developers looking at some proposed new c
 
 Remember, writing code is the **fun part** but reading code is **work part**, so try to make it as easy for the reviewer as possible.
 
-## Code Review Guidelines
+### Code Review Guidelines
 
 All participants must adhere to the overall idea that the review is an attempt to achieve `better`` code. This is a vague statement on purpose.
 
@@ -59,9 +58,7 @@ Participants must remember the scarcity of another developer's attention.
 
 **Reviewers (and prospective reviewers)** are encouraged to engage in reviews of codebases outside the projects and technologies they use on a day-to-day basis (but not expected to provide an approving review).
 
-## Best Practices
-
-### Starting a Review
+### Best Practices
 
 #### Smaller PRs
 
@@ -89,36 +86,31 @@ When leaving review comments, consider if any of the following characterizations
 - `TECHDEBT(XXX)`: Comment should have a TECHDEBT comment but imporant enough that it requires a ticket to track the work in the near future
 - `SOS`: Show Stopper. You feel strongly enought that it needs to be addressed now.
 
-Use the above to communicate next steps for the author to pursue based on the comment.
+During review, submit feedback using line comments (Fig1); prefer `Add\[ing a\] single comment` over `Start[ing] a review` (Fi2). Once a review has been started, the option to add single comments is removed. Preferring single comments allows feedback to happen even in the event of an interrupted review.
 
-During review, submit feedback using line comments (A); prefer "Add\[ing a\] single comment" over "Start[ing] a review" (B).
-
-_(Once a review has been started, the option to add single comments is removed. Preferring single comments allows feedback to happen even in the event of an interrupted review.)_
-
-### A
+### Figure 1: Inline Github Comment
 
 ![github_line_comment.png](./assets/github_line_comment.png)
 
-### B
+### Figure 2: Line Comment Dialog
 
 ![line_comment_dialog_start.png](./assets/line_comment_dialog_start.png)
 
-**Referencing Issues Across Repositories:**
-When referencing issues from one repository, in another's Issues and Pull Requests, GitHub supports automatic links in markdown using the following format: `<org name>/<repo name>#<issue or PR number>`.`
+**Referencing Issues Across Repositories:** When referencing issues from one repository, in another's Issues and Pull Requests, GitHub supports automatic links in markdown using the following format: `<org name>/<repo name>#<issue or PR number>`.
 
 ### Finishing a Review
 
 Write a summary of your observations and consider including positive remarks in addition to any constructive criticism.
 
-If you observe a deviation from these practices or another reason that this change should not be merged, select "request changes" and include a summary of the observation(s), as well as any practice(s) you find them to be in conflict with, in the review body (C).
+If you observe a deviation from these practices or another reason that this change should not be merged, select `request changes` and include a summary of the observation(s), as well as any practice(s) you find them to be in conflict with, in the review body (Fig3).
 
 If you don't feel comfortable giving approval or requesting changes but want to share a summary or observations of larger patterns in the codebase or the company, select "Comment" and submit your review (C).
 
-Confirm that all items in the "required checklist" are checked or not applicable.
+Confirm that all items in the `required checklist` are checked or not applicable.
 
-If you believe the Pull Request looks good to merge, select "Approve" and submit your review (C).
+If you believe the Pull Request looks good to merge, select "Approve" and submit your review (Fig3).
 
-### C
+### Figure 3: Submitting A Review
 
 ![submit_review.png](./assets/submit_review.png)
 
@@ -127,7 +119,7 @@ If you believe the Pull Request looks good to merge, select "Approve" and submit
 1. Utilize the `Squash & Merge` feature (maintain a clean history)
 2. Copy the `Github PR Description` into the commit message (add sufficient detail)
 
-**Authors are core members or regular external contributors**
+**Authors are core members or regular external contributors:**
 
 - Core member needs to approve PR
 - Author should merge in the PR themselves (following instructions above)
@@ -136,9 +128,3 @@ If you believe the Pull Request looks good to merge, select "Approve" and submit
 
 - Core member needs to approve PR
 - Core member can merge PR on behalf of contributor (following instructions above)
-
-**Pull Request Authors:**
-Specify whether or not the Pull Request can be merged by the last approving reviewer by use of (or lack thereof) the "Reviewer can merge" label. If no such label exists for a given project, create it.
-
-**Reviewers:**
-If you would give the last approving review **and** the Pull Request has the "Reviewer can merge" label, **merge**.
