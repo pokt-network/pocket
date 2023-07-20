@@ -54,7 +54,7 @@ func TestTreeStore_Create(t *testing.T) {
 
 	// root hash should be empty for empty tree
 	root, ns := treemod.GetTree(trees.TransactionsTreeName)
-	require.Equal(t, root, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+	require.Equal(t, root, make([]byte, 32))
 
 	// nodestore should have no values in it
 	keys, vals, err := ns.GetAll(nil, false)
