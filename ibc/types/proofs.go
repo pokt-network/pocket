@@ -45,6 +45,7 @@ func (l *LeafOp) ConvertToIcs23LeafOp() *ics23.LeafOp {
 func (i *InnerSpec) ConvertToIcs23InnerSpec() *ics23.InnerSpec {
 	ics := new(ics23.InnerSpec)
 	ics.ChildOrder = i.ChildOrder
+	ics.ChildSize = i.ChildSize
 	ics.MinPrefixLength = i.MinPrefixLength
 	ics.MaxPrefixLength = i.MaxPrefixLength
 	ics.EmptyChild = i.EmptyChild
