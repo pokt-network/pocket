@@ -10,6 +10,7 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	util_types "github.com/pokt-network/pocket/utility/types"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -119,7 +120,7 @@ func (c *clientManager) VerifyHostClientState(counterparty modules.ClientState) 
 		poktCounter.TrustLevel.GT(&light_client_types.Fraction{Numerator: 1, Denominator: 1}) {
 		return errors.New("counterparty client state trust level is not in the accepted range")
 	}
-	if !poktCounter.ProofSpec.ConvertToIcs23ProofSpec().SpecEquals(poktHost.ProofSpec.ConvertToIcs23ProofSpec()) {
+	if !proto.Equal(poktCounter.ProofSpec, poktHost.ProofSpec) {
 		return errors.New("counterparty client state has different proof spec")
 	}
 	if poktCounter.UnbondingPeriod != poktHost.UnbondingPeriod {
