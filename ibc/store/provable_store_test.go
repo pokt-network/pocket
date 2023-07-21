@@ -45,6 +45,12 @@ func TestProvableStore_Get(t *testing.T) {
 			expectedValue: nil,
 			expectedError: coreTypes.ErrIBCKeyDoesNotExist("test/key2"),
 		},
+		{
+			name:          "key is nil",
+			key:           nil,
+			expectedValue: nil,
+			expectedError: coreTypes.ErrIBCKeyDoesNotExist("test"),
+		},
 	}
 
 	provableStore := newTestProvableStore(t)
@@ -344,7 +350,7 @@ func newTestProvableStore(t *testing.T) modules.ProvableStore {
 		require.NoError(t, err)
 	})
 
-	return newProvableStore(bus, []byte("test"), privKey)
+	return NewProvableStore(bus, []byte("test"), privKey)
 }
 
 func setupDB(t *testing.T) (*smt.SMT, kvstore.KVStore, map[string]string) {
@@ -432,7 +438,7 @@ func newPersistenceMock(t *testing.T,
 		EXPECT().
 		GetIBCStoreEntry(gomock.Any(), gomock.Any()).
 		DoAndReturn(
-			func(key []byte, _ int64) ([]byte, error) {
+			func(key []byte, _ uint64) ([]byte, error) {
 				value, ok := dbMap[hex.EncodeToString(key)]
 				if !ok {
 					return nil, coreTypes.ErrIBCKeyDoesNotExist(string(key))
