@@ -37,13 +37,17 @@ var (
 	genesisStateNumApplications = 1
 )
 
+const (
+	h1 = "5282ee91a3ec0a6f2b30e4780b369bae78c80ef3ea40587fef6ae263bf41f244"
+)
+
 func TestTreeStore_Update(t *testing.T) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	t.Cleanup(func() {
 		require.NoError(t, pool.Purge(resource))
 	})
 
-	t.Run("should update actor trees, commit and modify the state hash", func(t *testing.T) {
+	t.Run("should update actor trees, commit, and modify the state hash", func(t *testing.T) {
 		pmod := newTestPersistenceModule(t, dbUrl)
 		context := newTestPostgresContext(t, 0, pmod)
 
@@ -52,6 +56,7 @@ func TestTreeStore_Update(t *testing.T) {
 		hash1, err := context.ComputeStateHash()
 		require.NoError(t, err)
 		require.NotEmpty(t, hash1)
+		require.Equal(t, hash1, h1)
 
 		_, err = createAndInsertDefaultTestApp(t, context)
 		require.NoError(t, err)
@@ -65,26 +70,12 @@ func TestTreeStore_Update(t *testing.T) {
 	})
 }
 
-func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.PersistenceModule {
+func newTestPersistenceModule(t *testing.T, databaseURL string) modules.PersistenceModule {
 	t.Helper()
 	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
 	defer teardownDeterministicKeygen()
 
-	cfg := &configs.Config{
-		Persistence: &configs.PersistenceConfig{
-			PostgresUrl:       databaseUrl,
-			NodeSchema:        testSchema,
-			BlockStorePath:    ":memory:",
-			TxIndexerPath:     ":memory:",
-			TreesStoreDir:     ":memory:",
-			MaxConnsCount:     5,
-			MinConnsCount:     1,
-			MaxConnLifetime:   "5m",
-			MaxConnIdleTime:   "1m",
-			HealthCheckPeriod: "30s",
-		},
-	}
-
+	cfg := newTestDefaultConfig(t, databaseURL)
 	genesisState, _ := test_artifacts.NewGenesisState(
 		genesisStateNumValidators,
 		genesisStateNumServicers,
@@ -101,6 +92,26 @@ func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.Persiste
 	require.NoError(t, err)
 
 	return persistenceMod.(modules.PersistenceModule)
+}
+
+// fetches a new default node configuration for testing
+func newTestDefaultConfig(t *testing.T, databaseURL string) *configs.Config {
+	t.Helper()
+	cfg := &configs.Config{
+		Persistence: &configs.PersistenceConfig{
+			PostgresUrl:       databaseURL,
+			NodeSchema:        testSchema,
+			BlockStorePath:    ":memory:",
+			TxIndexerPath:     ":memory:",
+			TreesStoreDir:     ":memory:",
+			MaxConnsCount:     5,
+			MinConnsCount:     1,
+			MaxConnLifetime:   "5m",
+			MaxConnIdleTime:   "1m",
+			HealthCheckPeriod: "30s",
+		},
+	}
+	return cfg
 }
 func createAndInsertDefaultTestApp(t *testing.T, db *persistence.PostgresContext) (*coreTypes.Actor, error) {
 	t.Helper()

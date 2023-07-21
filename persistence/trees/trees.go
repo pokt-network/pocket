@@ -260,9 +260,6 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 		}
 	}
 
-	if err := t.Commit(); err != nil {
-		return "", fmt.Errorf("failed to commit: %w", err)
-	}
 	return t.getStateHash(), nil
 }
 
