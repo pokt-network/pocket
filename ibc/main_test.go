@@ -57,7 +57,6 @@ func newTestP2PModule(t *testing.T, bus modules.Bus) modules.P2PModule {
 		AnyTimes()
 	p2pMock.EXPECT().GetModuleName().Return(modules.P2PModuleName).AnyTimes()
 	p2pMock.EXPECT().HandleEvent(gomock.Any()).Return(nil).AnyTimes()
-	bus.RegisterModule(p2pMock)
 
 	return p2pMock
 }
