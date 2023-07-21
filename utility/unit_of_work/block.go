@@ -217,7 +217,7 @@ func (uow *baseUtilityUnitOfWork) revertToLastSavepoint() coreTypes.Error {
 }
 
 func (uow *baseUtilityUnitOfWork) newSavePoint() coreTypes.Error {
-	if err := uow.persistenceRWContext.NewSavePoint(); err != nil {
+	if err := uow.persistenceRWContext.SetSavePoint(); err != nil {
 		uow.logger.Err(err).Msgf("failed to create new savepoint at height %d", uow.height)
 		return coreTypes.ErrNewSavePoint(err)
 	}

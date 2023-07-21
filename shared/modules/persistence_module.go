@@ -81,7 +81,7 @@ type PersistenceRWContext interface {
 // PersistenceWriteContext has no use-case independent of `PersistenceRWContext`, but is a useful abstraction
 type PersistenceWriteContext interface {
 	// Context Operations
-	NewSavePoint() error
+	SetSavePoint() error
 	RollbackToSavePoint() error
 	Release()
 

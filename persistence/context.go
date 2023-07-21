@@ -36,8 +36,8 @@ type PostgresContext struct {
 	networkId string
 }
 
-// NewSavePoint generates a new Savepoint for this context.
-func (p *PostgresContext) NewSavePoint() error {
+// SetSavePoint generates a new Savepoint for this context.
+func (p *PostgresContext) SetSavePoint() error {
 	if err := p.stateTrees.Savepoint(); err != nil {
 		return err
 	}
