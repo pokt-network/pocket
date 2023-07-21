@@ -58,6 +58,7 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 		return coreTypes.ErrProposalBlockNotSet()
 	}
 
+	// initialize a new savepoint before applying the block
 	if err := uow.newSavePoint(); err != nil {
 		return err
 	}
@@ -69,8 +70,7 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 	}
 
 	// processProposalBlockTransactions indexes the transactions into the TxIndexer.
-	// if it fails, it triggers a rollback to undo the changes that processProposalBlockTransactions
-	// could have caused.
+	// If it fails, it returns an error which triggers a rollback below to undo the changes that processProposalBlockTransactions could have caused.
 	log.Debug().Msg("processing transactions from proposal block")
 	txMempool := uow.GetBus().GetUtilityModule().GetMempool()
 	if err := uow.processProposalBlockTransactions(txMempool); err != nil {

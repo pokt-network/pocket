@@ -23,18 +23,12 @@ import (
 )
 
 var (
-	DefaultChains = []string{"0001"}
-
-	DefaultDeltaBig   = big.NewInt(100)
-	DefaultAccountBig = big.NewInt(1000000)
-	DefaultStakeBig   = big.NewInt(1000000000000000)
-
-	DefaultAccountAmount = utils.BigIntToString(DefaultAccountBig)
-	DefaultStake         = utils.BigIntToString(DefaultStakeBig)
-
-	DefaultStakeStatus     = int32(coreTypes.StakeStatus_Staked)
-	DefaultPauseHeight     = int64(-1) // pauseHeight=-1 implies not paused
-	DefaultUnstakingHeight = int64(-1) // unstakingHeight=-1 implies not unstaking
+	defaultChains          = []string{"0001"}
+	defaultStakeBig        = big.NewInt(1000000000000000)
+	defaultStake           = utils.BigIntToString(defaultStakeBig)
+	defaultStakeStatus     = int32(coreTypes.StakeStatus_Staked)
+	defaultPauseHeight     = int64(-1) // pauseHeight=-1 implies not paused
+	defaultUnstakingHeight = int64(-1) // unstakingHeight=-1 implies not unstaking
 
 	testSchema = "test_schema"
 
@@ -49,9 +43,9 @@ func TestTreeStore_Update(t *testing.T) {
 		require.NoError(t, pool.Purge(resource))
 	})
 
-	t.Run("should update actor tree and commit", func(t *testing.T) {
+	t.Run("should update actor trees, commit and modify the state hash", func(t *testing.T) {
 		pmod := newTestPersistenceModule(t, dbUrl)
-		context := NewTestPostgresContext(t, 0, pmod)
+		context := newTestPostgresContext(t, 0, pmod)
 
 		require.NoError(t, context.NewSavePoint())
 
@@ -125,13 +119,14 @@ func createAndInsertDefaultTestApp(t *testing.T, db *persistence.PostgresContext
 		pubKeyBz,
 		outputBz,
 		false,
-		DefaultStakeStatus,
-		DefaultStake,
-		DefaultChains,
-		DefaultPauseHeight,
-		DefaultUnstakingHeight)
+		defaultStakeStatus,
+		defaultStake,
+		defaultChains,
+		defaultPauseHeight,
+		defaultUnstakingHeight)
 }
 
+// TECHDEBT(#796): Test helpers should be consolidated in a single place
 func newTestApp(t *testing.T) *coreTypes.Actor {
 	operatorKey, err := crypto.GeneratePublicKey()
 	require.NoError(t, err)
@@ -142,15 +137,16 @@ func newTestApp(t *testing.T) *coreTypes.Actor {
 	return &coreTypes.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
-		Chains:          DefaultChains,
-		StakedAmount:    DefaultStake,
-		PausedHeight:    DefaultPauseHeight,
-		UnstakingHeight: DefaultUnstakingHeight,
+		Chains:          defaultChains,
+		StakedAmount:    defaultStake,
+		PausedHeight:    defaultPauseHeight,
+		UnstakingHeight: defaultUnstakingHeight,
 		Output:          hex.EncodeToString(outputAddr),
 	}
 }
 
-func NewTestPostgresContext(t testing.TB, height int64, testPersistenceMod modules.PersistenceModule) *persistence.PostgresContext {
+// TECHDEBT(#796): Test helpers should be consolidated in a single place
+func newTestPostgresContext(t testing.TB, height int64, testPersistenceMod modules.PersistenceModule) *persistence.PostgresContext {
 	t.Helper()
 	rwCtx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
@@ -169,49 +165,6 @@ func NewTestPostgresContext(t testing.TB, height int64, testPersistenceMod modul
 	})
 
 	return postgresCtx
-}
-
-// TECHDEBT: Extract these test functions out into a central test location
-// REFERENCE: https://www.notion.so/pocketnetwork/Testutils-9cba9010e18447248e9daa8a3b87e3f2#f1d7f404918541bc86ccde07980e3f09
-func NewTestPersistenceModule(t *testing.T, databaseUrl string) modules.PersistenceModule {
-	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
-	defer teardownDeterministicKeygen()
-
-	cfg := &configs.Config{
-		Persistence: &configs.PersistenceConfig{
-			PostgresUrl:       databaseUrl,
-			NodeSchema:        testSchema,
-			BlockStorePath:    ":memory:",
-			TxIndexerPath:     ":memory:",
-			TreesStoreDir:     ":memory:",
-			MaxConnsCount:     5,
-			MinConnsCount:     1,
-			MaxConnLifetime:   "5m",
-			MaxConnIdleTime:   "1m",
-			HealthCheckPeriod: "30s",
-		},
-	}
-
-	genesisState, _ := test_artifacts.NewGenesisState(
-		genesisStateNumValidators,
-		genesisStateNumServicers,
-		genesisStateNumApplications,
-		genesisStateNumServicers,
-	)
-	runtimeMgr := runtime.NewManager(cfg, genesisState)
-	bus, err := runtime.CreateBus(runtimeMgr)
-	if err != nil {
-		log.Printf("Error creating bus: %s", err)
-		return nil
-	}
-
-	persistenceMod, err := persistence.Create(bus)
-	if err != nil {
-		log.Printf("Error creating persistence module: %s", err)
-		return nil
-	}
-
-	return persistenceMod.(modules.PersistenceModule)
 }
 
 // This is necessary for unit tests that are dependant on a baseline genesis state

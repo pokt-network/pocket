@@ -2,15 +2,13 @@
 // each backed by the `KVStore` interface. It offers an atomic
 // commit and rollback mechanism for interacting with
 // its core resource - a set of merkle trees.
-// `Commit` must be called after any `Update` calls to persist changes.
-// `Savepoint` is first called to create a new anchor in time.
-// `Update` is called, which will fetch and apply the changes to their
-// respective trees. Finally, `Commit` is called, which persists the
-// currently applied mutations to disk. If `Rollback` is called at any
-// point before committing, it rolls the TreeStore state back to the
-// earlier savepoint. This means that the caller is responsible for
-// correctly managing atomic updates of the TreeStore. In most contexts
-// this is from the perspective of the `utility/unit_of_work` package.
+// - `Update` is called, which will fetch and apply the contextual changes to the respective trees.
+// - `Savepoint` is first called to create a new anchor in time that can be rolled back to
+// - `Commit` must be called after any `Update` calls to persist changes applied to disk.
+// - If `Rollback` is called at any point before committing, it rolls the TreeStore state back to the
+//    earlier savepoint. This means that the caller is responsible for correctly managing atomic updates
+//     of the TreeStore.
+// In most contexts, this is from the perspective of the `utility/unit_of_work` package.
 
 package trees
 
@@ -99,12 +97,12 @@ type treeStore struct {
 	rootTree     *stateTree
 	merkleTrees  map[string]*stateTree
 
-	// Worldstate holds a previous view of the Worldstate
-	// for savepoints and rollbacks purposes.
-	Prev *Worldstate
+	// PrevState holds a previous view of the Worldstate.
+	// The tree store rolls back to this view if errors are encountered during block application.
+	PrevState *Worldstate
 }
 
-// Worldstate holds a ser/deserializable view of the entire tree state.
+// Worldstate holds a (de)serializable view of the entire tree state.
 type Worldstate struct {
 	TreeStoreDir string
 	RootTree     *stateTree
@@ -310,23 +308,23 @@ func (t *treeStore) Savepoint() error {
 	if err != nil {
 		return err
 	}
-	t.Prev = w
+	t.PrevState = w
 	return nil
 }
 
 // Rollback intentionally can't return an error because at this point we're out of tricks
 // to recover from problems.
 func (t *treeStore) Rollback() {
-	if t.Prev != nil {
-		t.merkleTrees = t.Prev.MerkleTrees
-		t.rootTree = t.Prev.RootTree
+	if t.PrevState != nil {
+		t.merkleTrees = t.PrevState.MerkleTrees
+		t.rootTree = t.PrevState.RootTree
 		return
 	}
 	t.logger.Fatal().Msgf("rollback called without valid savepoint - this is a bug - treeStore shutting down: %+v", t)
 }
 
-// save commits any pending changes to the trees and serializes the treeStore to a WorldState object
-// with new readers and writers.
+// save commits any pending changes to the trees and creates a copy of the current state of the
+// tree store then saves that copy as a rollback point for later use if errors are encountered.
 // OPTIMIZE: Consider saving only the root hash of each tree and the tree directory here and then
 // load the trees up in Rollback instead of setting them up here.
 func (t *treeStore) save() (*Worldstate, error) {
