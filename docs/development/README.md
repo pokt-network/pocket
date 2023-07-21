@@ -86,7 +86,7 @@ Optionally activate changelog pre-commit hook
 cp .githooks/pre-commit .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
-_**NOTE**: The pre-commit changelog verification has been disabled during the developement of V1 as of 2023-05-16 to unblock development velocity. This check is no longer done in the CI and is not recommended for local development either currently._
+_**NOTE**: The pre-commit changelog verification has been disabled during the developement of V1 as of 2023-05-16 to unblock development velocity; see more details [here](https://github.com/pokt-network/pocket/assets/1892194/394fdb09-e388-44aa-820d-e9d5a23578cf). This check is no longer done in the CI and is not recommended for local development either currently._
 
 ### Pocket Network CLI
 
