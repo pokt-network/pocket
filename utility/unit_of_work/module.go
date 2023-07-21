@@ -2,7 +2,6 @@ package unit_of_work
 
 import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"go.uber.org/multierr"
@@ -70,18 +69,18 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 	}
 
 	// processProposalBlockTransactions indexes the transactions into the TxIndexer.
-	// If it fails, it returns an error which triggers a rollback below to undo the changes that processProposalBlockTransactions could have caused.
+	// If it fails, it returns an error which triggers a rollback below to undo the changes
+	// that processProposalBlockTransactions could have caused.
 	log.Debug().Msg("processing transactions from proposal block")
-	txMempool := uow.GetBus().GetUtilityModule().GetMempool()
-	if err := uow.processProposalBlockTransactions(txMempool); err != nil {
-		rollErr := uow.revertLastSavePoint()
+	if err := uow.processProposalBlockTransactions(); err != nil {
+		rollErr := uow.revertToLastSavepoint()
 		return multierr.Combine(rollErr, err)
 	}
 
 	// end block lifecycle phase calls endBlock and reverts to the last known savepoint if it encounters any errors
 	log.Debug().Msg("calling endBlock")
 	if err := uow.endBlock(uow.proposalProposerAddr); err != nil {
-		rollErr := uow.revertLastSavePoint()
+		rollErr := uow.revertToLastSavepoint()
 		return multierr.Combine(rollErr, err)
 	}
 
@@ -96,7 +95,7 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 	// the hash and set it into the proposal block it's currently hard to do because the state is different at every test run (non-determinism)
 	if uow.proposalStateHash != IgnoreProposalBlockCheckHash {
 		if uow.proposalStateHash != stateHash {
-			return uow.revertLastSavePoint()
+			return uow.revertToLastSavepoint()
 		}
 	}
 
@@ -141,9 +140,10 @@ func (uow *baseUtilityUnitOfWork) isProposalBlockSet() bool {
 // processProposalBlockTransactions processes the transactions from the proposal block stored in the current
 // unit of work. It applies the transactions to the persistence context, indexes them, and removes that from
 // the mempool if they are present.
-func (uow *baseUtilityUnitOfWork) processProposalBlockTransactions(txMempool mempool.TXMempool) (err error) {
+func (uow *baseUtilityUnitOfWork) processProposalBlockTransactions() (err error) {
 	// CONSIDERATION: should we check that `uow.proposalBlockTxs` is not nil and return an error if so or allow empty blocks?
 	// For reference, see Tendermint: https://docs.tendermint.com/v0.34/tendermint-core/configuration.html#empty-blocks-vs-no-empty-blocks
+	txMempool := uow.GetBus().GetUtilityModule().GetMempool()
 	for index, txProtoBytes := range uow.proposalBlockTxs {
 		tx, err := coreTypes.TxFromBytes(txProtoBytes)
 		if err != nil {

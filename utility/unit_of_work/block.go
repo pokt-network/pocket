@@ -208,7 +208,7 @@ func (uow *baseUtilityUnitOfWork) prevBlockByzantineValidators() ([][]byte, erro
 	return nil, nil
 }
 
-func (uow *baseUtilityUnitOfWork) revertLastSavePoint() coreTypes.Error {
+func (uow *baseUtilityUnitOfWork) revertToLastSavepoint() coreTypes.Error {
 	if err := uow.persistenceRWContext.RollbackToSavePoint(); err != nil {
 		uow.logger.Err(err).Msgf("failed to rollback to savepoint at height %d", uow.height)
 		return coreTypes.ErrRollbackSavePoint(err)
