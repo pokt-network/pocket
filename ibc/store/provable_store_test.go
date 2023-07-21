@@ -350,7 +350,7 @@ func newTestProvableStore(t *testing.T) modules.ProvableStore {
 		require.NoError(t, err)
 	})
 
-	return newProvableStore(bus, []byte("test"), privKey)
+	return NewProvableStore(bus, []byte("test"), privKey)
 }
 
 func setupDB(t *testing.T) (*smt.SMT, kvstore.KVStore, map[string]string) {

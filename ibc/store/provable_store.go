@@ -51,8 +51,8 @@ type provableStore struct {
 	privateKey string
 }
 
-// newProvableStore returns a new instance of provableStore with the bus and prefix provided
-func newProvableStore(bus modules.Bus, prefix coreTypes.CommitmentPrefix, privateKey string) *provableStore {
+// NewProvableStore returns a new instance of provableStore with the bus and prefix provided
+func NewProvableStore(bus modules.Bus, prefix coreTypes.CommitmentPrefix, privateKey string) *provableStore {
 	return &provableStore{
 		m:          sync.Mutex{},
 		bus:        bus,
