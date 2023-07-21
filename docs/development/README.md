@@ -86,9 +86,7 @@ Optionally activate changelog pre-commit hook
 cp .githooks/pre-commit .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
-
-_Please note that the Github workflow will still prevent this from merging
-unless the CHANGELOG is updated._
+_**NOTE**: The pre-commit changelog verification has been disabled during the developement of V1 as of 2023-05-16 to unblock development velocity. This check is no longer done in the CI and is not recommended for local development either currently._
 
 ### Pocket Network CLI
 
