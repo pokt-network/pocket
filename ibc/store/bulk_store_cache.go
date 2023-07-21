@@ -92,7 +92,7 @@ func (s *bulkStoreCache) AddStore(name string) error {
 	if _, ok := s.ls.stores[name]; ok {
 		return coreTypes.ErrIBCStoreAlreadyExists(name)
 	}
-	store := NewProvableStore(s.GetBus(), coreTypes.CommitmentPrefix(name), s.privateKey)
+	store := newProvableStore(s.GetBus(), coreTypes.CommitmentPrefix(name), s.privateKey)
 	s.ls.stores[store.name] = store
 	return nil
 }
