@@ -35,8 +35,6 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		return
 	}
 
-	// DISCUSS: Do we need to pause for `MinBlockFreqMSec` here to let more transactions or should we stick with optimistic responsiveness?
-
 	if err := m.didReceiveEnoughMessageForStep(NewRound); err != nil {
 		m.logger.Info().Fields(hotstuffMsgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
 		return
@@ -64,6 +62,11 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// TODO: Add test to make sure same block is not applied twice if round is interrupted after being 'Applied'.
 	// TODO: Add more unit tests for these checks...
 	if m.shouldPrepareNewBlock(highPrepareQC) {
+		doPrepare := m.paceMaker.ProcessDelayedBlockPrepare()
+		if !doPrepare {
+			m.logger.Info().Msg("skip prepare new block")
+			return
+		}
 		block, err := m.prepareBlock(highPrepareQC)
 		if err != nil {
 			m.logger.Error().Err(err).Msg(typesCons.ErrPrepareBlock.Error())

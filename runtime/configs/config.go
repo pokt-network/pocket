@@ -122,6 +122,7 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 				TimeoutMsec:               defaults.DefaultPacemakerTimeoutMsec,
 				Manual:                    defaults.DefaultPacemakerManual,
 				DebugTimeBetweenStepsMsec: defaults.DefaultPacemakerDebugTimeBetweenStepsMsec,
+				MinBlockTimeMsec:          defaults.DefaultPacemakerMinBlockTimeMsec,
 			},
 		},
 		Utility: &UtilityConfig{

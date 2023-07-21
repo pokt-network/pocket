@@ -43,6 +43,7 @@ var (
 	DefaultPacemakerTimeoutMsec               = uint64(10000)
 	DefaultPacemakerManual                    = true
 	DefaultPacemakerDebugTimeBetweenStepsMsec = uint64(1000)
+	DefaultPacemakerMinBlockTimeMsec          = uint64(5000)
 	// utility
 	DefaultUtilityMaxMempoolTransactionBytes = uint64(1024 ^ 3) // 1GB V0 defaults
 	DefaultUtilityMaxMempoolTransactions     = uint32(9000)

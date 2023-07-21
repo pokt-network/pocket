@@ -3,6 +3,7 @@ package pacemaker
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
@@ -38,6 +39,7 @@ type Pacemaker interface {
 	PacemakerDebug
 
 	ShouldHandleMessage(message *typesCons.HotstuffMessage) (bool, error)
+	ProcessDelayedBlockPrepare() bool
 
 	RestartTimer()
 	NewHeight()
@@ -48,9 +50,10 @@ type pacemaker struct {
 	base_modules.IntegrableModule
 	base_modules.InterruptableModule
 
-	pacemakerCfg    *configs.PacemakerConfig
-	roundTimeout    time.Duration
-	roundCancelFunc context.CancelFunc
+	pacemakerCfg         *configs.PacemakerConfig
+	roundTimeout         time.Duration
+	roundCancelFunc      context.CancelFunc
+	latestPrepareRequest latestPrepareRequest
 
 	// Only used for development and debugging.
 	debug pacemakerDebug
@@ -58,6 +61,15 @@ type pacemaker struct {
 	logger *modules.Logger
 	// REFACTOR: logPrefix should be removed in exchange for setting a namespace directly with the logger
 	logPrefix string
+}
+
+// Structure to handle delaying block preparation (reaping the block mempool)
+type latestPrepareRequest struct {
+	m              sync.Mutex
+	ch             chan bool
+	cancelFunc     context.CancelFunc
+	blockProposed  bool
+	deadlinePassed bool
 }
 
 func CreatePacemaker(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -85,6 +97,13 @@ func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 		debugTimeBetweenStepsMsec: m.pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
 		quorumCertificate:         nil,
 	}
+	m.latestPrepareRequest = latestPrepareRequest{
+		m:              sync.Mutex{},
+		ch:             nil,
+		cancelFunc:     nil,
+		blockProposed:  false,
+		deadlinePassed: false,
+	}
 
 	return m, nil
 }
@@ -92,6 +111,7 @@ func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 func (m *pacemaker) Start() error {
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 	m.RestartTimer()
+	m.RestartBlockProposalTimer()
 	return nil
 }
 
@@ -171,6 +191,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 func (m *pacemaker) RestartTimer() {
 	// NOTE: Not deferring a cancel call because this function is asynchronous.
+	// DISCUSS: Should we have a lock to manipulate m.roundCancelFunc?
 	if m.roundCancelFunc != nil {
 		m.roundCancelFunc()
 	}
@@ -187,6 +208,45 @@ func (m *pacemaker) RestartTimer() {
 			}
 		case <-clock.After(m.roundTimeout + timeoutBuffer):
 			return
+		}
+	}()
+}
+
+func (m *pacemaker) RestartBlockProposalTimer() {
+	m.latestPrepareRequest.m.Lock()
+	defer m.latestPrepareRequest.m.Unlock()
+
+	if m.latestPrepareRequest.ch != nil {
+		m.latestPrepareRequest.ch <- false
+	}
+
+	if m.latestPrepareRequest.cancelFunc != nil {
+		m.latestPrepareRequest.cancelFunc()
+	}
+
+	m.latestPrepareRequest.blockProposed = false
+	m.latestPrepareRequest.deadlinePassed = false
+
+	ctx, cancel := context.WithCancel(context.TODO())
+	m.latestPrepareRequest.cancelFunc = cancel
+	clock := m.GetBus().GetRuntimeMgr().GetClock()
+	minBlockTime := time.Duration(m.pacemakerCfg.MinBlockTimeMsec * uint64(time.Millisecond))
+
+	go func() {
+		select {
+		case <-ctx.Done():
+			return
+		case <-clock.After(minBlockTime):
+			m.latestPrepareRequest.m.Lock()
+			defer m.latestPrepareRequest.m.Unlock()
+
+			if m.latestPrepareRequest.ch != nil {
+				m.latestPrepareRequest.blockProposed = true
+				m.latestPrepareRequest.ch <- true
+				m.latestPrepareRequest.ch = nil
+			}
+
+			m.latestPrepareRequest.deadlinePassed = true
 		}
 	}()
 }
@@ -225,6 +285,7 @@ func (m *pacemaker) InterruptRound(reason string) {
 
 func (m *pacemaker) NewHeight() {
 	defer m.RestartTimer()
+	defer m.RestartBlockProposalTimer()
 
 	consensusMod := m.GetBus().GetConsensusModule()
 	consensusMod.ResetRound(true)
@@ -241,6 +302,29 @@ func (m *pacemaker) NewHeight() {
 		CounterIncrement(
 			consensusTelemetry.CONSENSUS_BLOCKCHAIN_HEIGHT_COUNTER_NAME,
 		)
+}
+
+func (m *pacemaker) ProcessDelayedBlockPrepare() bool {
+	m.latestPrepareRequest.m.Lock()
+
+	if m.latestPrepareRequest.blockProposed {
+		return false
+	}
+
+	if m.latestPrepareRequest.deadlinePassed {
+		return true
+	}
+
+	// there is already a block preparer candidate, we cancel it and start a new one
+	// DISCUSS: This is needed if we want to get the latest QC for the block proposal.
+	if m.latestPrepareRequest.ch != nil {
+		m.latestPrepareRequest.ch <- false
+	}
+
+	m.latestPrepareRequest.ch = make(chan bool)
+	m.latestPrepareRequest.m.Unlock()
+
+	return <-m.latestPrepareRequest.ch
 }
 
 func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {

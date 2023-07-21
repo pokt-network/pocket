@@ -172,6 +172,56 @@ func forcePacemakerTimeout(t *testing.T, clockMock *clock.Mock, paceMakerTimeout
 	advanceTime(t, clockMock, paceMakerTimeout+10*time.Millisecond)
 }
 
+func TestPacemakerMinBlockTime(t *testing.T) {
+	// Test preparation
+	clockMock := clock.NewMock()
+	timeReminder(t, clockMock, time.Second)
+
+	// UnitTestNet configs
+	paceMakerTimeoutMsec := uint64(10000)
+	consensusMessageTimeout := time.Duration(paceMakerTimeoutMsec / 5) // Must be smaller than pacemaker timeout because we expect a deterministic number of consensus messages.
+	paceMakerMinBlockTimeMsec := uint64(5000)                          // Make sure it is larger than the consensus message timeout
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	for _, runtimeConfig := range runtimeMgrs {
+		consCfg := runtimeConfig.GetConfig().Consensus.PacemakerConfig
+		consCfg.TimeoutMsec = paceMakerTimeoutMsec
+		consCfg.MinBlockTimeMsec = paceMakerMinBlockTimeMsec
+	}
+	buses := GenerateBuses(t, runtimeMgrs)
+
+	// Create & start test pocket nodes
+	eventsChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+	err := StartAllTestPocketNodes(t, pocketNodes)
+	require.NoError(t, err)
+
+	// Debug message to start consensus by triggering next view
+	for _, pocketNode := range pocketNodes {
+		TriggerNextView(t, pocketNode)
+	}
+
+	consMod := pocketNodes[1].GetBus().GetConsensusModule()
+
+	newRoundMessages, err := waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, 1, uint8(consensus.NewRound), 0, 0, numValidators*numValidators, consensusMessageTimeout, true)
+	require.NoError(t, err)
+	whenBroadcast := clockMock.Now()
+	broadcastMessages(t, newRoundMessages, pocketNodes)
+	finishedBroadcast := uint64(clockMock.Now().Sub(whenBroadcast).Milliseconds())
+	beforePrepareTimeout := time.Duration((paceMakerMinBlockTimeMsec - finishedBroadcast) * uint64(time.Millisecond))
+
+	step := typesCons.HotstuffStep(consMod.CurrentStep())
+	require.Equal(t, consensus.NewRound, step)
+
+	advanceTime(t, clockMock, clock.Duration(beforePrepareTimeout))
+	step = typesCons.HotstuffStep(consMod.CurrentStep())
+	// Should still be blocking proposal step
+	require.Equal(t, consensus.NewRound, step)
+
+	//advanceTime(t, clockMock, 8000*time.Millisecond)
+	//step = typesCons.HotstuffStep(consMod.CurrentStep())
+	//require.Equal(t, consensus.Prepare, step)
+}
+
 // TODO: Implement these tests and use them as a starting point for new ones. Consider using ChatGPT to help you out :)
 
 func TestPacemakerDifferentHeightsCatchup(t *testing.T) {

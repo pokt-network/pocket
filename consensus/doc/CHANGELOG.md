@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Implement minimum block production pace by delaying block preparation
+
 ## [0.0.0.54] - 2023-06-13
 
 - Fix tests
