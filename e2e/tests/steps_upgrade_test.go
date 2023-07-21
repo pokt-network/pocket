@@ -2,58 +2,64 @@
 
 package e2e
 
+import "github.com/stretchr/testify/require"
+
 func (s *rootSuite) UserHasAValidCancelUpgradeCommandWithSignerAndVersion() {
-	panic("PENDING")
+	require.Fail(s, "implement me")
 }
 
 func (s *rootSuite) UserHasACancelUpgradeCommandForAPastVersion() {
-	panic("PENDING")
-}
-
-func (s *rootSuite) UserIsAnAclOwner() {
-	panic("PENDING")
+	require.Fail(s, "implement me")
 }
 
 func (s *rootSuite) TheSystemShouldCancelTheScheduledUpgrade() {
-	panic("PENDING")
+	require.Fail(s, "implement me")
 }
 
 func (s *rootSuite) TheSpecifiedUpgradeIsScheduledAndNotYetActivated() {
-	panic("PENDING")
+	require.Fail(s, "implement me")
 }
 
 func (s *rootSuite) TheSystemShouldRejectTheCommandAsItCannotCancelAPastUpgrade() {
-	panic("PENDING")
+	require.Fail(s, "implement me")
 }
 
 func (s *rootSuite) TheSystemShouldValidateTheCommand() {
-	panic("PENDING")
+	require.Fail(s, "implement me")
 }
 
 func (s *rootSuite) TheSystemShouldSuccessfullyAcceptTheCommand() {
-	panic("PENDING")
+	require.Fail(s, "implement me")
 }
 
 func (s *rootSuite) TheSystemShouldReturnTheUpdatedProtocolVersion() {
-	panic("PENDING")
+	require.Fail(s, "implement me")
 }
 
 func (s *rootSuite) TheSystemShouldRejectTheCommandDueToInvalidInput() {
-	panic("PENDING")
+	require.Fail(s, "implement me")
 }
 
 func (s *rootSuite) TheSystemShouldRejectTheCommandDueToTooManyVersionsAhead() {
-	panic("PENDING")
+	require.Fail(s, "implement me")
 }
 
 func (s *rootSuite) TheSystemShouldReturnTheSuccessfulCancellationStatus() {
-	panic("PENDING")
+	require.Fail(s, "implement me")
 }
 
-func (s *rootSuite) UserHasAValidUpgradeProtocolCommandWithSignerHeightAndNewVersion() {
-	panic("PENDING")
+func (s *rootSuite) TheUserHasAValidUpgradeProtocolCommandWithSignerHeightAndNewVersion() {
+	require.Fail(s, "implement me")
 }
 
 func (s *rootSuite) TheSystemShouldApplyTheProtocolUpgradeAtTheSpecifiedActivationHeight() {
-	panic("PENDING")
+	require.Fail(s, "implement me")
+}
+
+func (s *rootSuite) TheUserHasAnInvalidUpgradeProtocolCommand() {
+	require.Fail(s, "implement me")
+}
+
+func (s *rootSuite) TheUserHasAUpgradeProtocolCommandWithTooManyVersionsJump() {
+	require.Fail(s, "implement me")
 }

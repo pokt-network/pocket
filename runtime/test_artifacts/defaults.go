@@ -23,7 +23,7 @@ var (
 	DefaultChainID             = "testnet"
 	ServiceURLFormat           = "node%d.consensus:42069"
 	DefaultMaxBlockBytes       = uint64(4000000)
-	DefaultParamsOwner, _      = crypto.NewPrivateKey("ff538589deb7f28bbce1ba68b37d2efc0eaa03204b36513cf88422a875559e38d6cbe0430ddd85a5e48e0c99ef3dea47bf0d1a83c6e6ad1640f72201dc8a0120")
+	DefaultParamsOwner, _      = crypto.NewPrivateKey("ff538589deb7f28bbce1ba68b37d2efc0eaa03204b36513cf88422a875559e38d6cbe0430ddd85a5e48e0c99ef3dea47bf0d1a83c6e6ad1640f72201dc8a0120") // da034209758b78eaea06dd99c07909ab54c99b45
 )
 
 func DefaultParams() *genesis.Params {
