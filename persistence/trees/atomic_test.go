@@ -31,7 +31,7 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 	mockPersistenceMod.EXPECT().GetTxIndexer().AnyTimes().Return(mockTxIndexer)
 
 	ts := &treeStore{
-		logger:       logger.Global.CreateLoggerForModule(modules.TreeStoreSubmoduleName), // TODO
+		logger:       logger.Global.CreateLoggerForModule(modules.TreeStoreSubmoduleName),
 		treeStoreDir: ":memory:",
 	}
 	require.NoError(t, ts.setupTrees())

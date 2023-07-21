@@ -309,6 +309,7 @@ func (t *treeStore) Savepoint() error {
 	return nil
 }
 
+// Rollback rolls back to the last saved world state maintained by the treeStore.
 // Rollback intentionally can't return an error because at this point we're out of tricks
 // to recover from problems.
 func (t *treeStore) Rollback() {
