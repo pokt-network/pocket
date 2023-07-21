@@ -28,7 +28,7 @@ func GetConsensusState(clientStore modules.ProvableStore, height modules.Height)
 // in the format: "clients" using the clientID provided
 func GetClientState(clientStore modules.ProvableStore, identifier string) (modules.ClientState, error) {
 	// Retrieve the client state bytes from the client store
-	clientStateBz, err := clientStore.Get(path.FullClientStateKey(identifier))
+	clientStateBz, err := clientStore.Get(path.ClientStateKey(identifier))
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func setClientState(clientStore modules.ProvableStore, clientState *ClientState)
 	if err != nil {
 		return err
 	}
-	return clientStore.Set(nil, val) // key == nil ==> key == "clients/{clientID}"
+	return clientStore.Set([]byte(path.KeyClientState), val) // key == nil ==> key == "clients/{clientID}"
 }
 
 // setConsensusState stores the consensus state at the given height.
