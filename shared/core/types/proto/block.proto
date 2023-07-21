@@ -16,11 +16,25 @@ message BlockHeader {
   bytes proposerAddress = 5; // the address of the proposer/leader of this block
   // CONSIDERATION: Should we use `QuorumCertificate` directly here?
   bytes quorumCertificate = 6; // the quorum certificate containing signature from 2/3+ validators at this height
-   // CONSIDERATION: Decide if this is needed
-  google.protobuf.Timestamp timestamp = 7;
+  // CONSIDERATION: Decide if this is needed
+  google.protobuf.Timestamp timestamp = 7; // unixnano timestamp of when the block was created
+  map<string, string> state_tree_hashes = 8; // map[TreeName]hex(TreeRootHash)
+  string val_set_hash = 9; // the hash of the current validator set who were able to sign the current block
+  string next_val_set_hash = 10; // the hash of the next validator set; needed to ensure the validity of staked validators proposing the next block
 }
 
 message Block {
   core.BlockHeader blockHeader = 1;
   repeated bytes transactions = 2;
+}
+
+message ValidatorSet {
+    repeated ValidatorIdentity validators = 1;
+}
+
+// DISCUSS(M5): Should we include voting power in this identity?
+// Ignoring voting_power/stake for leader election? Is this needed - I dont think so
+message ValidatorIdentity {
+    string address = 1;
+    string pub_key = 2;
 }

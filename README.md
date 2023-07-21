@@ -10,6 +10,32 @@ The official implementation of the [V1 Pocket Network Protocol Specification](ht
 
 \*_Please note that V1 protocol is currently under development and see [pocket-core](https://github.com/pokt-network/pocket-core) for the version that is currently live on mainnet._\*
 
+## Implementation
+
+Official Golang implementation of the Pocket Network v1 Protocol.
+
+<div>
+  <a href="https://godoc.org/github.com/pokt-network/pocket"><img src="https://img.shields.io/badge/godoc-reference-blue.svg"/></a>
+  <a href="https://goreportcard.com/report/github.com/pokt-network/pocket"><img src="https://goreportcard.com/badge/github.com/pokt-network/pocket"/></a>
+  <a href="https://golang.org"><img  src="https://img.shields.io/badge/golang-v1.20-green.svg"/></a>
+  <a href="https://github.com/tools/godep" ><img src="https://img.shields.io/badge/godep-dependency-71a3d9.svg"/></a>
+</div>
+
+## Overview
+
+<div>
+    <a href="https://discord.gg/pokt"><img src="https://img.shields.io/discord/553741558869131266"></a>
+    <a  href="https://github.com/pokt-network/pocket/releases"><img src="https://img.shields.io/github/release-pre/pokt-network/pocket.svg"/></a>
+    <!-- <a href="https://circleci.com/gh/pokt-network/pocket"><img src="https://circleci.com/gh/pokt-network/pocket.svg?style=svg"/></a> -->
+    <a  href="https://github.com/pokt-network/pocket/pulse"><img src="https://img.shields.io/github/contributors/pokt-network/pocket.svg"/></a>
+    <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg"/></a>
+    <a href="https://github.com/pokt-network/pocket/pulse"><img src="https://img.shields.io/github/last-commit/pokt-network/pocket.svg"/></a>
+    <a href="https://github.com/pokt-network/pocket/pulls"><img src="https://img.shields.io/github/issues-pr/pokt-network/pocket.svg"/></a>
+    <a href="https://github.com/pokt-network/pocket/releases"><img src="https://img.shields.io/badge/platform-linux%20%7C%20macos-pink.svg"/></a>
+    <a href="https://github.com/pokt-network/pocket/issues"><img src="https://img.shields.io/github/issues/pokt-network/pocket.svg"/></a>
+    <a href="https://github.com/pokt-network/pocket/issues"><img src="https://img.shields.io/github/issues-closed/pokt-network/pocket.svg"/></a>
+</div>
+
 ## Getting Started
 
 ---

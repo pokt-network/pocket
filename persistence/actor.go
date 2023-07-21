@@ -80,6 +80,24 @@ func (p *PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Acto
 	return
 }
 
+// GetValidatorSet returns the validator set for a given height
+func (p *PostgresContext) GetValidatorSet(height int64) (*coreTypes.ValidatorSet, error) {
+	validators, err := p.GetAllValidators(height) // sorted by address asc
+	if err != nil {
+		return nil, err
+	}
+	valSet := new(coreTypes.ValidatorSet)
+	for _, val := range validators {
+		validator := &coreTypes.ValidatorIdentity{
+			Address: val.GetAddress(),
+			PubKey:  val.GetPublicKey(),
+		}
+		valSet.Validators = append(valSet.Validators, validator)
+	}
+	// Assumption: Validators are sorted by address based on return value from `p.GetAllValidators`
+	return valSet, nil
+}
+
 func (p *PostgresContext) GetAllServicers(height int64) (sn []*coreTypes.Actor, err error) {
 	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.ServicerActor.GetAllQuery(height))

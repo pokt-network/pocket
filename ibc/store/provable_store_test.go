@@ -465,7 +465,7 @@ func newTreeStoreMock(t *testing.T,
 
 	ctrl := gomock.NewController(t)
 	treeStoreMock := mockModules.NewMockTreeStoreModule(ctrl)
-	treeStoreMock.EXPECT().GetModuleName().Return(modules.TreeStoreModuleName).AnyTimes()
+	treeStoreMock.EXPECT().GetModuleName().Return(modules.TreeStoreSubmoduleName).AnyTimes()
 	treeStoreMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	treeStoreMock.EXPECT().GetBus().Return(bus).AnyTimes()
 

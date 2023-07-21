@@ -8,6 +8,8 @@ import (
 	"github.com/pokt-network/smt"
 )
 
+var _ modules.TreeStoreModule = &treeStore{}
+
 func (*treeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeStoreModule, error) {
 	m := &treeStore{}
 
@@ -41,11 +43,14 @@ func WithLogger(logger *modules.Logger) modules.TreeStoreOption {
 // saves its data.
 func WithTreeStoreDirectory(path string) modules.TreeStoreOption {
 	return func(m modules.TreeStoreModule) {
-		if mod, ok := m.(*treeStore); ok {
+		mod, ok := m.(*treeStore)
+		if ok {
 			mod.treeStoreDir = path
 		}
 	}
 }
+
+func (t *treeStore) GetModuleName() string { return modules.TreeStoreSubmoduleName }
 
 func (t *treeStore) setupTrees() error {
 	if t.treeStoreDir == ":memory:" {
