@@ -31,7 +31,7 @@ func (cs *ClientState) Validate() error {
 	if lenWasmChecksum == 0 {
 		return errors.New("wasm checksum cannot be empty")
 	}
-	if lenWasmChecksum > 32 { // sha256 output is 256 bits long
+	if lenWasmChecksum != 32 { // sha256 output is 256 bits long
 		return fmt.Errorf("expected 32, got %d", lenWasmChecksum)
 	}
 

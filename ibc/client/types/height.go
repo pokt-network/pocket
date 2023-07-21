@@ -50,6 +50,9 @@ func (h *Height) Increment() modules.Height {
 }
 
 func (h *Height) Decrement() modules.Height {
+	if h.RevisionHeight == 0 {
+		return h
+	}
 	return &Height{
 		RevisionNumber: h.RevisionNumber,
 		RevisionHeight: h.RevisionHeight - 1,
