@@ -29,7 +29,7 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	m.logger.Debug().Fields(loggingFields).Msg("About to start handling hotstuff msg...")
 
 	// Elect a leader for the current round if needed
-	if m.shouldElectNextLeader() {
+	if m != nil && m.shouldElectNextLeader() {
 		if err := m.electNextLeader(msg); err != nil {
 			return err
 		}
