@@ -24,6 +24,7 @@ require (
 
 require (
 	github.com/benbjohnson/clock v1.3.0
+	github.com/blang/semver/v4 v4.0.0
 	github.com/cosmos/ics23/go v0.10.0
 	github.com/deepmap/oapi-codegen v1.12.4
 	github.com/dgraph-io/badger/v3 v3.2103.2

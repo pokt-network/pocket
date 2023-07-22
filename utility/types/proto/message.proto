@@ -51,3 +51,11 @@ message MessageChangeParameter {
   string parameter_key = 3;
   google.protobuf.Any parameter_value = 4;
 }
+
+message MessageUpgrade {
+  bytes signer = 1;
+  string version = 3;
+  int64 height = 4;
+}
+
+// TODO(0xbigboss): MessageCancelUpgrade
