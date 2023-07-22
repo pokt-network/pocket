@@ -213,6 +213,7 @@ func (m *pacemaker) RestartTimer() {
 }
 
 func (m *pacemaker) RestartBlockProposalTimer() {
+	fmt.Println("Called RestartBlockProposalTimer")
 	m.latestPrepareRequest.m.Lock()
 	defer m.latestPrepareRequest.m.Unlock()
 
@@ -221,21 +222,37 @@ func (m *pacemaker) RestartBlockProposalTimer() {
 	}
 
 	if m.latestPrepareRequest.cancelFunc != nil {
+		// Olshansky's observation: something is causing this to call the cancel function prematurely
+		fmt.Println("OLSH m.latestPrepareRequest.cancelFunc()")
 		m.latestPrepareRequest.cancelFunc()
 	}
 
 	m.latestPrepareRequest.blockProposed = false
 	m.latestPrepareRequest.deadlinePassed = false
 
-	ctx, cancel := context.WithCancel(context.TODO())
-	m.latestPrepareRequest.cancelFunc = cancel
-	clock := m.GetBus().GetRuntimeMgr().GetClock()
+	// m.roundCancelFunc = cancel
+	// ctx, cancel := context.WithCancel(context.TODO())
+
 	minBlockTime := time.Duration(m.pacemakerCfg.MinBlockTimeMsec * uint64(time.Millisecond))
+	clock := m.GetBus().GetRuntimeMgr().GetClock()
+	ctx, cancel := clock.WithTimeout(context.TODO(), minBlockTime)
+	m.latestPrepareRequest.cancelFunc = cancel
 
 	go func() {
 		select {
 		case <-ctx.Done():
-			return
+			if ctx.Err() == context.DeadlineExceeded {
+				m.latestPrepareRequest.m.Lock()
+				defer m.latestPrepareRequest.m.Unlock()
+
+				if m.latestPrepareRequest.ch != nil {
+					m.latestPrepareRequest.blockProposed = true
+					m.latestPrepareRequest.ch <- true
+					m.latestPrepareRequest.ch = nil
+				}
+			} else {
+				fmt.Println("WHY DID WE CANCEL EARLY?")
+			}
 		case <-clock.After(minBlockTime):
 			m.latestPrepareRequest.m.Lock()
 			defer m.latestPrepareRequest.m.Unlock()
@@ -245,8 +262,6 @@ func (m *pacemaker) RestartBlockProposalTimer() {
 				m.latestPrepareRequest.ch <- true
 				m.latestPrepareRequest.ch = nil
 			}
-
-			m.latestPrepareRequest.deadlinePassed = true
 		}
 	}()
 }

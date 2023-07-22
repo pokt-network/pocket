@@ -1,6 +1,7 @@
 package e2e_tests
 
 import (
+	"fmt"
 	"runtime"
 	"testing"
 	"time"
@@ -178,9 +179,10 @@ func TestPacemakerMinBlockTime(t *testing.T) {
 	timeReminder(t, clockMock, time.Second)
 
 	// UnitTestNet configs
-	paceMakerTimeoutMsec := uint64(10000)
-	consensusMessageTimeout := time.Duration(paceMakerTimeoutMsec / 5) // Must be smaller than pacemaker timeout because we expect a deterministic number of consensus messages.
-	paceMakerMinBlockTimeMsec := uint64(5000)                          // Make sure it is larger than the consensus message timeout
+	// Olshansky's observation: making this bigger helps debug
+	paceMakerTimeoutMsec := uint64(50000)
+	consensusMessageTimeout := time.Duration(paceMakerTimeoutMsec / 10) // Must be smaller than pacemaker timeout because we expect a deterministic number of consensus messages.
+	paceMakerMinBlockTimeMsec := uint64(paceMakerTimeoutMsec / 5)       // Make sure it is larger than the consensus message timeout
 	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
 	for _, runtimeConfig := range runtimeMgrs {
 		consCfg := runtimeConfig.GetConfig().Consensus.PacemakerConfig
@@ -202,16 +204,25 @@ func TestPacemakerMinBlockTime(t *testing.T) {
 
 	consMod := pocketNodes[1].GetBus().GetConsensusModule()
 
-	newRoundMessages, err := waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, 1, uint8(consensus.NewRound), 0, 0, numValidators*numValidators, consensusMessageTimeout, true)
-	require.NoError(t, err)
+	// Since we set the last var to `true`, the line below waits for `paceMakerTimeoutMsec` to elapse
+	newRoundMessages, err := waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, 1, uint8(consensus.NewRound), 0, 0, numValidators*numValidators, consensusMessageTimeout, false)
 	whenBroadcast := clockMock.Now()
+	// fmt.Println("OLSH newRoundMessages", len(newRoundMessages), numValidators*numValidators)
+	require.NoError(t, err)
+
 	broadcastMessages(t, newRoundMessages, pocketNodes)
-	finishedBroadcast := uint64(clockMock.Now().Sub(whenBroadcast).Milliseconds())
-	beforePrepareTimeout := time.Duration((paceMakerMinBlockTimeMsec - finishedBroadcast) * uint64(time.Millisecond))
+	finishedBroadcast := float64(clockMock.Now().Sub(whenBroadcast).Milliseconds())
+	if finishedBroadcast <= 0.1 {
+		fmt.Println("OLSH AM I HER")
+		finishedBroadcast = float64(paceMakerMinBlockTimeMsec) * float64(0.1)
+	}
+	beforePrepareTimeout := time.Duration((paceMakerMinBlockTimeMsec - uint64(finishedBroadcast)) * uint64(time.Millisecond))
 
 	step := typesCons.HotstuffStep(consMod.CurrentStep())
 	require.Equal(t, consensus.NewRound, step)
 
+	// OLSH 5001 4.999s 10000 4999
+	fmt.Println("OLSH", finishedBroadcast, beforePrepareTimeout, paceMakerMinBlockTimeMsec, paceMakerMinBlockTimeMsec-uint64(finishedBroadcast))
 	advanceTime(t, clockMock, clock.Duration(beforePrepareTimeout))
 	step = typesCons.HotstuffStep(consMod.CurrentStep())
 	// Should still be blocking proposal step
