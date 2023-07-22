@@ -48,10 +48,6 @@ func (s *rootSuite) TheSystemShouldReturnTheSuccessfulCancellationStatus() {
 	require.Fail(s, "implement me")
 }
 
-func (s *rootSuite) TheUserHasAValidUpgradeProtocolCommandWithSignerHeightAndNewVersion() {
-	require.Fail(s, "implement me")
-}
-
 func (s *rootSuite) TheSystemShouldApplyTheProtocolUpgradeAtTheSpecifiedActivationHeight() {
 	require.Fail(s, "implement me")
 }

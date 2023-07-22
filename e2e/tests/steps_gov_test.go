@@ -1,3 +1,5 @@
+//go:build e2e
+
 package e2e
 
 import (
@@ -14,9 +16,6 @@ func (s *rootSuite) TheUserIsAnAclOwner() {
 	require.NoError(s, err)
 	require.Contains(s, res.Stdout, "Key imported")
 	res, err = s.validator.RunCommand("keys", "get", test_artifacts.DefaultParamsOwner.PublicKey().String())
-	if err != nil && res.Stderr != "" {
-		e2eLogger.Log().Msgf("Error: %v %s", err, res.Stderr)
-		require.NoError(s, err)
-	}
+	require.NoError(s, err)
 	require.Contains(s, res.Stdout, test_artifacts.DefaultParamsOwner.PublicKey().String())
 }
