@@ -23,6 +23,9 @@ var SmtSpec = &ProofSpec{
 }
 
 func (p *ProofSpec) ConvertToIcs23ProofSpec() *ics23.ProofSpec {
+	if p == nil {
+		return nil
+	}
 	ics := new(ics23.ProofSpec)
 	ics.LeafSpec = p.LeafSpec.ConvertToIcs23LeafOp()
 	ics.InnerSpec = p.InnerSpec.ConvertToIcs23InnerSpec()
@@ -32,7 +35,23 @@ func (p *ProofSpec) ConvertToIcs23ProofSpec() *ics23.ProofSpec {
 	return ics
 }
 
+func ConvertFromIcs23ProofSpec(p *ics23.ProofSpec) *ProofSpec {
+	if p == nil {
+		return nil
+	}
+	spc := new(ProofSpec)
+	spc.LeafSpec = ConvertFromIcs23LeafOp(p.LeafSpec)
+	spc.InnerSpec = ConvertFromIcs23InnerSpec(p.InnerSpec)
+	spc.MaxDepth = p.MaxDepth
+	spc.MinDepth = p.MinDepth
+	spc.PrehashKeyBeforeComparison = p.PrehashKeyBeforeComparison
+	return spc
+}
+
 func (l *LeafOp) ConvertToIcs23LeafOp() *ics23.LeafOp {
+	if l == nil {
+		return nil
+	}
 	ics := new(ics23.LeafOp)
 	ics.Hash = l.Hash.ConvertToIcs23HashOp()
 	ics.PrehashKey = l.PrehashKey.ConvertToIcs23HashOp()
@@ -42,7 +61,23 @@ func (l *LeafOp) ConvertToIcs23LeafOp() *ics23.LeafOp {
 	return ics
 }
 
+func ConvertFromIcs23LeafOp(l *ics23.LeafOp) *LeafOp {
+	if l == nil {
+		return nil
+	}
+	op := new(LeafOp)
+	op.Hash = ConvertFromIcs23HashOp(l.Hash)
+	op.PrehashKey = ConvertFromIcs23HashOp(l.PrehashKey)
+	op.PrehashValue = ConvertFromIcs23HashOp(l.PrehashValue)
+	op.Length = ConvertFromIcs23LengthOp(l.Length)
+	op.Prefix = l.Prefix
+	return op
+}
+
 func (i *InnerSpec) ConvertToIcs23InnerSpec() *ics23.InnerSpec {
+	if i == nil {
+		return nil
+	}
 	ics := new(ics23.InnerSpec)
 	ics.ChildOrder = i.ChildOrder
 	ics.ChildSize = i.ChildSize
@@ -51,6 +86,20 @@ func (i *InnerSpec) ConvertToIcs23InnerSpec() *ics23.InnerSpec {
 	ics.EmptyChild = i.EmptyChild
 	ics.Hash = i.Hash.ConvertToIcs23HashOp()
 	return ics
+}
+
+func ConvertFromIcs23InnerSpec(i *ics23.InnerSpec) *InnerSpec {
+	if i == nil {
+		return nil
+	}
+	spec := new(InnerSpec)
+	spec.ChildOrder = i.ChildOrder
+	spec.ChildSize = i.ChildSize
+	spec.MinPrefixLength = i.MinPrefixLength
+	spec.MaxPrefixLength = i.MaxPrefixLength
+	spec.EmptyChild = i.EmptyChild
+	spec.Hash = ConvertFromIcs23HashOp(i.Hash)
+	return spec
 }
 
 func (h HashOp) ConvertToIcs23HashOp() ics23.HashOp {
@@ -69,6 +118,27 @@ func (h HashOp) ConvertToIcs23HashOp() ics23.HashOp {
 		return ics23.HashOp_BITCOIN
 	case HashOp_SHA512_256:
 		return ics23.HashOp_SHA512_256
+	default:
+		panic("unknown hash op")
+	}
+}
+
+func ConvertFromIcs23HashOp(h ics23.HashOp) HashOp {
+	switch h {
+	case ics23.HashOp_NO_HASH:
+		return HashOp_NO_HASH
+	case ics23.HashOp_SHA256:
+		return HashOp_SHA256
+	case ics23.HashOp_SHA512:
+		return HashOp_SHA512
+	case ics23.HashOp_KECCAK:
+		return HashOp_KECCAK
+	case ics23.HashOp_RIPEMD160:
+		return HashOp_RIPEMD160
+	case ics23.HashOp_BITCOIN:
+		return HashOp_BITCOIN
+	case ics23.HashOp_SHA512_256:
+		return HashOp_SHA512_256
 	default:
 		panic("unknown hash op")
 	}
@@ -99,10 +169,49 @@ func (l LengthOp) ConvertToIcs23LenthOp() ics23.LengthOp {
 	}
 }
 
+func ConvertFromIcs23LengthOp(l ics23.LengthOp) LengthOp {
+	switch l {
+	case ics23.LengthOp_NO_PREFIX:
+		return LengthOp_NO_PREFIX
+	case ics23.LengthOp_VAR_PROTO:
+		return LengthOp_VAR_PROTO
+	case ics23.LengthOp_VAR_RLP:
+		return LengthOp_VAR_RLP
+	case ics23.LengthOp_FIXED32_BIG:
+		return LengthOp_FIXED32_BIG
+	case ics23.LengthOp_FIXED32_LITTLE:
+		return LengthOp_FIXED32_LITTLE
+	case ics23.LengthOp_FIXED64_BIG:
+		return LengthOp_FIXED64_BIG
+	case ics23.LengthOp_FIXED64_LITTLE:
+		return LengthOp_FIXED64_LITTLE
+	case ics23.LengthOp_REQUIRE_32_BYTES:
+		return LengthOp_REQUIRE_32_BYTES
+	case ics23.LengthOp_REQUIRE_64_BYTES:
+		return LengthOp_REQUIRE_64_BYTES
+	default:
+		panic("unknown length op")
+	}
+}
+
 func (i *InnerOp) ConvertToIcs23InnerOp() *ics23.InnerOp {
+	if i == nil {
+		return nil
+	}
 	ics := new(ics23.InnerOp)
 	ics.Hash = i.Hash.ConvertToIcs23HashOp()
 	ics.Prefix = i.Prefix
 	ics.Suffix = i.Suffix
 	return ics
+}
+
+func ConvertFromIcs23InnerOp(i *ics23.InnerOp) *InnerOp {
+	if i == nil {
+		return nil
+	}
+	op := new(InnerOp)
+	op.Hash = ConvertFromIcs23HashOp(i.Hash)
+	op.Prefix = i.Prefix
+	op.Suffix = i.Suffix
+	return op
 }
