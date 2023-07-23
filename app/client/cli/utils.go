@@ -316,12 +316,12 @@ func keybaseForCLI() (keybase.Keybase, error) {
 
 func unableToConnectToRpc(err error) error {
 	fmt.Printf("❌ Unable to connect to the RPC @ %s\n\nError: %s", boldText(flags.RemoteCLIURL), err)
-	return nil
+	return fmt.Errorf("unable to connect to the RPC @ %s", flags.RemoteCLIURL)
 }
 
 func rpcResponseCodeUnhealthy(statusCode int, response []byte) error {
 	fmt.Printf("❌ RPC reporting unhealthy status HTTP %d @ %s\n\n%s", statusCode, boldText(flags.RemoteCLIURL), response)
-	return nil
+	return fmt.Errorf("RPC reporting unhealthy status HTTP %d @ %s", statusCode, flags.RemoteCLIURL)
 }
 
 func boldText[T string | []byte](s T) string {
