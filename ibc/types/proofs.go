@@ -193,25 +193,3 @@ func convertFromIcs23LengthOp(l ics23.LengthOp) LengthOp {
 		panic("unknown length op")
 	}
 }
-
-func (i *InnerOp) convertToIcs23InnerOp() *ics23.InnerOp {
-	if i == nil {
-		return nil
-	}
-	ics := new(ics23.InnerOp)
-	ics.Hash = i.Hash.convertToIcs23HashOp()
-	ics.Prefix = i.Prefix
-	ics.Suffix = i.Suffix
-	return ics
-}
-
-func convertFromIcs23InnerOp(i *ics23.InnerOp) *InnerOp {
-	if i == nil {
-		return nil
-	}
-	op := new(InnerOp)
-	op.Hash = convertFromIcs23HashOp(i.Hash)
-	op.Prefix = i.Prefix
-	op.Suffix = i.Suffix
-	return op
-}
