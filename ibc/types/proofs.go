@@ -27,8 +27,8 @@ func (p *ProofSpec) ConvertToIcs23ProofSpec() *ics23.ProofSpec {
 		return nil
 	}
 	ics := new(ics23.ProofSpec)
-	ics.LeafSpec = p.LeafSpec.ConvertToIcs23LeafOp()
-	ics.InnerSpec = p.InnerSpec.ConvertToIcs23InnerSpec()
+	ics.LeafSpec = p.LeafSpec.convertToIcs23LeafOp()
+	ics.InnerSpec = p.InnerSpec.convertToIcs23InnerSpec()
 	ics.MaxDepth = p.MaxDepth
 	ics.MinDepth = p.MinDepth
 	ics.PrehashKeyBeforeComparison = p.PrehashKeyBeforeComparison
@@ -40,41 +40,41 @@ func ConvertFromIcs23ProofSpec(p *ics23.ProofSpec) *ProofSpec {
 		return nil
 	}
 	spc := new(ProofSpec)
-	spc.LeafSpec = ConvertFromIcs23LeafOp(p.LeafSpec)
-	spc.InnerSpec = ConvertFromIcs23InnerSpec(p.InnerSpec)
+	spc.LeafSpec = convertFromIcs23LeafOp(p.LeafSpec)
+	spc.InnerSpec = convertFromIcs23InnerSpec(p.InnerSpec)
 	spc.MaxDepth = p.MaxDepth
 	spc.MinDepth = p.MinDepth
 	spc.PrehashKeyBeforeComparison = p.PrehashKeyBeforeComparison
 	return spc
 }
 
-func (l *LeafOp) ConvertToIcs23LeafOp() *ics23.LeafOp {
+func (l *LeafOp) convertToIcs23LeafOp() *ics23.LeafOp {
 	if l == nil {
 		return nil
 	}
 	ics := new(ics23.LeafOp)
-	ics.Hash = l.Hash.ConvertToIcs23HashOp()
-	ics.PrehashKey = l.PrehashKey.ConvertToIcs23HashOp()
-	ics.PrehashValue = l.PrehashValue.ConvertToIcs23HashOp()
-	ics.Length = l.Length.ConvertToIcs23LenthOp()
+	ics.Hash = l.Hash.convertToIcs23HashOp()
+	ics.PrehashKey = l.PrehashKey.convertToIcs23HashOp()
+	ics.PrehashValue = l.PrehashValue.convertToIcs23HashOp()
+	ics.Length = l.Length.convertToIcs23LenthOp()
 	ics.Prefix = l.Prefix
 	return ics
 }
 
-func ConvertFromIcs23LeafOp(l *ics23.LeafOp) *LeafOp {
+func convertFromIcs23LeafOp(l *ics23.LeafOp) *LeafOp {
 	if l == nil {
 		return nil
 	}
 	op := new(LeafOp)
-	op.Hash = ConvertFromIcs23HashOp(l.Hash)
-	op.PrehashKey = ConvertFromIcs23HashOp(l.PrehashKey)
-	op.PrehashValue = ConvertFromIcs23HashOp(l.PrehashValue)
-	op.Length = ConvertFromIcs23LengthOp(l.Length)
+	op.Hash = convertFromIcs23HashOp(l.Hash)
+	op.PrehashKey = convertFromIcs23HashOp(l.PrehashKey)
+	op.PrehashValue = convertFromIcs23HashOp(l.PrehashValue)
+	op.Length = convertFromIcs23LengthOp(l.Length)
 	op.Prefix = l.Prefix
 	return op
 }
 
-func (i *InnerSpec) ConvertToIcs23InnerSpec() *ics23.InnerSpec {
+func (i *InnerSpec) convertToIcs23InnerSpec() *ics23.InnerSpec {
 	if i == nil {
 		return nil
 	}
@@ -84,11 +84,11 @@ func (i *InnerSpec) ConvertToIcs23InnerSpec() *ics23.InnerSpec {
 	ics.MinPrefixLength = i.MinPrefixLength
 	ics.MaxPrefixLength = i.MaxPrefixLength
 	ics.EmptyChild = i.EmptyChild
-	ics.Hash = i.Hash.ConvertToIcs23HashOp()
+	ics.Hash = i.Hash.convertToIcs23HashOp()
 	return ics
 }
 
-func ConvertFromIcs23InnerSpec(i *ics23.InnerSpec) *InnerSpec {
+func convertFromIcs23InnerSpec(i *ics23.InnerSpec) *InnerSpec {
 	if i == nil {
 		return nil
 	}
@@ -98,11 +98,11 @@ func ConvertFromIcs23InnerSpec(i *ics23.InnerSpec) *InnerSpec {
 	spec.MinPrefixLength = i.MinPrefixLength
 	spec.MaxPrefixLength = i.MaxPrefixLength
 	spec.EmptyChild = i.EmptyChild
-	spec.Hash = ConvertFromIcs23HashOp(i.Hash)
+	spec.Hash = convertFromIcs23HashOp(i.Hash)
 	return spec
 }
 
-func (h HashOp) ConvertToIcs23HashOp() ics23.HashOp {
+func (h HashOp) convertToIcs23HashOp() ics23.HashOp {
 	switch h {
 	case HashOp_NO_HASH:
 		return ics23.HashOp_NO_HASH
@@ -123,7 +123,7 @@ func (h HashOp) ConvertToIcs23HashOp() ics23.HashOp {
 	}
 }
 
-func ConvertFromIcs23HashOp(h ics23.HashOp) HashOp {
+func convertFromIcs23HashOp(h ics23.HashOp) HashOp {
 	switch h {
 	case ics23.HashOp_NO_HASH:
 		return HashOp_NO_HASH
@@ -144,7 +144,7 @@ func ConvertFromIcs23HashOp(h ics23.HashOp) HashOp {
 	}
 }
 
-func (l LengthOp) ConvertToIcs23LenthOp() ics23.LengthOp {
+func (l LengthOp) convertToIcs23LenthOp() ics23.LengthOp {
 	switch l {
 	case LengthOp_NO_PREFIX:
 		return ics23.LengthOp_NO_PREFIX
@@ -169,7 +169,7 @@ func (l LengthOp) ConvertToIcs23LenthOp() ics23.LengthOp {
 	}
 }
 
-func ConvertFromIcs23LengthOp(l ics23.LengthOp) LengthOp {
+func convertFromIcs23LengthOp(l ics23.LengthOp) LengthOp {
 	switch l {
 	case ics23.LengthOp_NO_PREFIX:
 		return LengthOp_NO_PREFIX
@@ -194,23 +194,23 @@ func ConvertFromIcs23LengthOp(l ics23.LengthOp) LengthOp {
 	}
 }
 
-func (i *InnerOp) ConvertToIcs23InnerOp() *ics23.InnerOp {
+func (i *InnerOp) convertToIcs23InnerOp() *ics23.InnerOp {
 	if i == nil {
 		return nil
 	}
 	ics := new(ics23.InnerOp)
-	ics.Hash = i.Hash.ConvertToIcs23HashOp()
+	ics.Hash = i.Hash.convertToIcs23HashOp()
 	ics.Prefix = i.Prefix
 	ics.Suffix = i.Suffix
 	return ics
 }
 
-func ConvertFromIcs23InnerOp(i *ics23.InnerOp) *InnerOp {
+func convertFromIcs23InnerOp(i *ics23.InnerOp) *InnerOp {
 	if i == nil {
 		return nil
 	}
 	op := new(InnerOp)
-	op.Hash = ConvertFromIcs23HashOp(i.Hash)
+	op.Hash = convertFromIcs23HashOp(i.Hash)
 	op.Prefix = i.Prefix
 	op.Suffix = i.Suffix
 	return op
