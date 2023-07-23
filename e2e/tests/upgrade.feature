@@ -2,14 +2,14 @@ Feature: Upgrade Protocol
 
   Scenario: ACL Owner Successfully Submits a Protocol Upgrade Using CLI
     Given the user is an ACL Owner
-    When the user runs the command "gov upgrade <version> <height> <chain-id>"
+    When the user runs the command "gov upgrade <owner> <version> <height>"
     Then the user should be able to see standard output containing "<stdout>"
     When the user runs the command "gov query upgrade"
     Then the user should be able to see standard output containing "<version>"
 
     Examples:
-      | version | height | chain-id | stdout |
-      | 2.0.0   | 100    | test     | 2.0.0  |
+      | owner                                    | version | height | stdout |
+      | da034209758b78eaea06dd99c07909ab54c99b45 | 2.0.0   | 100    | 2.0.0  |
 
   Scenario: ACL Owner Submits an Invalid Protocol Upgrade Using CLI
     Given the user is an ACL Owner

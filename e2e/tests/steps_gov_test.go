@@ -15,7 +15,10 @@ func (s *rootSuite) TheUserIsAnAclOwner() {
 	)
 	require.NoError(s, err)
 	require.Contains(s, res.Stdout, "Key imported")
-	res, err = s.validator.RunCommand("keys", "get", test_artifacts.DefaultParamsOwner.PublicKey().String())
-	require.NoError(s, err)
+	res, err = s.validator.RunCommand("keys", "get", test_artifacts.DefaultParamsOwner.Address().String())
+	if err != nil {
+		e2eLogger.Error().AnErr("error", err).Str("stdout", res.Stdout).Str("stderr", res.Stderr).Msgf("failed to get acl owner key")
+		require.NoError(s, err)
+	}
 	require.Contains(s, res.Stdout, test_artifacts.DefaultParamsOwner.PublicKey().String())
 }

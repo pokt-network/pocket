@@ -89,26 +89,30 @@ func govCommands() []*cobra.Command {
 					return err
 				}
 
-				cmd.Printf("HTTP status code: %d\n", resp.StatusCode())
-				cmd.Println(string(resp.Body))
+				if resp.StatusCode() != 200 {
+					return fmt.Errorf("HTTP status code: %d\n", resp.StatusCode())
+				}
+
+				fmt.Printf("Successfully sent change parameter %s owned by %s to %s\n", args[1], args[0], args[2])
+				fmt.Printf("HTTP status code: %d\n", resp.StatusCode())
+				fmt.Println(string(resp.Body))
 
 				return nil
 			},
 		},
 		{
-			Use:     "Upgrade <version> <height>",
+			Use:     "Upgrade <owner> <version> <height>",
 			Short:   "Upgrade ",
 			Long:    "Schedules an upgrade to the specified version at the specified height",
 			Aliases: []string{"upgrade"},
-			Args:    cobra.ExactArgs(2),
+			Args:    cobra.ExactArgs(3),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				// Unpack CLI arguments
 				fromAddrHex := args[0]
 				version := args[1]
 				heightArg := args[2]
 
-				// TODO(0xbigboss): implement RPC client, route and handler
-				cmd.Printf("submitting upgrade for version %s at height %s.\n", args[0], args[1])
+				fmt.Printf("submitting upgrade for version %s at height %s.\n", args[0], args[1])
 
 				kb, err := keybaseForCLI()
 				if err != nil {
@@ -156,8 +160,13 @@ func govCommands() []*cobra.Command {
 					return err
 				}
 
-				cmd.Printf("HTTP status code: %d\n", resp.StatusCode())
-				cmd.Println(string(resp.Body))
+				if resp.StatusCode() != 200 {
+					return fmt.Errorf("HTTP status code: %d\n", resp.StatusCode())
+				}
+
+				fmt.Printf("Successfully submitted upgrade for version %s at height %s.\n", args[0], args[1])
+				fmt.Printf("HTTP status code: %d\n", resp.StatusCode())
+				fmt.Println(string(resp.Body))
 
 				return nil
 			},
