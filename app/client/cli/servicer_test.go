@@ -83,6 +83,6 @@ func testSession(appAddr string, height int64) *rpc.Session {
 		Chain:            testRelaychainEth,
 		NumSessionBlocks: numSessionBlocks,
 		SessionHeight:    height,
-		SessionNumber:    (height / numSessionBlocks),
+		SessionNumber:    (height / numSessionBlocks), // assumes numSessionBlocks never changed
 	}
 }
