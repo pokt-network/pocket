@@ -1,3 +1,5 @@
+
+
 - Add screenshots for complete
 - Add screenshots remaining
 - Add screenshots future
@@ -8,3 +10,10 @@ Demos:
 - Dima's DevNet dashboard
 - Documentation from everyone
 - New team members coming onboard
+    - RedOne
+    - Matthew
+    - Prudhive
+
+
+- Add image of midweek checking
+
