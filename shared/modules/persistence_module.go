@@ -50,7 +50,7 @@ type PersistenceModule interface {
 type AtomicStore interface {
 	Savepoint() error
 	Commit() error
-	Rollback()
+	Rollback() error
 }
 
 // Interface defining the context within which the node can operate with the persistence layer.

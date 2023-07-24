@@ -82,6 +82,9 @@ type stateTree struct {
 
 var _ modules.TreeStoreModule = &treeStore{}
 
+// errFailedRollback is thrown whenever a rollback is attempted with no savepoint set
+var errFailedRollback = fmt.Errorf("failed to rollback")
+
 // treeStore stores a set of merkle trees that it manages.
 // It fulfills the modules.treeStore interface
 // * It is responsible for atomic commit or rollback behavior of the underlying
@@ -312,13 +315,14 @@ func (t *treeStore) Savepoint() error {
 // Rollback rolls back to the last saved world state maintained by the treeStore.
 // Rollback intentionally can't return an error because at this point we're out of tricks
 // to recover from problems.
-func (t *treeStore) Rollback() {
+func (t *treeStore) Rollback() error {
 	if t.PrevState != nil {
 		t.merkleTrees = t.PrevState.MerkleTrees
 		t.rootTree = t.PrevState.RootTree
-		return
+		return nil
 	}
-	t.logger.Fatal().Msgf("rollback called without valid savepoint - this is a bug - treeStore shutting down: %+v", t)
+	t.logger.Err(errFailedRollback)
+	return errFailedRollback
 }
 
 // save commits any pending changes to the trees and creates a copy of the current state of the

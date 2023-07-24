@@ -68,6 +68,15 @@ func TestTreeStore_Update(t *testing.T) {
 		require.NotEmpty(t, hash2)
 		require.NotEqual(t, hash1, hash2)
 	})
+
+	t.Run("should fail to rollback when no treestore savepoint is set", func(t *testing.T) {
+		pmod := newTestPersistenceModule(t, dbUrl)
+		context := newTestPostgresContext(t, 0, pmod)
+
+		err := context.RollbackToSavePoint()
+		require.Error(t, err)
+		require.ErrorContainsf(t, err, "failed to rollback", "incorrect error returned")
+	})
 }
 
 func newTestPersistenceModule(t *testing.T, databaseURL string) modules.PersistenceModule {
