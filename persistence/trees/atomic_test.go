@@ -82,7 +82,8 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 	}
 
 	// rollback the changes made to the trees above BEFORE anything was committed
-	ts.Rollback()
+	err := ts.Rollback()
+	require.NoError(t, err)
 
 	// validate that the state hash is unchanged after new data was inserted but rolled back before commitment
 	hash3 := ts.getStateHash()
