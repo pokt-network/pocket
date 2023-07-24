@@ -320,6 +320,8 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 	# IBC
 	make copy_ics23_proto
 	$(PROTOC_SHARED) -I=./ibc/types/proto --go_out=./ibc/types ./ibc/types/proto/*.proto
+	$(PROTOC_SHARED) -I=./ibc/client/types/proto --go_out=./ibc/client/types ./ibc/client/types/proto/*.proto
+	$(PROTOC_SHARED) -I=./ibc/client/types/proto -I=./ibc/client/light_clients/types/proto -I=./shared/core/types/proto -I=./ibc/types/proto --go_out=./ibc/client/light_clients/types ./ibc/client/light_clients/types/proto/*.proto
 
 	# echo "View generated proto files by running: make protogen_show"
 
