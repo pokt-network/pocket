@@ -17,7 +17,7 @@ on:
 
 env:
   # Even though we can test against multiple versions, this one is considered a target version.
-  TARGET_GOLANG_VERSION: "1.19"
+  TARGET_GOLANG_VERSION: "1.20"
   PROTOC_VERSION: "3.19.4"
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
     runs-on: custom-runner
     strategy:
       matrix:
-        go: ["1.19"] # As we are relying on generics, we can't go lower than 1.18.
+        go: ["1.20"] # As we are relying on generics, we can't go lower than 1.18.
       fail-fast: false
     name: Go ${{ matrix.go }} test
     steps:

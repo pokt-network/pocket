@@ -17,6 +17,7 @@ Please note that this repository is under very active development and breaking c
   - [Profiling](#profiling)
 - [Code Organization](#code-organization)
 - [Maintaining Documentation](#maintaining-documentation)
+- [Code Review Guidelines](#code-review-guidelines)
 - [Documentation Resources and Implementation](#documentation-resources-and-implementation)
   - [Your Project Dashboard](#your-project-dashboard)
   - [Github Labels](#github-labels)
@@ -55,7 +56,7 @@ which protoc-go-inject-tag && echo "protoc-go-inject-tag Installed"
 # protoc-go-inject-tag Installed
 
 go version
-# go version go1.18.1 darwin/arm64
+# go version go1.20.5 darwin/arm64
 
 mockgen --version
 # v1.6.0
@@ -85,9 +86,7 @@ Optionally activate changelog pre-commit hook
 cp .githooks/pre-commit .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
-
-_Please note that the Github workflow will still prevent this from merging
-unless the CHANGELOG is updated._
+_**NOTE**: The pre-commit changelog verification has been disabled during the developement of V1 as of 2023-05-16 to unblock development velocity; see more details [here](https://github.com/pokt-network/pocket/assets/1892194/394fdb09-e388-44aa-820d-e9d5a23578cf). This check is no longer done in the CI and is not recommended for local development either currently._
 
 ### Pocket Network CLI
 
@@ -319,6 +318,18 @@ Documentation files currently found by the following command `find . -name "*.md
 To keep the Wiki organized, a comment is added at the end of each `.md` file. For example, you can find the following one at the end of this file `<!-- GITHUB_WIKI: guides/development/readme -->`. The structure of the comment indicates the category (guides), subcategory(ies) (development) and filename (readme): `<!-- GITHUB_WIKI: <category>/<subcategory 1>/.../<filename>`. You can see the example output in the [Wiki Page](https://github.com/pokt-network/pocket/wiki/Development-Readme).
 
 If you are adding a new `.md` file for documentation please included a similar comment. Use your best judgment for the category and subcategory if its a new directory. Otherwise, copy the comment from a similar file in the directory and choose a relevant filename.
+
+## Code Review Guidelines
+
+- [Code Quality](./CODE_REVIEW_GUIDELINES.md#code-quality)
+- [Code Reviews](./CODE_REVIEW_GUIDELINES.md#code-reviews)
+- [Code Review Guidelines](./CODE_REVIEW_GUIDELINES.md#code-review-guidelines)
+  - [Expectations](./CODE_REVIEW_GUIDELINES.md#expectations)
+- [Best Practices](./CODE_REVIEW_GUIDELINES.md#best-practices)
+  - [Reviewing](./CODE_REVIEW_GUIDELINES.md#reviewing)
+  - [Starting a Review](./CODE_REVIEW_GUIDELINES.md#starting-a-review)
+  - [Finishing a Review](./CODE_REVIEW_GUIDELINES.md#finishing-a-review)
+  - [Merging](./CODE_REVIEW_GUIDELINES.md#merging)
 
 ## Documentation Resources and Implementation
 
