@@ -55,7 +55,7 @@ func TestGetSessionFromCache(t *testing.T) {
 				require.NoError(t, err)
 				defer os.RemoveAll(dbPath)
 
-				c, err = cache.Create(dbPath)
+				c, err = cache.NewSessionCache(dbPath)
 				require.NoError(t, err)
 
 				for _, s := range tc.cachedSessions {

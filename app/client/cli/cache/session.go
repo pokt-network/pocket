@@ -27,8 +27,8 @@ type sessionCache struct {
 	store kvstore.KVStore
 }
 
-// Create returns a session cache backed by a kvstore using the provided database path.
-func Create(databasePath string) (SessionCache, error) {
+// NewSessionCache returns a session cache backed by a kvstore using the provided database path.
+func NewSessionCache(databasePath string) (SessionCache, error) {
 	store, err := kvstore.NewKVStore(databasePath)
 	if err != nil {
 		return nil, fmt.Errorf("Error initializing key-value store using path %s: %w", databasePath, err)

@@ -33,7 +33,7 @@ func init() {
 	rootCmd.AddCommand(NewServicerCommand())
 
 	var err error
-	sessionCache, err = cache.Create(sessionCacheDBPath)
+	sessionCache, err = cache.NewSessionCache(sessionCacheDBPath)
 	if err != nil {
 		logger.Global.Warn().Err(err).Msg("failed to initialize session cache")
 	}

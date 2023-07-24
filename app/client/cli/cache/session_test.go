@@ -59,7 +59,7 @@ func TestGet(t *testing.T) {
 			require.NoError(t, err)
 			defer os.RemoveAll(dbPath)
 
-			cache, err := Create(dbPath)
+			cache, err := NewSessionCache(dbPath)
 			require.NoError(t, err)
 
 			for _, s := range tc.cacheContents {
