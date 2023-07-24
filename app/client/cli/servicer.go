@@ -26,14 +26,14 @@ var (
 	errSessionNotFoundInCache   = errors.New("session not found in cache")
 	errNoMatchingSessionInCache = errors.New("no session matching the requested height found in cache")
 
-	sessionCache *cache.SessionCache
+	sessionCache cache.SessionCache
 )
 
 func init() {
 	rootCmd.AddCommand(NewServicerCommand())
 
 	var err error
-	sessionCache, err = cache.NewSessionCache(sessionCacheDBPath)
+	sessionCache, err = cache.Create(sessionCacheDBPath)
 	if err != nil {
 		logger.Global.Warn().Err(err).Msg("failed to initialize session cache")
 	}
@@ -142,7 +142,7 @@ func validateServicer(session *rpc.Session, servicerAddress string) (*rpc.Protoc
 }
 
 // getSessionFromCache uses the client-side session cache to fetch a session for app+chain combination at the provided height, if one has already been retrieved and cached.
-func getSessionFromCache(c *cache.SessionCache, appAddress, chain string, height int64) (*rpc.Session, error) {
+func getSessionFromCache(c cache.SessionCache, appAddress, chain string, height int64) (*rpc.Session, error) {
 	if c == nil {
 		return nil, errNoSessionCache
 	}

@@ -48,13 +48,14 @@ func TestGetSessionFromCache(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			var c *cache.SessionCache
+			var c cache.SessionCache
+			// prepare cache with test session for this unit test
 			if len(tc.cachedSessions) > 0 {
 				dbPath, err := os.MkdirTemp("", "cliCacheStoragePath")
 				require.NoError(t, err)
 				defer os.RemoveAll(dbPath)
 
-				c, err = cache.NewSessionCache(dbPath)
+				c, err = cache.Create(dbPath)
 				require.NoError(t, err)
 
 				for _, s := range tc.cachedSessions {
@@ -71,6 +72,8 @@ func TestGetSessionFromCache(t *testing.T) {
 }
 
 func testSession(appAddr string, height int64) *rpc.Session {
+	const numSessionBlocks = 4
+
 	return &rpc.Session{
 		Application: rpc.ProtocolActor{
 			ActorType: rpc.Application,
@@ -78,8 +81,8 @@ func testSession(appAddr string, height int64) *rpc.Session {
 			Chains:    []string{testRelaychainEth},
 		},
 		Chain:            testRelaychainEth,
-		NumSessionBlocks: 4,
+		NumSessionBlocks: numSessionBlocks,
 		SessionHeight:    height,
-		SessionNumber:    2,
+		SessionNumber:    (height / numSessionBlocks),
 	}
 }

@@ -12,22 +12,29 @@ import (
 
 var errSessionNotFound = errors.New("session not found in cache")
 
-// SessionCache stores and retrieves sessions for application+relaychain pairs
+// SessionCache defines the set of methods used to interact with the client-side session cache
+type SessionCache interface {
+	Get(appAddr, chain string) (*rpc.Session, error)
+	Set(session *rpc.Session) error
+	Stop() error
+}
+
+// sessionCache stores and retrieves sessions for application+relaychain pairs
 //
 //	It uses a key-value store as backing storage
-type SessionCache struct {
+type sessionCache struct {
 	// store is the local store for cached sessions
 	store kvstore.KVStore
 }
 
-// NewSessionCache returns a session cache backed by a kvstore using the provided database path.
-func NewSessionCache(databasePath string) (*SessionCache, error) {
+// Create returns a session cache backed by a kvstore using the provided database path.
+func Create(databasePath string) (SessionCache, error) {
 	store, err := kvstore.NewKVStore(databasePath)
 	if err != nil {
 		return nil, fmt.Errorf("Error initializing key-value store using path %s: %w", databasePath, err)
 	}
 
-	return &SessionCache{
+	return &sessionCache{
 		store: store,
 	}, nil
 }
@@ -36,7 +43,7 @@ func NewSessionCache(databasePath string) (*SessionCache, error) {
 // The caller is responsible to verify that the returned session is valid for the current block height.
 // Get is NOT safe to use concurrently
 // DISCUSS: do we need concurrency here?
-func (s *SessionCache) Get(appAddr, chain string) (*rpc.Session, error) {
+func (s *sessionCache) Get(appAddr, chain string) (*rpc.Session, error) {
 	key := sessionKey(appAddr, chain)
 	bz, err := s.store.Get(key)
 	if err != nil {
@@ -54,7 +61,7 @@ func (s *SessionCache) Get(appAddr, chain string) (*rpc.Session, error) {
 // Set stores the provided session in the cache with the key being the app+chain combination.
 // For each app+chain combination, a single session will be stored. Subsequent calls to Set will overwrite the entry for the provided app and chain.
 // Set is NOT safe to use concurrently
-func (s *SessionCache) Set(session *rpc.Session) error {
+func (s *sessionCache) Set(session *rpc.Session) error {
 	bz, err := json.Marshal(*session)
 	if err != nil {
 		return fmt.Errorf("error marshalling session for app: %s, chain: %s, session height: %d: %w", session.Application.Address, session.Chain, session.SessionHeight, err)
@@ -68,7 +75,7 @@ func (s *SessionCache) Set(session *rpc.Session) error {
 }
 
 // Stop call stop on the backing store. No calls should be made to Get or Set after calling Stop.
-func (s *SessionCache) Stop() error {
+func (s *sessionCache) Stop() error {
 	return s.store.Stop()
 }
 
