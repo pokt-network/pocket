@@ -10,6 +10,7 @@
 - [Components](#components)
   - [ICS-24 Host Requirements](#ics-24-host-requirements)
   - [ICS-23 Vector Commitments](#ics-23-vector-commitments)
+  - [ICS-02 Client Semantics](#ics-02-client-semantics)
 
 ## Definitions
 
@@ -115,7 +116,15 @@ See: [ICS-24](./ics24.md) for more details on the specifics of the ICS-24 implem
 
 See: [ICS-23](./ics23.md) for more details on the specifics of the ICS-23 implementation for Pocket.
 
+### ICS-02 Client Semantics
+
+[ICS-02][ics02] defines the methods, and interfaces through which the IBC host will interact with and manage the different clients it uses. This includes the creation of clients, their updates and upgrades as well as verifying any proofs with the counterparty client's state. The following interfaces must be defined: `ClientState`, `ConsensusState`, `ClientMessage`, `Height` each of these will potentially have a different implementation for each client type. In order to improve client upgradeability Pocket uses [ICS-08][ics08] WASM clients, which use a generic implementation of each interface, passing in opaque serialised data to the WASM client to be deserialised and used internally.
+
+See [ICS-02](./ics02.md) for more details on the specifics of the ICS-02 implementation for Pocket.
+
 [ibc-spec]: https://github.com/cosmos/ibc
 [ics24]: https://github.com/cosmos/ibc/blob/main/spec/core/ics-024-host-requirements/README.md
 [ics23]: https://github.com/cosmos/ibc/blob/main/spec/core/ics-023-vector-commitments/README.md
 [smt]: https://github.com/pokt-network/smt
+[ics02]: https://github.com/cosmos/ibc/blob/main/spec/core/ics-002-client-semantics/README.md
+[ics08]: https://github.com/cosmos/ibc/blob/main/spec/client/ics-008-wasm-client/README.md
