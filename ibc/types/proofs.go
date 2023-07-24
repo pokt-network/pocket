@@ -2,6 +2,8 @@ package types
 
 import ics23 "github.com/cosmos/ics23/go"
 
+// Copy of ics23.SmtSpec
+// Ref: https://github.com/cosmos/ics23/blob/daa1760cb80f8607494ecf9e40482e66717a24e0/go/proof.go#L47
 var SmtSpec = &ProofSpec{
 	LeafSpec: &LeafOp{
 		Hash:         HashOp_SHA256,
