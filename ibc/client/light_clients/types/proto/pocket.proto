@@ -12,7 +12,7 @@ import "block.proto";
 
 // PocketConsensusState defines the ibc client consensus state for Pocket
 message PocketConsensusState {
-    google.protobuf.Timestamp timestamp = 1;   // unixnano timestamp of the block
+    google.protobuf.Timestamp timestamp = 1;   // unix nano timestamp of the block
     string state_hash = 2;                     // hex encoded root state tree hash
     map<string, string> state_tree_hashes = 3; // map of state tree hashes; map[TreeName]hex(TreeRootHash)
     string next_val_set_hash = 4;              // hex encoded sha3_256 hash of the next validator set
@@ -45,6 +45,7 @@ message PocketHeader {
     // the consensus state at trusted_height must be within the unbonding_period to correctly verify the new header
     Height trusted_height = 3;           // height of the ConsensusState stored used to verify the new header
     // trusted_validators must hash to the ConsensusState.NextValSetHash as this is the last trusted validator set
+    // hashed using SHA3Hash(validatorSetBytes) in shared/crypto/sha3.go
     ValidatorSet trusted_validators = 4; // already stored validator set used to verify the update
 }
 
