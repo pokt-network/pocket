@@ -81,7 +81,7 @@ func TestHandleEvent_FlushCaches(t *testing.T) {
 	require.NoError(t, cache.Stop())
 
 	// flush the cache
-	err = ibcHost.GetBus().GetBulkStoreCacher().FlushAllEntries()
+	err = ibcHost.GetBus().GetBulkStoreCacher().FlushCachesToStore()
 	require.NoError(t, err)
 
 	cache, err = kvstore.NewKVStore(tmpDir)
