@@ -16,8 +16,9 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// TODO_THIS_COMMIT: add godoc comment explaining what this **is** and **is not**
-// intended to be used for.
+// debugPrivKey is used in the generation of a runtime config to provide a private key to the P2P and Consensus modules
+// this is not a private key used for sending transactions, but is used for the purposes of broadcasting messages etc.
+// this must be done as the CLI does not take a node configuration file and still requires a Private Key for modules
 const debugPrivKey = "09fc8ee114e678e665d09179acb9a30060f680df44ba06b51434ee47940a8613be19b2b886e743eb1ff7880968d6ce1a46350315e569243e747a227ee8faec3d"
 
 // P2PDependenciesPreRunE initializes peerstore & current height providers, and a
@@ -87,7 +88,7 @@ func setupAndStartP2PModule(rm runtime.Manager) {
 	}
 
 	var ok bool
-	P2PMod, ok = mod.(modules.P2PModule)
+	P2PMod, ok := mod.(modules.P2PModule)
 	if !ok {
 		logger.Global.Fatal().Msgf("unexpected P2P module type: %T", mod)
 	}

@@ -159,14 +159,17 @@ func handleSelect(cmd *cobra.Command, selection string) {
 }
 
 // Broadcast to the entire network.
-func broadcastDebugMessage(_ *cobra.Command, debugMsg *messaging.DebugMessage) {
+func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to create Any proto")
 	}
 
-	// TECHDEBT: prefer to retrieve P2P module from the bus instead.
-	if err := helpers.P2PMod.Broadcast(anyProto); err != nil {
+	bus, err := helpers.GetBusFromCmd(cmd)
+	if err != nil {
+		logger.Global.Fatal().Err(err).Msg("Failed to retrieve bus from command")
+	}
+	if err := bus.GetP2PModule().Broadcast(anyProto); err != nil {
 		logger.Global.Error().Err(err).Msg("Failed to broadcast debug message")
 	}
 }
@@ -183,7 +186,6 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 		logger.Global.Fatal().Err(err).Msg("Unable to retrieve the pstore")
 	}
 
-	var validatorAddress []byte
 	if pstore.Size() == 0 {
 		logger.Global.Fatal().Msg("No validators found")
 	}
@@ -192,13 +194,16 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 	//
 	// DISCUSS_THIS_COMMIT: The statement above is false. Using `#Send()` will only
 	// be unicast with no opportunity for further propagation.
-	validatorAddress = pstore.GetPeerList()[0].GetAddress()
+	firstStakedActorAddress := pstore.GetPeerList()[0].GetAddress()
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 	}
 
-	// TECHDEBT: prefer to retrieve P2P module from the bus instead.
-	if err := helpers.P2PMod.Send(validatorAddress, anyProto); err != nil {
+	bus, err := helpers.GetBusFromCmd(cmd)
+	if err != nil {
+		logger.Global.Fatal().Err(err).Msg("Failed to retrieve bus from command")
+	}
+	if err := bus.GetP2PModule().Send(firstStakedActorAddress, anyProto); err != nil {
 		logger.Global.Error().Err(err).Msg("Failed to send debug message")
 	}
 }
