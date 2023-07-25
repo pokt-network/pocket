@@ -33,7 +33,7 @@ type PersistenceModule interface {
 
 	// Indexer operations
 	GetTxIndexer() indexer.TxIndexer
-	TransactionExists(transactionHash string) (bool, error)
+	TransactionExists(txHash, txProtoBz []byte) bool
 
 	// Debugging / development only
 	HandleDebugMessage(*messaging.DebugMessage) error
