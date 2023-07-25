@@ -35,9 +35,6 @@ type PersistenceModule interface {
 	GetTxIndexer() indexer.TxIndexer
 	TransactionExists(transactionHash string) (bool, error)
 
-	// TreeStore operations
-	GetTreeStore() TreeStoreModule
-
 	// Debugging / development only
 	HandleDebugMessage(*messaging.DebugMessage) error
 
@@ -149,6 +146,8 @@ type PersistenceWriteContext interface {
 	// key-value pairs represent the same key-value pairings in the IBC state tree. This table is
 	// used for data retrieval purposes and to update the state tree from the mempool of IBC transactions.
 	SetIBCStoreEntry(key, value []byte) error
+	// SetIBCEvent stores an IBC event in the persistence context at the current height
+	SetIBCEvent(event *coreTypes.IBCEvent) error
 
 	// Relay Operations
 	RecordRelayService(applicationAddress string, key []byte, relay *coreTypes.Relay, response *coreTypes.RelayResponse) error
@@ -221,6 +220,7 @@ type PersistenceReadContext interface {
 	// Validator Queries
 	GetValidator(address []byte, height int64) (*coreTypes.Actor, error)
 	GetAllValidators(height int64) ([]*coreTypes.Actor, error)
+	GetValidatorSet(height int64) (*coreTypes.ValidatorSet, error)
 	GetValidatorExists(address []byte, height int64) (exists bool, err error)
 	GetValidatorStakeAmount(height int64, address []byte) (string, error)
 	GetValidatorsReadyToUnstake(height int64, status int32) (validators []*moduleTypes.UnstakingActor, err error)
@@ -246,6 +246,8 @@ type PersistenceReadContext interface {
 	// IBC Queries
 	// GetIBCStoreEntry returns the value of the key at the given height from the ibc_entries table
 	GetIBCStoreEntry(key []byte, height int64) ([]byte, error)
+	// GetIBCEvent returns the matching IBC events for any topic at the height provied
+	GetIBCEvents(height uint64, topic string) ([]*coreTypes.IBCEvent, error)
 }
 
 // PersistenceLocalContext defines the set of operations specific to local persistence.

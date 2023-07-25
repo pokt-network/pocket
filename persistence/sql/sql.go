@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/pokt-network/pocket/persistence/indexer"
 	ptypes "github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
@@ -89,16 +88,6 @@ func GetAccountsUpdated(
 	}
 
 	return accounts, nil
-}
-
-// GetTransactions takes a transaction indexer and returns the transactions for the current height
-func GetTransactions(txi indexer.TxIndexer, height uint64) ([]*coreTypes.IndexedTransaction, error) {
-	// TECHDEBT(#813): Avoid this cast to int64
-	indexedTxs, err := txi.GetByHeight(int64(height), false)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get transactions by height: %w", err)
-	}
-	return indexedTxs, nil
 }
 
 // GetPools returns the pools updated at the given height

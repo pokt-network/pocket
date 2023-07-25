@@ -1,6 +1,6 @@
 # Purpose of this container image is to ship pocket binary with minimal dependencies.
 
-ARG TARGET_GOLANG_VERSION=1.19
+ARG TARGET_GOLANG_VERSION=1.20
 
 FROM golang:${TARGET_GOLANG_VERSION}-bullseye AS builder
 

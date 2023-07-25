@@ -23,29 +23,27 @@ const (
 	PromptSendBlockRequest       string = "BlockRequest (broadcast)"
 )
 
-var (
-	items = []string{
-		PromptPrintNodeState,
-		PromptTriggerNextView,
-		PromptTogglePacemakerMode,
-		PromptResetToGenesis,
-		PromptShowLatestBlockInStore,
-		PromptSendMetadataRequest,
-		PromptSendBlockRequest,
-	}
-)
-
-func init() {
-	dbg := NewDebugCommand()
-	dbg.AddCommand(NewDebugSubCommands()...)
-	rootCmd.AddCommand(dbg)
+var items = []string{
+	PromptPrintNodeState,
+	PromptTriggerNextView,
+	PromptTogglePacemakerMode,
+	PromptResetToGenesis,
+	PromptShowLatestBlockInStore,
+	PromptSendMetadataRequest,
+	PromptSendBlockRequest,
 }
 
-// NewDebugSubCommands builds out the list of debug subcommands by matching the
+func init() {
+	dbgUI := newDebugUICommand()
+	dbgUI.AddCommand(newDebugUISubCommands()...)
+	rootCmd.AddCommand(dbgUI)
+}
+
+// newDebugUISubCommands builds out the list of debug subcommands by matching the
 // handleSelect dispatch to the appropriate command.
 // * To add a debug subcommand, you must add it to the `items` array and then
 // write a function handler to match for it in `handleSelect`.
-func NewDebugSubCommands() []*cobra.Command {
+func newDebugUISubCommands() []*cobra.Command {
 	commands := make([]*cobra.Command, len(items))
 	for idx, promptItem := range items {
 		commands[idx] = &cobra.Command{
@@ -60,11 +58,12 @@ func NewDebugSubCommands() []*cobra.Command {
 	return commands
 }
 
-// NewDebugCommand returns the cobra CLI for the Debug command.
-func NewDebugCommand() *cobra.Command {
+// newDebugUICommand returns the cobra CLI for the Debug UI interface.
+func newDebugUICommand() *cobra.Command {
 	return &cobra.Command{
-		Use:               "debug",
-		Short:             "Debug utility for rapid development",
+		Aliases:           []string{"dui"},
+		Use:               "DebugUI",
+		Short:             "Debug selection ui for rapid development",
 		Args:              cobra.MaximumNArgs(0),
 		PersistentPreRunE: helpers.P2PDependenciesPreRunE,
 		RunE:              runDebug,

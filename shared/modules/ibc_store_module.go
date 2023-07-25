@@ -25,7 +25,7 @@ type BulkStoreCacher interface {
 	GetStore(name string) (ProvableStore, error)
 	RemoveStore(name string) error
 	GetAllStores() map[string]ProvableStore
-	FlushAllEntries() error
+	FlushCachesToStore() error
 	PruneCaches(height uint64) error
 	RestoreCaches(height uint64) error
 }
@@ -44,7 +44,7 @@ type ProvableStore interface {
 	Delete(key []byte) error
 	GetCommitmentPrefix() coreTypes.CommitmentPrefix
 	Root() ics23.CommitmentRoot
-	FlushEntries(kvstore.KVStore) error
+	FlushCache(kvstore.KVStore) error
 	PruneCache(store kvstore.KVStore, height uint64) error
 	RestoreCache(store kvstore.KVStore, height uint64) error
 }
