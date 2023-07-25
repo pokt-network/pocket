@@ -62,7 +62,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// TODO: Add test to make sure same block is not applied twice if round is interrupted after being 'Applied'.
 	// TODO: Add more unit tests for these checks...
 	if m.shouldPrepareNewBlock(highPrepareQC) {
-		doPrepare := m.paceMaker.ProcessDelayedBlockPrepare()
+		doPrepare := <-m.paceMaker.ProcessDelayedBlockPrepare(m.height)
 		if !doPrepare {
 			m.logger.Info().Msg("skip prepare new block")
 			return
