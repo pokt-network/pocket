@@ -12,6 +12,9 @@ import (
 
 var peerListTableHeader = []string{"Peer ID", "Pokt Address", "ServiceURL"}
 
+// PrintPeerList retrieves the correct peer list using the peerstore provider
+// on the bus and then passes this list to PrintPeerListTable to print the
+// list of peers to os.Stdout as a table
 func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 	var (
 		peers           types.PeerList
@@ -29,11 +32,10 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 	if !ok {
 		return fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
 	}
-	//--
 
 	switch routerType {
 	case StakedRouterType:
-		// TODO_THIS_COMMIT: what about unstaked peers actors?
+		// TODO_IN_THIS_COMMIT: what about unstaked peers actors?
 		// if !isStaked ...
 		pstore, err := pstoreProvider.GetStakedPeerstoreAtCurrentHeight()
 		if err != nil {
@@ -51,7 +53,7 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 	case AllRouterTypes:
 		routerPlurality = "s"
 
-		// TODO_THIS_COMMIT: what about unstaked peers actors?
+		// TODO_IN_THIS_COMMIT: what about unstaked peers actors?
 		// if !isStaked ...
 		stakedPStore, err := pstoreProvider.GetStakedPeerstoreAtCurrentHeight()
 		if err != nil {
@@ -83,7 +85,7 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 	}
 
 	if err := LogSelfAddress(bus); err != nil {
-		return fmt.Errorf("printing self address: %w", err)
+		return fmt.Errorf("error printing self address: %w", err)
 	}
 
 	// NB: Intentionally printing with `fmt` instead of the logger to match
@@ -96,11 +98,11 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 		routerType,
 		routerPlurality,
 	); err != nil {
-		return fmt.Errorf("printing to stdout: %w", err)
+		return fmt.Errorf("error printing to stdout: %w", err)
 	}
 
 	if err := PrintPeerListTable(peers); err != nil {
-		return fmt.Errorf("printing peer list: %w", err)
+		return fmt.Errorf("error printing peer list: %w", err)
 	}
 	return nil
 }

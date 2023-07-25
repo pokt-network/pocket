@@ -341,7 +341,8 @@ func (rtr *backgroundRouter) setupSubscription() (err error) {
 func (rtr *backgroundRouter) bootstrap(ctx context.Context) {
 	// CONSIDERATION: add `GetPeers` method, which returns a map,
 	// to the `PeerstoreProvider` interface to simplify this loop.
-	for _, peer := range rtr.pstore.GetPeerList() {
+	peerList := rtr.pstore.GetPeerList()
+	for _, peer := range peerList {
 		if err := utils.AddPeerToLibp2pHost(rtr.host, peer); err != nil {
 			rtr.logger.Error().Err(err).Msg("adding peer to libp2p host")
 			continue
@@ -362,6 +363,7 @@ func (rtr *backgroundRouter) bootstrap(ctx context.Context) {
 		rtr.logger.Debug().Fields(map[string]any{
 			"peer_id":   libp2pAddrInfo.ID.String(),
 			"peer_addr": libp2pAddrInfo.Addrs[0].String(),
+			"num_peers": len(peerList) - 1, // -1 as includes self
 		}).Msg("connecting to peer")
 		if err := rtr.connectWithRetry(ctx, libp2pAddrInfo); err != nil {
 			rtr.logger.Error().Err(err).Msg("connecting to bootstrap peer")

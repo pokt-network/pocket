@@ -14,9 +14,11 @@ import (
 
 var (
 	listCmd = &cobra.Command{
-		Use:   "list",
-		Short: "Print addresses and service URLs of known peers",
-		RunE:  listRunE,
+		Use:     "List",
+		Short:   "List the known peers",
+		Long:    "Prints a table of the Peer ID, Pokt Address and Service URL of the known peers",
+		Aliases: []string{"list", "ls"},
+		RunE:    listRunE,
 	}
 
 	ErrRouterType = fmt.Errorf("must specify one of --staked, --unstaked, or --all")
@@ -35,21 +37,14 @@ func listRunE(cmd *cobra.Command, _ []string) error {
 	}
 
 	switch {
-	case stakedFlag:
-		if unstakedFlag || allFlag {
-			return ErrRouterType
-		}
+	case stakedFlag && !unstakedFlag && !allFlag:
 		routerType = debug.StakedRouterType
-	case unstakedFlag:
-		if stakedFlag || allFlag {
-			return ErrRouterType
-		}
+	case unstakedFlag && !stakedFlag && !allFlag:
 		routerType = debug.UnstakedRouterType
-	// even if `allFlag` is false, we still want to print all peers
+	case stakedFlag || unstakedFlag:
+		return ErrRouterType
+	// even if `allFlag` is false, we still want to print all connections
 	default:
-		if stakedFlag || unstakedFlag {
-			return ErrRouterType
-		}
 		routerType = debug.AllRouterTypes
 	}
 

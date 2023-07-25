@@ -192,7 +192,7 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 
 	// if the message needs to be broadcast, it'll be handled by the business logic of the message handler
 	//
-	// DISCUSS_THIS_COMMIT: The statement above is false. Using `#Send()` will only
+	// DISCUSS_IN_THIS_COMMIT: The statement above is false. Using `#Send()` will only
 	// be unicast with no opportunity for further propagation.
 	firstStakedActorAddress := pstore.GetPeerList()[0].GetAddress()
 	if err != nil {
