@@ -14,8 +14,10 @@ var (
 	_ persistencePStoreProviderFactory     = &persistencePeerstoreProvider{}
 )
 
-type persistencePStoreProviderOption func(*persistencePeerstoreProvider)
-type persistencePStoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, persistencePStoreProviderOption]
+type (
+	persistencePStoreProviderOption  func(*persistencePeerstoreProvider)
+	persistencePStoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, persistencePStoreProviderOption]
+)
 
 type persistencePeerstoreProvider struct {
 	base_modules.IntegrableModule

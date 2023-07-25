@@ -21,16 +21,11 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 		routerPlurality = ""
 	)
 
-	// TECHDEBT(#810, #811): use `bus.GetPeerstoreProvider()` after peerstore provider
+	// TECHDEBT(#811): use `bus.GetPeerstoreProvider()` after peerstore provider
 	// is retrievable as a proper submodule.
-	pstoreProviderModule, err := bus.GetModulesRegistry().
-		GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
+	pstoreProvider, err := peerstore_provider.GetPeerstoreProvider(bus)
 	if err != nil {
-		return fmt.Errorf("getting peerstore provider: %w", err)
-	}
-	pstoreProvider, ok := pstoreProviderModule.(peerstore_provider.PeerstoreProvider)
-	if !ok {
-		return fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
+		return err
 	}
 
 	switch routerType {

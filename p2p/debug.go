@@ -10,7 +10,7 @@ import (
 
 func (m *p2pModule) handleDebugMessage(msg *messaging.DebugMessage) error {
 	switch msg.Action {
-	case messaging.DebugMessageAction_DEBUG_P2P_PEER_LIST:
+	case messaging.DebugMessageAction_DEBUG_P2P_PRINT_PEER_LIST:
 		if !m.cfg.EnablePeerDiscoveryDebugRpc {
 			return typesP2P.ErrPeerDiscoveryDebugRPCDisabled
 		}

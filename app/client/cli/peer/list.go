@@ -49,7 +49,7 @@ func listRunE(cmd *cobra.Command, _ []string) error {
 	}
 
 	debugMsg := &messaging.DebugMessage{
-		Action: messaging.DebugMessageAction_DEBUG_P2P_PEER_LIST,
+		Action: messaging.DebugMessageAction_DEBUG_P2P_PRINT_PEER_LIST,
 		Type:   messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
 		Message: &anypb.Any{
 			Value: []byte(routerType),
@@ -67,13 +67,13 @@ func listRunE(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	// TECHDEBT(#810, #811): will need to wait for DHT bootstrapping to complete before
+	// TECHDEBT(#811): will need to wait for DHT bootstrapping to complete before
 	// p2p broadcast can be used with to reach unstaked actors.
 	// CONSIDERATION: add the peer commands to the interactive CLI as the P2P module
 	// instance could persist between commands. Other interactive CLI commands which
 	// rely on unstaked actor router broadcast are working as expected.
 
-	// TECHDEBT(#810, #811): use broadcast instead to reach all peers.
+	// TECHDEBT(#811): use broadcast instead to reach all peers.
 	return sendToStakedPeers(cmd, debugMsgAny)
 }
 

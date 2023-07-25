@@ -17,7 +17,6 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/protocol"
-	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/unicast"
@@ -258,16 +257,11 @@ func (rtr *backgroundRouter) setupDependencies(ctx context.Context, _ *config.Ba
 }
 
 func (rtr *backgroundRouter) setupPeerstore(ctx context.Context) (err error) {
-	// TECHDEBT(#810, #811): use `bus.GetPeerstoreProvider()` after peerstore provider
+	// TECHDEBT(#811): use `bus.GetPeerstoreProvider()` after peerstore provider
 	// is retrievable as a proper submodule
-	pstoreProviderModule, err := rtr.GetBus().GetModulesRegistry().
-		GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
+	pstoreProvider, err := peerstore_provider.GetPeerstoreProvider(rtr.GetBus())
 	if err != nil {
-		return fmt.Errorf("retrieving peerstore provider: %w", err)
-	}
-	pstoreProvider, ok := pstoreProviderModule.(providers.PeerstoreProvider)
-	if !ok {
-		return fmt.Errorf("unexpected peerstore provider type: %T", pstoreProviderModule)
+		return err
 	}
 
 	rtr.logger.Debug().Msg("setupCurrentHeightProvider")

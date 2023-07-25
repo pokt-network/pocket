@@ -5,6 +5,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -31,7 +32,7 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 		}
 
 		oldPeerList := m.stakedActorRouter.GetPeerstore().GetPeerList()
-		pstoreProvider, err := m.getPeerstoreProvider()
+		pstoreProvider, err := peerstore_provider.GetPeerstoreProvider(m.GetBus())
 		if err != nil {
 			return err
 		}

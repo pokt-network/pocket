@@ -3,6 +3,8 @@ package peerstore_provider
 //go:generate mockgen -package=mock_types  -destination=../../types/mocks/peerstore_provider_mock.go github.com/pokt-network/pocket/p2p/providers/peerstore_provider PeerstoreProvider
 
 import (
+	"fmt"
+
 	"github.com/pokt-network/pocket/logger"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -63,4 +65,19 @@ func ActorToPeer(abp PeerstoreProvider, actor *coreTypes.Actor) (typesP2P.Peer, 
 	}
 
 	return peer, nil
+}
+
+// TECHDEBT(#811): use `bus.GetPeerstoreProvider()` after peerstore provider
+// is retrievable as a proper submodule.
+func GetPeerstoreProvider(bus modules.Bus) (PeerstoreProvider, error) {
+	pstoreProviderModule, err := bus.GetModulesRegistry().
+		GetModule(PeerstoreProviderSubmoduleName)
+	if err != nil {
+		return nil, fmt.Errorf("getting peerstore provider: %w", err)
+	}
+	pstoreProvider, ok := pstoreProviderModule.(PeerstoreProvider)
+	if !ok {
+		return nil, fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
+	}
+	return pstoreProvider, nil
 }

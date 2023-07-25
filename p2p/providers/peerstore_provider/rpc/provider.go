@@ -21,8 +21,10 @@ var (
 	_ rpcPeerstoreProviderFactory          = &rpcPeerstoreProvider{}
 )
 
-type rpcPeerstoreProviderOption func(*rpcPeerstoreProvider)
-type rpcPeerstoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, rpcPeerstoreProviderOption]
+type (
+	rpcPeerstoreProviderOption  func(*rpcPeerstoreProvider)
+	rpcPeerstoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, rpcPeerstoreProviderOption]
+)
 
 type rpcPeerstoreProvider struct {
 	base_modules.IntegrableModule
@@ -97,7 +99,7 @@ func (rpcPSP *rpcPeerstoreProvider) GetStakedPeerstoreAtCurrentHeight() (typesP2
 }
 
 func (rpcPSP *rpcPeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
-	// TECHDEBT(#810, #811): use `bus.GetUnstakedActorRouter()` once it's available.
+	// TECHDEBT(#811): use `bus.GetUnstakedActorRouter()` once it's available.
 	unstakedActorRouterMod, err := rpcPSP.GetBus().GetModulesRegistry().GetModule(typesP2P.UnstakedActorRouterSubmoduleName)
 	if err != nil {
 		return nil, err
