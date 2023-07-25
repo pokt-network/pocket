@@ -23,6 +23,7 @@ const (
 	PromptSendBlockRequest       string = "BlockRequest (broadcast)"
 )
 
+<<<<<<< HEAD
 var items = []string{
 	PromptPrintNodeState,
 	PromptTriggerNextView,
@@ -39,6 +40,30 @@ func init() {
 	rootCmd.AddCommand(dbgUI)
 }
 
+=======
+var (
+	items = []string{
+		PromptPrintNodeState,
+		PromptTriggerNextView,
+		PromptTogglePacemakerMode,
+		PromptResetToGenesis,
+		PromptShowLatestBlockInStore,
+		PromptSendMetadataRequest,
+		PromptSendBlockRequest,
+	}
+)
+
+func init() {
+	dbgUI := newDebugUICommand()
+	dbgUI.AddCommand(newDebugUISubCommands()...)
+	rootCmd.AddCommand(dbgUI)
+
+	dbg := newDebugCommand()
+	dbg.AddCommand(debugCommands()...)
+	rootCmd.AddCommand(dbg)
+}
+
+>>>>>>> main
 // newDebugUISubCommands builds out the list of debug subcommands by matching the
 // handleSelect dispatch to the appropriate command.
 // * To add a debug subcommand, you must add it to the `items` array and then
