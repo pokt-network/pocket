@@ -363,7 +363,7 @@ func (rtr *backgroundRouter) bootstrap(ctx context.Context) {
 			"peer_id":   libp2pAddrInfo.ID.String(),
 			"peer_addr": libp2pAddrInfo.Addrs[0].String(),
 		}).Msg("connecting to peer")
-		if err := rtr.host.Connect(ctx, libp2pAddrInfo); err != nil {
+		if err := rtr.connectWithRetry(ctx, libp2pAddrInfo); err != nil {
 			rtr.logger.Error().Err(err).Msg("connecting to bootstrap peer")
 			continue
 		}
@@ -380,7 +380,7 @@ func (rtr *backgroundRouter) connectWithRetry(ctx context.Context, libp2pAddrInf
 			return nil
 		}
 
-		fmt.Printf("Failed to connect (attempt %d), retrying in %v...\n", i+1, connectRetryTimeout)
+		rtr.logger.Error().Msgf("Failed to connect (attempt %d), retrying in %v...\n", i+1, connectRetryTimeout)
 		time.Sleep(connectRetryTimeout)
 	}
 
