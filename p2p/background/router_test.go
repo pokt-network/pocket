@@ -306,6 +306,23 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 	// setup notifee/notify BEFORE bootstrapping
 	notifee := &libp2pNetwork.NotifyBundle{
 		ConnectedF: func(_ libp2pNetwork.Network, _ libp2pNetwork.Conn) {
+			// TECHDEBT: it's rare but possible that a host will re-connect,
+			// causing the `bootstrapWaitgroup` to go negative.
+			// This test should be redesigned using atomic counters or
+			// something similar to avoid this issue.
+			defer func() {
+				if err := recover(); err != nil {
+					if err.(error).Error() == "sync: negative WaitGroup counter" {
+						// ignore negative WaitGroup counter error
+						return
+					}
+					// fail the test for anything else; converting the panic into
+					// test failure allows the test to run with the `-count` flag
+					// to completion.
+					t.Fatal(err)
+				}
+			}()
+
 			t.Logf("connected!")
 			bootstrapWaitgroup.Done()
 		},

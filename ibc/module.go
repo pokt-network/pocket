@@ -95,7 +95,7 @@ func (m *ibcModule) HandleEvent(event *anypb.Any) error {
 		}
 		// Flush all caches to disk for last height
 		bsc := m.GetBus().GetBulkStoreCacher()
-		if err := bsc.FlushAllEntries(); err != nil {
+		if err := bsc.FlushCachesToStore(); err != nil {
 			return err
 		}
 		// Prune old cache entries

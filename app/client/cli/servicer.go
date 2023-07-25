@@ -4,19 +4,39 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/spf13/cobra"
 
+	"github.com/pokt-network/pocket/app/client/cli/cache"
 	"github.com/pokt-network/pocket/app/client/cli/flags"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/rpc"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
+// IMPROVE: make this configurable
+const sessionCacheDBPath = "/tmp"
+
+var (
+	errNoSessionCache           = errors.New("session cache not set up")
+	errSessionNotFoundInCache   = errors.New("session not found in cache")
+	errNoMatchingSessionInCache = errors.New("no session matching the requested height found in cache")
+
+	sessionCache cache.SessionCache
+)
+
 func init() {
 	rootCmd.AddCommand(NewServicerCommand())
+
+	var err error
+	sessionCache, err = cache.NewSessionCache(sessionCacheDBPath)
+	if err != nil {
+		logger.Global.Warn().Err(err).Msg("failed to initialize session cache")
+	}
 }
 
 func NewServicerCommand() *cobra.Command {
@@ -52,6 +72,12 @@ Will prompt the user for the *application* account passphrase`,
 			Aliases: []string{},
 			Args:    cobra.ExactArgs(4),
 			RunE: func(cmd *cobra.Command, args []string) error {
+				defer func() {
+					if err := sessionCache.Stop(); err != nil {
+						logger.Global.Warn().Err(err).Msg("failed to stop session cache")
+					}
+				}()
+
 				applicationAddr := args[0]
 				servicerAddr := args[1]
 				chain := args[2]
@@ -115,11 +141,35 @@ func validateServicer(session *rpc.Session, servicerAddress string) (*rpc.Protoc
 	return nil, fmt.Errorf("Error getting servicer: address %s does not match any servicers in the session %d", servicerAddress, session.SessionNumber)
 }
 
+// getSessionFromCache uses the client-side session cache to fetch a session for app+chain combination at the provided height, if one has already been retrieved and cached.
+func getSessionFromCache(c cache.SessionCache, appAddress, chain string, height int64) (*rpc.Session, error) {
+	if c == nil {
+		return nil, errNoSessionCache
+	}
+
+	session, err := c.Get(appAddress, chain)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", errSessionNotFoundInCache, err.Error())
+	}
+
+	// verify the cached session matches the provided height
+	if height >= session.SessionHeight && height < session.SessionHeight+session.NumSessionBlocks {
+		return session, nil
+	}
+
+	return nil, errNoMatchingSessionInCache
+}
+
 func getCurrentSession(ctx context.Context, appAddress, chain string) (*rpc.Session, error) {
 	// CONSIDERATION: passing 0 as the height value to get the current session seems more optimal than this.
 	currentHeight, err := getCurrentHeight(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Error getting current session: %w", err)
+	}
+
+	session, err := getSessionFromCache(sessionCache, appAddress, chain, currentHeight)
+	if err == nil {
+		return session, nil
 	}
 
 	req := rpc.SessionRequest{
@@ -148,7 +198,17 @@ func getCurrentSession(ctx context.Context, appAddress, chain string) (*rpc.Sess
 		return nil, fmt.Errorf("Error getting current session: Unexpected response %v", resp)
 	}
 
-	return resp.JSON200, nil
+	session = resp.JSON200
+	if sessionCache == nil {
+		logger.Global.Warn().Msg("session cache not available: cannot cache the retrieved session")
+		return session, nil
+	}
+
+	if err := sessionCache.Set(session); err != nil {
+		logger.Global.Warn().Err(err).Msg("failed to store session in cache")
+	}
+
+	return session, nil
 }
 
 // REFACTOR: reuse this function in all the query commands
