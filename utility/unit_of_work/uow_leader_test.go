@@ -72,8 +72,9 @@ func Test_leaderUtilityUnitOfWork_CreateProposalBlock(t *testing.T) {
 }
 
 func newDefaultMockRWContext(t *testing.T, ctrl *gomock.Controller) *mockModules.MockPersistenceRWContext {
-	mockrwcontext := mockModules.NewMockPersistenceRWContext(ctrl)
+	t.Helper()
 
+	mockrwcontext := mockModules.NewMockPersistenceRWContext(ctrl)
 	mockrwcontext.EXPECT().SetPoolAmount(gomock.Any(), gomock.Any()).AnyTimes()
 	mockrwcontext.EXPECT().RollbackToSavePoint().Times(1)
 	mockrwcontext.EXPECT().GetIntParam(gomock.Any(), gomock.Any()).Return(0, nil).AnyTimes()
