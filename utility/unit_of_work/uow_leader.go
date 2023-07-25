@@ -2,6 +2,7 @@ package unit_of_work
 
 import (
 	"encoding/hex"
+	"fmt"
 
 	"github.com/pokt-network/pocket/logger"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -58,7 +59,11 @@ func (uow *leaderUtilityUnitOfWork) CreateProposalBlock(proposer []byte, maxTxBy
 	// Compute & return the new state hash
 	stateHash, err = uow.persistenceRWContext.ComputeStateHash()
 	if err != nil {
-		log.Fatal().Err(err).Bool("TODO", true).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
+		if err := uow.persistenceRWContext.RollbackToSavePoint(); err != nil {
+			log.Error().Msgf("failed to recover from rollback at height %+v: %+v", uow.height, err)
+			return "", nil, err
+		}
+		return "", nil, fmt.Errorf("rollback at height %d: failed to compute state hash: %w", uow.height, err)
 	}
 	log.Info().Str("state_hash", stateHash).Msg("Finished successfully")
 
