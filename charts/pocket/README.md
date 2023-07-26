@@ -44,6 +44,9 @@ privateKeySecretKeyRef:
 | config.consensus.pacemaker_config.timeout_msec | int | `10000` |  |
 | config.consensus.private_key | string | `""` |  |
 | config.fisherman.enabled | bool | `false` |  |
+| config.ibc.enabled | bool | `true` |  |
+| config.ibc.host.private_key | string | `""` |  |
+| config.ibc.stores_dir | string | `"/pocket/data/ibc"` |  |
 | config.logger.format | string | `"json"` |  |
 | config.logger.level | string | `"debug"` |  |
 | config.p2p.hostname | string | `""` |  |
