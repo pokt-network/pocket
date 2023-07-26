@@ -161,6 +161,7 @@ type PersistenceReadContext interface {
 
 	// Version queries
 	GetVersionAtHeight(height int64) (string, error) // TODO: Implement this
+	GetRevisionNumber(height int64) uint64           // TODO(#882): Implement this
 
 	// Supported Chains Queries
 	GetSupportedChains(height int64) ([]string, error) // TODO: Implement this
@@ -245,7 +246,7 @@ type PersistenceReadContext interface {
 
 	// IBC Queries
 	// GetIBCStoreEntry returns the value of the key at the given height from the ibc_entries table
-	GetIBCStoreEntry(key []byte, height int64) ([]byte, error)
+	GetIBCStoreEntry(key []byte, height uint64) ([]byte, error)
 	// GetIBCEvent returns the matching IBC events for any topic at the height provied
 	GetIBCEvents(height uint64, topic string) ([]*coreTypes.IBCEvent, error)
 }
