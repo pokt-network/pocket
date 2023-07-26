@@ -75,7 +75,7 @@ func TestIBC_GetIBCStoreEntry(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		height        int64
+		height        uint64
 		key           []byte
 		expectedValue []byte
 		expectedErr   error
@@ -133,13 +133,12 @@ var (
 	baseAttributeValue = []byte("testValue")
 )
 
-func TestIBCSetEvent(t *testing.T) {
+func TestIBC_SetIBCEvent(t *testing.T) {
 	// Setup database
 	db := NewTestPostgresContext(t, 1)
 	// Add a single event at height 1
 	event := new(coreTypes.IBCEvent)
 	event.Topic = "test"
-	event.Height = 1
 	event.Attributes = append(event.Attributes, &coreTypes.Attribute{
 		Key:   baseAttributeKey,
 		Value: baseAttributeValue,
@@ -216,7 +215,6 @@ func TestIBCSetEvent(t *testing.T) {
 			db.Height = int64(tc.height)
 			event := new(coreTypes.IBCEvent)
 			event.Topic = tc.topic
-			event.Height = tc.height
 			for _, attr := range tc.attributes {
 				event.Attributes = append(event.Attributes, &coreTypes.Attribute{
 					Key:   attr.key,
@@ -233,7 +231,7 @@ func TestIBCSetEvent(t *testing.T) {
 	}
 }
 
-func TestGetIBCEvent(t *testing.T) {
+func TestIBC_GetIBCEvent(t *testing.T) {
 	// Setup database
 	db := NewTestPostgresContext(t, 1)
 	// Add events "testKey0", "testKey1", "testKey2", "testKey3"
@@ -242,10 +240,6 @@ func TestGetIBCEvent(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		event := new(coreTypes.IBCEvent)
 		event.Topic = "test"
-		event.Height = uint64(i + 1)
-		if i == 3 {
-			event.Height = uint64(i) // add a second event at height 3
-		}
 		s := strconv.Itoa(i)
 		event.Attributes = append(event.Attributes, &coreTypes.Attribute{
 			Key:   []byte("testKey" + s),
@@ -253,8 +247,11 @@ func TestGetIBCEvent(t *testing.T) {
 		})
 		events = append(events, event)
 	}
-	for _, event := range events {
-		db.Height = int64(event.Height)
+	for i, event := range events {
+		db.Height = int64(i + 1)
+		if i == 3 { // add 2 events at height 3
+			db.Height = int64(i)
+		}
 		require.NoError(t, db.SetIBCEvent(event))
 	}
 
@@ -301,7 +298,6 @@ func TestGetIBCEvent(t *testing.T) {
 			require.NoError(t, err)
 			require.Len(t, got, tc.expectedLength)
 			for i, index := range tc.eventsIndexes {
-				require.Equal(t, events[index].Height, got[i].Height)
 				require.Equal(t, events[index].Topic, got[i].Topic)
 				require.Equal(t, events[index].Attributes[0].Key, got[i].Attributes[0].Key)
 				require.Equal(t, events[index].Attributes[0].Value, got[i].Attributes[0].Value)
