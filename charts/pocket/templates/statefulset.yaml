@@ -2,10 +2,6 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ include "pocket.fullname" . }}
-  {{- with .Values.podAnnotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
   labels:
     {{- include "pocket.labels" . | nindent 4 }}
 spec:
@@ -17,10 +13,15 @@ spec:
     metadata:
       {{- with .Values.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
+        {{- range $key, $value := . }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
       {{- end }}
       labels:
         {{- include "pocket.selectorLabels" . | nindent 8 }}
+        {{- if .Values.podLabels }}
+        {{- toYaml .Values.podLabels | nindent 8 }}
+        {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
