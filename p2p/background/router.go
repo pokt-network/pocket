@@ -35,8 +35,8 @@ var (
 // TECHDEBT: Make these values configurable
 // TECHDEBT: Consider using an exponential backoff instead
 const (
-	connectMaxRetries   = 5
-	connectRetryTimeout = time.Second * 2
+	connectMaxRetries   = 7
+	connectRetryTimeout = time.Second * 3
 )
 
 type backgroundRouterFactory = modules.FactoryWithConfig[typesP2P.Router, *config.BackgroundConfig]
@@ -338,13 +338,13 @@ func (rtr *backgroundRouter) bootstrap(ctx context.Context) {
 	peerList := rtr.pstore.GetPeerList()
 	for _, peer := range peerList {
 		if err := utils.AddPeerToLibp2pHost(rtr.host, peer); err != nil {
-			rtr.logger.Error().Err(err).Msg("adding peer to libp2p host")
+			rtr.logger.Error().Err(err).Msg("error adding peer to libp2p host")
 			continue
 		}
 
 		libp2pAddrInfo, err := utils.Libp2pAddrInfoFromPeer(peer)
 		if err != nil {
-			rtr.logger.Error().Err(err).Msg("converting peer info")
+			rtr.logger.Error().Err(err).Msg("error converting peer info")
 			continue
 		}
 
@@ -360,7 +360,7 @@ func (rtr *backgroundRouter) bootstrap(ctx context.Context) {
 			"num_peers": len(peerList) - 1, // -1 as includes self
 		}).Msg("connecting to peer")
 		if err := rtr.connectWithRetry(ctx, libp2pAddrInfo); err != nil {
-			rtr.logger.Error().Err(err).Msg("connecting to bootstrap peer")
+			rtr.logger.Error().Err(err).Msg("error connecting to bootstrap peer")
 			continue
 		}
 	}
@@ -376,11 +376,11 @@ func (rtr *backgroundRouter) connectWithRetry(ctx context.Context, libp2pAddrInf
 			return nil
 		}
 
-		rtr.logger.Error().Msgf("Failed to connect (attempt %d), retrying in %v...\n", i+1, connectRetryTimeout)
+		rtr.logger.Error().Msgf("failed to connect (attempt %d), retrying in %v...", i+1, connectRetryTimeout)
 		time.Sleep(connectRetryTimeout)
 	}
 
-	return fmt.Errorf("failed to connect after %d attempts, last error: %w", 5, err)
+	return fmt.Errorf("failed to connect after %d attempts, last error: %w", connectMaxRetries, err)
 }
 
 // topicValidator is used in conjunction with libp2p-pubsub's notion of "topic
