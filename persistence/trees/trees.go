@@ -82,8 +82,8 @@ type stateTree struct {
 
 var _ modules.TreeStoreModule = &treeStore{}
 
-// errFailedRollback is thrown whenever a rollback is attempted with no savepoint set
-var errFailedRollback = fmt.Errorf("failed to rollback")
+// ErrFailedRollback is thrown when a rollback fails to reset the TreeStore to a known good state
+var ErrFailedRollback = fmt.Errorf("failed to rollback")
 
 // treeStore stores a set of merkle trees that it manages.
 // It fulfills the modules.treeStore interface
@@ -102,11 +102,12 @@ type treeStore struct {
 
 	// PrevState holds a previous view of the Worldstate.
 	// The tree store rolls back to this view if errors are encountered during block application.
-	PrevState *Worldstate
+	PrevState *worldstate
 }
 
-// Worldstate holds a (de)serializable view of the entire tree state.
-type Worldstate struct {
+// worldstate holds a (de)serializable view of the entire tree state.
+// TECHDEBT(#566) - Hook this up to node CLI subcommands
+type worldstate struct {
 	TreeStoreDir string
 	RootTree     *stateTree
 	MerkleTrees  map[string]*stateTree
@@ -321,20 +322,20 @@ func (t *treeStore) Rollback() error {
 		t.rootTree = t.PrevState.RootTree
 		return nil
 	}
-	t.logger.Err(errFailedRollback)
-	return errFailedRollback
+	t.logger.Err(ErrFailedRollback)
+	return ErrFailedRollback
 }
 
 // save commits any pending changes to the trees and creates a copy of the current state of the
 // tree store then saves that copy as a rollback point for later use if errors are encountered.
 // OPTIMIZE: Consider saving only the root hash of each tree and the tree directory here and then
 // load the trees up in Rollback instead of setting them up here.
-func (t *treeStore) save() (*Worldstate, error) {
+func (t *treeStore) save() (*worldstate, error) {
 	if err := t.Commit(); err != nil {
 		return nil, err
 	}
 
-	w := &Worldstate{
+	w := &worldstate{
 		TreeStoreDir: t.treeStoreDir,
 		MerkleTrees:  map[string]*stateTree{},
 	}

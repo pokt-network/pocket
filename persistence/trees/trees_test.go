@@ -9,6 +9,7 @@ import (
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/kvstore"
+	"github.com/pokt-network/pocket/persistence/trees"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
@@ -75,7 +76,7 @@ func TestTreeStore_Update(t *testing.T) {
 
 		err := context.RollbackToSavePoint()
 		require.Error(t, err)
-		require.ErrorContainsf(t, err, "failed to rollback", "incorrect error returned")
+		require.ErrorIs(t, err, trees.ErrFailedRollback)
 	})
 }
 
