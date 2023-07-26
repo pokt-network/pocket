@@ -8,16 +8,16 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/shared/codec"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	core_types "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	typesUtil "github.com/pokt-network/pocket/utility/types"
+	util_types "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 )
 
 func TestHandleTransaction_ErrorAlreadyInMempool(t *testing.T) {
 	// Prepare test data
-	emptyTx := coreTypes.Transaction{}
+	emptyTx := core_types.Transaction{}
 	txProtoBytes, err := proto.Marshal(&emptyTx)
 	require.NoError(t, err)
 
@@ -31,7 +31,7 @@ func TestHandleTransaction_ErrorAlreadyInMempool(t *testing.T) {
 	// Error on having a duplciate transaction
 	err = utilityMod.HandleTransaction(txProtoBytes)
 	require.Error(t, err)
-	require.EqualError(t, err, coreTypes.ErrDuplicateTransaction().Error())
+	require.EqualError(t, err, core_types.ErrDuplicateTransaction().Error())
 }
 
 func TestHandleTransaction_ErrorAlreadyCommitted(t *testing.T) {
@@ -41,14 +41,14 @@ func TestHandleTransaction_ErrorAlreadyCommitted(t *testing.T) {
 	privKey, err := crypto.GeneratePrivateKey()
 	require.NoError(t, err)
 
-	emptyTx := &coreTypes.Transaction{}
+	emptyTx := &core_types.Transaction{}
 	err = emptyTx.Sign(privKey)
 	require.NoError(t, err)
 	txProtoBytes, err := codec.GetCodec().Marshal(emptyTx)
 	require.NoError(t, err)
 
 	// Test data - Prepare IndexedTransaction
-	idxTx := &coreTypes.IndexedTransaction{
+	idxTx := &core_types.IndexedTransaction{
 		Tx:            txProtoBytes,
 		Height:        0,
 		Index:         0,
@@ -72,7 +72,7 @@ func TestHandleTransaction_ErrorAlreadyCommitted(t *testing.T) {
 	// Error on having an indexed transaction
 	err = utilityMod.HandleTransaction(idxTx.Tx)
 	require.Error(t, err)
-	require.EqualError(t, err, coreTypes.ErrTransactionAlreadyCommitted().Error())
+	require.EqualError(t, err, core_types.ErrTransactionAlreadyCommitted().Error())
 }
 
 func TestHandleTransaction_BasicValidation(t *testing.T) {
@@ -81,7 +81,7 @@ func TestHandleTransaction_BasicValidation(t *testing.T) {
 
 	pubKey := privKey.PublicKey()
 
-	message := &typesUtil.MessageSend{
+	message := &util_types.MessageSend{
 		FromAddress: []byte("from"),
 		ToAddress:   []byte("to"),
 		Amount:      "10",
@@ -89,9 +89,9 @@ func TestHandleTransaction_BasicValidation(t *testing.T) {
 	anyMessage, err := codec.GetCodec().ToAny(message)
 	require.NoError(t, err)
 
-	validTx := &coreTypes.Transaction{
+	validTx := &core_types.Transaction{
 		Nonce: strconv.Itoa(int(crypto.GetNonce())),
-		Signature: &coreTypes.Signature{
+		Signature: &core_types.Signature{
 			PublicKey: []byte("public key"),
 			Signature: []byte("signature"),
 		},
@@ -102,78 +102,78 @@ func TestHandleTransaction_BasicValidation(t *testing.T) {
 
 	testCases := []struct {
 		name        string
-		txProto     *coreTypes.Transaction
+		txProto     *core_types.Transaction
 		expectedErr error
 	}{
 		{
 			name:        "Invalid transaction: Missing Nonce",
-			txProto:     &coreTypes.Transaction{},
-			expectedErr: coreTypes.ErrEmptyNonce(),
+			txProto:     &core_types.Transaction{},
+			expectedErr: core_types.ErrEmptyNonce(),
 		},
 		{
 			name: "Invalid transaction: Missing Signature Structure",
-			txProto: &coreTypes.Transaction{
+			txProto: &core_types.Transaction{
 				Nonce: strconv.Itoa(int(crypto.GetNonce())),
 			},
-			expectedErr: coreTypes.ErrEmptySignatureStructure(),
+			expectedErr: core_types.ErrEmptySignatureStructure(),
 		},
 		{
 			name: "Invalid transaction: Missing Signature",
-			txProto: &coreTypes.Transaction{
+			txProto: &core_types.Transaction{
 				Nonce: strconv.Itoa(int(crypto.GetNonce())),
-				Signature: &coreTypes.Signature{
+				Signature: &core_types.Signature{
 					PublicKey: nil,
 					Signature: nil,
 				},
 			},
-			expectedErr: coreTypes.ErrEmptySignature(),
+			expectedErr: core_types.ErrEmptySignature(),
 		},
 		{
 			name: "Invalid transaction: Missing Public Key",
-			txProto: &coreTypes.Transaction{
+			txProto: &core_types.Transaction{
 				Nonce: strconv.Itoa(int(crypto.GetNonce())),
-				Signature: &coreTypes.Signature{
+				Signature: &core_types.Signature{
 					PublicKey: nil,
 					Signature: []byte("bytes in place for signature but not actually valid"),
 				},
 			},
-			expectedErr: coreTypes.ErrEmptyPublicKey(),
+			expectedErr: core_types.ErrEmptyPublicKey(),
 		},
 		{
 			name: "Invalid transaction: Invalid Public Key",
-			txProto: &coreTypes.Transaction{
+			txProto: &core_types.Transaction{
 				Nonce: strconv.Itoa(int(crypto.GetNonce())),
-				Signature: &coreTypes.Signature{
+				Signature: &core_types.Signature{
 					PublicKey: []byte("invalid pub key"),
 					Signature: []byte("bytes in place for signature but not actually valid"),
 				},
 			},
-			expectedErr: coreTypes.ErrNewPublicKeyFromBytes(fmt.Errorf("the public key length is not valid, expected length 32, actual length: 15")),
+			expectedErr: core_types.ErrNewPublicKeyFromBytes(fmt.Errorf("the public key length is not valid, expected length 32, actual length: 15")),
 		},
 		// TODO(olshansky): Figure out why sometimes we do and don't need `\u00a0` in the error
 		{
 			name: "Invalid transaction: Invalid Message",
-			txProto: &coreTypes.Transaction{
+			txProto: &core_types.Transaction{
 				Nonce: strconv.Itoa(int(crypto.GetNonce())),
-				Signature: &coreTypes.Signature{
+				Signature: &core_types.Signature{
 					PublicKey: pubKey.Bytes(),
 					Signature: []byte("bytes in place for signature but not actually valid"),
 				},
 				Msg: nil,
 			},
-			expectedErr: coreTypes.ErrDecodeMessage(fmt.Errorf("proto: invalid empty type URL")),
+			expectedErr: core_types.ErrDecodeMessage(fmt.Errorf("proto: invalid empty type URL")),
 		},
 		{
 			name: "Invalid transaction: Invalid Signature",
-			txProto: &coreTypes.Transaction{
+			txProto: &core_types.Transaction{
 				Nonce: strconv.Itoa(int(crypto.GetNonce())),
-				Signature: &coreTypes.Signature{
+				Signature: &core_types.Signature{
 					PublicKey: pubKey.Bytes(),
 					Signature: []byte("invalid signature"),
 				},
 				Msg: anyMessage,
 			},
-			expectedErr: coreTypes.ErrSignatureVerificationFailed(),
+			expectedErr: core_types.ErrSignatureVerificationFailed(),
 		},
 		{
 			name:        "Valid well-formatted transaction with valid signature",
@@ -214,7 +214,7 @@ func TestGetIndexedTransaction(t *testing.T) {
 		expectErr    error
 	}{
 		{"returns indexed transaction when it exists", idxTx.Tx, true, nil},
-		{"returns error when transaction doesn't exist", []byte("Does not exist"), false, coreTypes.ErrTransactionNotCommitted()},
+		{"returns error when transaction doesn't exist", []byte("Does not exist"), false, core_types.ErrTransactionNotCommitted()},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -230,16 +230,16 @@ func TestGetIndexedTransaction(t *testing.T) {
 	}
 }
 
-func prepareEmptyIndexedTransaction(t *testing.T, txIndexer indexer.TxIndexer) *coreTypes.IndexedTransaction {
+func prepareEmptyIndexedTransaction(t *testing.T, txIndexer indexer.TxIndexer) *core_types.IndexedTransaction {
 	t.Helper()
 
 	// Test data - Prepare Transaction
-	emptyTx := coreTypes.Transaction{}
+	emptyTx := core_types.Transaction{}
 	txProtoBytes, err := proto.Marshal(&emptyTx)
 	require.NoError(t, err)
 
 	// Test data - Prepare IndexedTransaction
-	idxTx := &coreTypes.IndexedTransaction{
+	idxTx := &core_types.IndexedTransaction{
 		Tx:            txProtoBytes,
 		Height:        0,
 		Index:         0,

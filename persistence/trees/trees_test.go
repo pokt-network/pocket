@@ -1,7 +1,6 @@
 package trees
 
 import (
-	"encoding/hex"
 	"fmt"
 	"testing"
 
@@ -53,20 +52,23 @@ func TestTreeStore_Prove(t *testing.T) {
 		treeName    string
 		key         []byte
 		value       []byte
+		valid       bool
 		expectedErr error
 	}{
 		{
-			name:        "valid proof: key and value in tree",
+			name:        "valid inclusion proof: key and value in tree",
 			treeName:    "test",
 			key:         []byte("key"),
 			value:       []byte("value"),
+			valid:       true,
 			expectedErr: nil,
 		},
 		{
-			name:        "valid proof: key not in tree",
+			name:        "valid exclusion proof: key not in tree",
 			treeName:    "test",
 			key:         []byte("key2"),
 			value:       nil,
+			valid:       true,
 			expectedErr: nil,
 		},
 		{
@@ -74,27 +76,31 @@ func TestTreeStore_Prove(t *testing.T) {
 			treeName:    "unstored tree",
 			key:         []byte("key"),
 			value:       []byte("value"),
+			valid:       false,
 			expectedErr: fmt.Errorf("tree not found: %s", "unstored tree"),
 		},
 		{
-			name:        "invalid proof: key in tree, wrong value",
+			name:        "invalid inclusion proof: key in tree, wrong value",
 			treeName:    "test",
 			key:         []byte("key"),
 			value:       []byte("wrong value"),
-			expectedErr: fmt.Errorf("invalid proof for key: %s, value: %s (%s)", hex.EncodeToString([]byte("key")), hex.EncodeToString([]byte("wrong value")), "test"),
+			valid:       false,
+			expectedErr: nil,
 		},
 		{
-			name:        "invalid proof: key in tree",
+			name:        "invalid exclusion proof: key in tree",
 			treeName:    "test",
 			key:         []byte("key"),
 			value:       nil,
-			expectedErr: fmt.Errorf("invalid proof for key: %s, value: %s (%s)", hex.EncodeToString([]byte("key")), hex.EncodeToString([]byte(nil)), "test"),
+			valid:       false,
+			expectedErr: nil,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := treeStore.Prove(tc.treeName, tc.key, tc.value)
+			valid, err := treeStore.Prove(tc.treeName, tc.key, tc.value)
+			require.Equal(t, valid, tc.valid)
 			if tc.expectedErr == nil {
 				require.NoError(t, err)
 				return

@@ -20,7 +20,10 @@ func (u *utilityModule) HandleTransaction(txProtoBytes []byte) error {
 	}
 
 	// Is the tx already committed & indexed (on disk)?
-	if txExists := u.GetBus().GetPersistenceModule().TransactionExists(txHash, txProtoBytes); txExists {
+	txExists, err := u.GetBus().GetPersistenceModule().TransactionExists(txHash, txProtoBytes)
+	if err != nil {
+		return err
+	} else if txExists {
 		return coreTypes.ErrTransactionAlreadyCommitted()
 	}
 

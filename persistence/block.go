@@ -13,12 +13,17 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (p *persistenceModule) TransactionExists(txHash, txProtoBz []byte) bool {
-	exists := p.GetBus().GetTreeStore().Prove(trees.TransactionsTreeName, txHash, txProtoBz)
-	if bytes.Equal(txProtoBz, nil) && exists == nil {
-		return false
+func (p *persistenceModule) TransactionExists(txHash, txProtoBz []byte) (bool, error) {
+	exists, err := p.GetBus().GetTreeStore().Prove(trees.TransactionsTreeName, txHash, txProtoBz)
+	if err != nil {
+		return false, err
 	}
-	return exists == nil
+	// exclusion proof verification
+	if bytes.Equal(txProtoBz, nil) && exists {
+		return false, nil
+	}
+	// inclusion proof verification
+	return exists, nil
 }
 
 func (p *PostgresContext) GetMinimumBlockHeight() (latestHeight uint64, err error) {

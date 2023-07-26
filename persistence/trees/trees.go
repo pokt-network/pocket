@@ -106,21 +106,19 @@ func (t *treeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
 // Prove generates and verifies a proof against the tree name stored in the TreeStore
 // using the given key-value pair. If value == nil this will be an exclusion proof,
 // otherwise it will be an inclusion proof.
-//
-// If the proof is valid, nil is returned. Otherwise, an error is returned.
-func (t *treeStore) Prove(name string, key, value []byte) error {
+func (t *treeStore) Prove(name string, key, value []byte) (bool, error) {
 	st, ok := t.merkleTrees[name]
 	if !ok {
-		return fmt.Errorf("tree not found: %s", name)
+		return false, fmt.Errorf("tree not found: %s", name)
 	}
 	proof, err := st.tree.Prove(key)
 	if err != nil {
-		return fmt.Errorf("error generating proof (%s): %w", name, err)
+		return false, fmt.Errorf("error generating proof (%s): %w", name, err)
 	}
 	if valid := smt.VerifyProof(proof, st.tree.Root(), key, value, st.tree.Spec()); !valid {
-		return fmt.Errorf("invalid proof for key: %s, value: %s (%s)", hex.EncodeToString(key), hex.EncodeToString(value), name)
+		return false, nil
 	}
-	return nil
+	return true, nil
 }
 
 // GetTreeHashes returns a map of tree names to their root hashes for all
