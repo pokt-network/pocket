@@ -48,4 +48,5 @@ type Bus interface {
 	GetIBCHost() IBCHostSubmodule
 	GetBulkStoreCacher() BulkStoreCacher
 	GetEventLogger() EventLogger
+	GetClientManager() ClientManager
 }

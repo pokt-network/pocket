@@ -1,7 +1,7 @@
 package events
 
 import (
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	core_types "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
@@ -42,14 +42,15 @@ func (*EventManager) Create(bus modules.Bus, options ...modules.EventLoggerOptio
 
 func (e *EventManager) GetModuleName() string { return modules.EventLoggerModuleName }
 
-func (e *EventManager) EmitEvent(event *coreTypes.IBCEvent) error {
+func (e *EventManager) EmitEvent(event *core_types.IBCEvent) error {
 	wCtx := e.GetBus().GetPersistenceModule().NewWriteContext()
 	defer wCtx.Release()
 	return wCtx.SetIBCEvent(event)
 }
 
-func (e *EventManager) QueryEvents(topic string, height uint64) ([]*coreTypes.IBCEvent, error) {
-	rCtx, err := e.GetBus().GetPersistenceModule().NewReadContext(int64(height))
+func (e *EventManager) QueryEvents(topic string, height uint64) ([]*core_types.IBCEvent, error) {
+	currHeight := e.GetBus().GetConsensusModule().CurrentHeight()
+	rCtx, err := e.GetBus().GetPersistenceModule().NewReadContext(int64(currHeight))
 	if err != nil {
 		return nil, err
 	}

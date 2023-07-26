@@ -3,7 +3,7 @@ package modules
 //go:generate mockgen -destination=./mocks/ibc_event_module_mock.go github.com/pokt-network/pocket/shared/modules EventLogger
 
 import (
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	core_types "github.com/pokt-network/pocket/shared/core/types"
 )
 
 const EventLoggerModuleName = "event_logger"
@@ -16,6 +16,6 @@ type EventLogger interface {
 	Submodule
 	eventLoggerFactory
 
-	EmitEvent(event *coreTypes.IBCEvent) error
-	QueryEvents(topic string, height uint64) ([]*coreTypes.IBCEvent, error)
+	EmitEvent(event *core_types.IBCEvent) error
+	QueryEvents(topic string, height uint64) ([]*core_types.IBCEvent, error)
 }

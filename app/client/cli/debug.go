@@ -12,7 +12,6 @@ import (
 	"github.com/pokt-network/pocket/app/client/cli/helpers"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -28,26 +27,20 @@ const (
 	PromptSendBlockRequest       string = "BlockRequest (broadcast)"
 )
 
-var (
-	items = []string{
-		PromptPrintNodeState,
-		PromptTriggerNextView,
-		PromptTogglePacemakerMode,
-		PromptResetToGenesis,
-		PromptShowLatestBlockInStore,
-		PromptSendMetadataRequest,
-		PromptSendBlockRequest,
-	}
-)
+var items = []string{
+	PromptPrintNodeState,
+	PromptTriggerNextView,
+	PromptTogglePacemakerMode,
+	PromptResetToGenesis,
+	PromptShowLatestBlockInStore,
+	PromptSendMetadataRequest,
+	PromptSendBlockRequest,
+}
 
 func init() {
 	dbgUI := newDebugUICommand()
 	dbgUI.AddCommand(newDebugUISubCommands()...)
 	rootCmd.AddCommand(dbgUI)
-
-	dbg := newDebugCommand()
-	dbg.AddCommand(debugCommands()...)
-	rootCmd.AddCommand(dbg)
 }
 
 // newDebugUISubCommands builds out the list of debug subcommands by matching the
@@ -60,7 +53,7 @@ func newDebugUISubCommands() []*cobra.Command {
 		commands[idx] = &cobra.Command{
 			Use:               promptItem,
 			PersistentPreRunE: helpers.P2PDependenciesPreRunE,
-			Run: func(cmd *cobra.Command, args []string) {
+			Run: func(cmd *cobra.Command, _ []string) {
 				handleSelect(cmd, cmd.Use)
 			},
 			ValidArgs: items,
@@ -81,56 +74,7 @@ func newDebugUICommand() *cobra.Command {
 	}
 }
 
-// newDebugCommand returns the cobra CLI for the Debug command.
-func newDebugCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:               "Debug",
-		Aliases:           []string{"d"},
-		Short:             "Debug utility for rapid development",
-		Args:              cobra.MaximumNArgs(1),
-		PersistentPreRunE: helpers.P2PDependenciesPreRunE,
-	}
-}
-
-func debugCommands() []*cobra.Command {
-	cmds := []*cobra.Command{
-		{
-			Use:     "TriggerView",
-			Aliases: []string{"next", "trigger", "view"},
-			Short:   "Trigger the next view in consensus",
-			Long:    "Sends a message to all visible nodes on the network to start the next view (height/step/round) in consensus",
-			Args:    cobra.ExactArgs(0),
-			RunE: func(cmd *cobra.Command, args []string) error {
-				m := &messaging.DebugMessage{
-					Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
-					Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
-					Message: nil,
-				}
-				broadcastDebugMessage(cmd, m)
-				return nil
-			},
-		},
-		{
-			Use:     "TogglePacemakerMode",
-			Short:   "Toggle the pacemaker",
-			Long:    "Toggle the consensus pacemaker either on or off so the chain progresses on its own or loses liveness",
-			Aliases: []string{"togglePaceMaker"},
-			Args:    cobra.ExactArgs(0),
-			RunE: func(cmd *cobra.Command, args []string) error {
-				m := &messaging.DebugMessage{
-					Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
-					Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
-					Message: nil,
-				}
-				broadcastDebugMessage(cmd, m)
-				return nil
-			},
-		},
-	}
-	return cmds
-}
-
-func runDebug(cmd *cobra.Command, args []string) (err error) {
+func runDebug(cmd *cobra.Command, _ []string) (err error) {
 	for {
 		if selection, err := promptGetInput(); err == nil {
 			handleSelect(cmd, selection)
@@ -218,32 +162,20 @@ func handleSelect(cmd *cobra.Command, selection string) {
 	}
 }
 
-// Broadcast to the entire validator set
+// Broadcast to the entire network.
 func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to create Any proto")
 	}
 
-	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
-	// broadcast. The reason it cannot be done right now is because this client is not in the
-	// address book of the actual validator nodes, so `validator1` never receives the message.
-	// p2pMod.Broadcast(anyProto)
-
-	pstore, err := fetchPeerstore(cmd)
+	bus, err := helpers.GetBusFromCmd(cmd)
 	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Unable to retrieve the pstore")
+		logger.Global.Fatal().Err(err).Msg("Failed to retrieve bus from command")
 	}
-	for _, val := range pstore.GetPeerList() {
-		addr := val.GetAddress()
-		if err != nil {
-			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
-		}
-		if err := helpers.P2PMod.Send(addr, anyProto); err != nil {
-			logger.Global.Error().Err(err).Msg("Failed to send debug message")
-		}
+	if err := bus.GetP2PModule().Broadcast(anyProto); err != nil {
+		logger.Global.Error().Err(err).Msg("Failed to broadcast debug message")
 	}
-
 }
 
 // Send to just a single (i.e. first) validator in the set
@@ -253,23 +185,29 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 		logger.Global.Error().Err(err).Msg("Failed to create Any proto")
 	}
 
-	pstore, err := fetchPeerstore(cmd)
+	pstore, err := helpers.FetchPeerstore(cmd)
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Unable to retrieve the pstore")
 	}
 
-	var validatorAddress []byte
 	if pstore.Size() == 0 {
 		logger.Global.Fatal().Msg("No validators found")
 	}
 
 	// if the message needs to be broadcast, it'll be handled by the business logic of the message handler
-	validatorAddress = pstore.GetPeerList()[0].GetAddress()
+	//
+	// TODO(#936): The statement above is false. Using `#Send()` will only
+	// be unicast with no opportunity for further propagation.
+	firstStakedActorAddress := pstore.GetPeerList()[0].GetAddress()
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 	}
 
-	if err := helpers.P2PMod.Send(validatorAddress, anyProto); err != nil {
+	bus, err := helpers.GetBusFromCmd(cmd)
+	if err != nil {
+		logger.Global.Fatal().Err(err).Msg("Failed to retrieve bus from command")
+	}
+	if err := bus.GetP2PModule().Send(firstStakedActorAddress, anyProto); err != nil {
 		logger.Global.Error().Err(err).Msg("Failed to send debug message")
 	}
 }
