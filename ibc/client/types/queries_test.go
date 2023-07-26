@@ -39,7 +39,7 @@ func TestClientState_Set(t *testing.T) {
 	cache := kvstore.NewMemKVStore()
 
 	// flush cache
-	require.NoError(t, provableStore.FlushEntries(cache))
+	require.NoError(t, provableStore.FlushCache(cache))
 
 	// get all from cache
 	keys, vals, err := cache.GetAll([]byte{}, false)
@@ -75,7 +75,7 @@ func TestConsensusState_Set(t *testing.T) {
 	cache := kvstore.NewMemKVStore()
 
 	// flush cache
-	require.NoError(t, provableStore.FlushEntries(cache))
+	require.NoError(t, provableStore.FlushCache(cache))
 
 	// get all from cache
 	keys, vals, err := cache.GetAll([]byte{}, false)
