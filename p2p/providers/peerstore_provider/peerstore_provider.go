@@ -3,12 +3,13 @@ package peerstore_provider
 //go:generate mockgen -package=mock_types  -destination=../../types/mocks/peerstore_provider_mock.go github.com/pokt-network/pocket/p2p/providers/peerstore_provider PeerstoreProvider
 
 import (
+	"errors"
+
 	"github.com/pokt-network/pocket/logger"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
-	"go.uber.org/multierr"
 )
 
 const PeerstoreProviderSubmoduleName = "peerstore_provider"
@@ -35,12 +36,12 @@ func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (pstore
 			logger.Global.Warn().Err(err).Msg("ignoring ErrResolvingAddr - peer unreachable, not adding it to peerstore")
 			continue
 		} else if err != nil {
-			errs = multierr.Append(errs, err)
+			errs = errors.Join(errs, err)
 			continue
 		}
 
 		if err = pstore.AddPeer(networkPeer); err != nil {
-			errs = multierr.Append(errs, err)
+			errs = errors.Join(errs, err)
 		}
 	}
 	return pstore, errs
