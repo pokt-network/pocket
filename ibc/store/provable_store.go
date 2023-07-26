@@ -67,8 +67,8 @@ func newProvableStore(bus modules.Bus, prefix coreTypes.CommitmentPrefix, privat
 // keys are automatically prefixed with the CommitmentPrefix if not present
 func (p *provableStore) Get(key []byte) ([]byte, error) {
 	prefixed := applyPrefix(p.prefix, key)
-	currHeight := int64(p.bus.GetConsensusModule().CurrentHeight())
-	rCtx, err := p.bus.GetPersistenceModule().NewReadContext(currHeight)
+	currHeight := p.bus.GetConsensusModule().CurrentHeight()
+	rCtx, err := p.bus.GetPersistenceModule().NewReadContext(int64(currHeight))
 	if err != nil {
 		return nil, err
 	}
@@ -166,8 +166,8 @@ func (p *provableStore) Root() ics23.CommitmentRoot {
 	return root
 }
 
-// FlushEntries writes all local changes to disk and clears the in-memory cache
-func (p *provableStore) FlushEntries(store kvstore.KVStore) error {
+// FlushCache writes all local changes to disk and clears the in-memory cache
+func (p *provableStore) FlushCache(store kvstore.KVStore) error {
 	p.m.Lock()
 	defer p.m.Unlock()
 	for _, entry := range p.cache {

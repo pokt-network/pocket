@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "github.com/pokt-network/pocket/ibc/client/light_client/types";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "proofs.proto";
+import "wasm.proto";
+import "block.proto";
+
+// PocketConsensusState defines the ibc client consensus state for Pocket
+message PocketConsensusState {
+    google.protobuf.Timestamp timestamp = 1;   // unix nano timestamp of the block
+    string state_hash = 2;                     // hex encoded root state tree hash
+    map<string, string> state_tree_hashes = 3; // map of state tree hashes; map[TreeName]hex(TreeRootHash)
+    string next_val_set_hash = 4;              // hex encoded sha3_256 hash of the next validator set
+}
+
+// PocketClientState defines the ibc client state for Pocket
+message PocketClientState {
+    string network_id = 1;                         // network identifier string
+    Fraction trust_level = 2;                      // fraction of the validator set that is required to sign off on new blocks
+    google.protobuf.Duration trusting_period = 3;  // the duration of the period since the LastestTimestamp where the state can be upgraded
+    google.protobuf.Duration unbonding_period = 4; // the duration of the staking unbonding period
+    google.protobuf.Duration max_clock_drift = 5;  // the max duration a new header's time can be in the future
+    Height latest_height = 6;                      // the latest height the client was updated to
+    uint64 frozen_height = 7;                      // the height at which the client was frozen due to a misbehaviour
+    ProofSpec proof_spec = 8;                      // ics23 proof spec used in verifying proofs
+    // RESEARCH: Figure out exactly what this is for in tendermint, why it is needed and if we need it also
+    // repeated string upgrade_path = 9;           // the upgrade path for the new client state
+}
+
+// Fraction defines a positive rational number
+message Fraction {
+    uint64 numerator = 1;
+    uint64 denominator = 2;
+}
+
+// PocketHeader defines the ibc client header for the Pocket network
+message PocketHeader {
+    BlockHeader block_header = 1;        // pocket consensus block header
+    ValidatorSet validator_set = 2;      // new validator set for the updating client
+    // the consensus state at trusted_height must be within the unbonding_period to correctly verify the new header
+    Height trusted_height = 3;           // height of the ConsensusState stored used to verify the new header
+    // trusted_validators must hash to the ConsensusState.NextValSetHash as this is the last trusted validator set
+    // hashed using SHA3Hash(validatorSetBytes) in shared/crypto/sha3.go
+    ValidatorSet trusted_validators = 4; // already stored validator set used to verify the update
+}
+
+// PocketMisbehaviour defines the ibc client misbehaviour for the Pocket network
+//
+// The two conflicting headers are submitted as evidence to verify the Pocket
+// network has misbehaved.
+message PocketMisbehaviour {
+    PocketHeader header_1 = 1; // the first header
+    PocketHeader header_2 = 2; // the second header
+}
