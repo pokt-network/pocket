@@ -62,9 +62,13 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// TODO: Add test to make sure same block is not applied twice if round is interrupted after being 'Applied'.
 	// TODO: Add more unit tests for these checks...
 	if m.shouldPrepareNewBlock(highPrepareQC) {
-		doPrepare := <-m.paceMaker.ProcessDelayedBlockPrepare(m.height)
-		if !doPrepare {
-			m.logger.Info().Msg("skip prepare new block")
+		// Place this where we want to start the timer
+		// Placed here, timer starts when we receive enough NewRound messages
+		m.paceMaker.RegisterMinBlockTimeDelay()
+
+		// This function delays block preparation and returns false if a concurrent preparation request with higher QC is available
+		if shouldPrepareBlock := m.paceMaker.DelayBlockPreparation(); !shouldPrepareBlock {
+			m.logger.Info().Msg("skip prepare new block, a candidate with higher QC is available")
 			return
 		}
 		block, err := m.prepareBlock(highPrepareQC)

@@ -39,7 +39,8 @@ type Pacemaker interface {
 	PacemakerDebug
 
 	ShouldHandleMessage(message *typesCons.HotstuffMessage) (bool, error)
-	ProcessDelayedBlockPrepare(height uint64) chan bool
+	RegisterMinBlockTimeDelay()
+	DelayBlockPreparation() bool
 
 	RestartTimer()
 	NewHeight()
@@ -50,10 +51,10 @@ type pacemaker struct {
 	base_modules.IntegrableModule
 	base_modules.InterruptableModule
 
-	pacemakerCfg         *configs.PacemakerConfig
-	roundTimeout         time.Duration
-	roundCancelFunc      context.CancelFunc
-	latestPrepareRequest latestPrepareRequest
+	pacemakerCfg       *configs.PacemakerConfig
+	roundTimeout       time.Duration
+	roundCancelFunc    context.CancelFunc
+	prepareStepDelayer prepareStepDelayer
 
 	// Only used for development and debugging.
 	debug pacemakerDebug
@@ -64,13 +65,13 @@ type pacemaker struct {
 }
 
 // Structure to handle delaying block preparation (reaping the block mempool)
-type latestPrepareRequest struct {
-	m              sync.Mutex
-	ch             chan bool
-	cancelFunc     context.CancelFunc
+// by adding a delay before the next prepare request
+type prepareStepDelayer struct {
+	m              sync.Mutex         // Mutex locking access to this structure and prevent inconsistent state
+	ch             chan bool          // Whenever there is a block proposal request arriving before the timeout, this channel is used to signal to it to whether build the block or not (if better candidate request with higher QC)
+	cancelFunc     context.CancelFunc // This is used to cancel an ongoing timeout. It should not happen, but future code changes may no longer preserve this guarantee, so this feature maintain its own cancellation logic
 	blockProposed  bool
 	deadlinePassed bool
-	delayedHeight  uint64
 }
 
 func CreatePacemaker(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -98,13 +99,12 @@ func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 		debugTimeBetweenStepsMsec: m.pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
 		quorumCertificate:         nil,
 	}
-	m.latestPrepareRequest = latestPrepareRequest{
+	m.prepareStepDelayer = prepareStepDelayer{
 		m:              sync.Mutex{},
 		ch:             nil,
 		cancelFunc:     nil,
 		blockProposed:  false,
 		deadlinePassed: false,
-		delayedHeight:  0,
 	}
 
 	return m, nil
@@ -265,85 +265,80 @@ func (m *pacemaker) NewHeight() {
 		)
 }
 
-// This is called each time there is a NewRound message received by the leader from replicas
-// With the introduction of MinBlockTimeMsec delay, multiple concurrent calls may happen
+// This is called each time the system wants a delayed signal to build a block
+func (m *pacemaker) RegisterMinBlockTimeDelay() {
+	// Discard any previous timer
+	// DISCUSS: This should not happen, Identify cases where an active timer has to be discarded, remove cancellation logic if none
+	if m.prepareStepDelayer.cancelFunc != nil {
+		m.prepareStepDelayer.cancelFunc()
+	}
+
+	m.prepareStepDelayer.blockProposed = false
+	m.prepareStepDelayer.deadlinePassed = false
+
+	minBlockTime := time.Duration(m.pacemakerCfg.MinBlockTimeMsec * uint64(time.Millisecond))
+	ctx, cancel := context.WithCancel(context.TODO())
+	m.prepareStepDelayer.cancelFunc = cancel
+
+	go func() {
+		select {
+		case <-ctx.Done():
+			return
+		case <-m.GetBus().GetRuntimeMgr().GetClock().After(minBlockTime):
+			m.prepareStepDelayer.m.Lock()
+			defer m.prepareStepDelayer.m.Unlock()
+
+			// After the timeout, if there was any candidate request waiting for a signal, tell it to build the block
+			if m.prepareStepDelayer.ch != nil {
+				m.prepareStepDelayer.ch <- true
+				close(m.prepareStepDelayer.ch)
+				m.prepareStepDelayer.blockProposed = true
+			}
+
+			// From now on, build the block ASAP
+			m.prepareStepDelayer.deadlinePassed = true
+
+			// No need to cancel the context anymore
+			m.prepareStepDelayer.cancelFunc = nil
+		}
+	}()
+}
+
+// This is called when conditions are met by the leader to build a block but still needs to wait for the MinBlockTimeMsec delay before reaping the mempool
+// With MinBlockTimeMsec delay, multiple concurrent calls may happen
 // It makes sure that:
 //   - Block proposal is made by only one of the possible `HotstuffLeaderMessageHandler.HandleNewRoundMessage()` concurrent (because delayed) calls
 //   - If the timer expires, the first call to this method will trigger the block proposal
-//   - If a late message is received after a block is proposed by another call, the late message is discarded
-//   - Reads and affectations to pacemaker.latestPrepareRequest state are protected by a mutex
-func (m *pacemaker) ProcessDelayedBlockPrepare(currentHeight uint64) chan bool {
-	m.latestPrepareRequest.m.Lock()
-	defer m.latestPrepareRequest.m.Unlock()
+//   - If a late message is received AFTER the a block is marked as proposed by another call, the late message is discarded
+//   - Reads and affectations to pacemaker.DelayBlockPreparation state are protected by a mutex
+func (m *pacemaker) DelayBlockPreparation() bool {
+	m.prepareStepDelayer.m.Lock()
 
-	// Prepare channel for the the current request
+	if m.prepareStepDelayer.blockProposed {
+		m.prepareStepDelayer.m.Unlock()
+		return false
+	}
+
+	// If there already is a channel signaling block proposal, make sure it gives up
+	if m.prepareStepDelayer.ch != nil {
+		m.prepareStepDelayer.ch <- false
+		close(m.prepareStepDelayer.ch)
+	}
+
+	// Deadline has passed, no need to have a channel, propose a block now
+	if m.prepareStepDelayer.deadlinePassed {
+		m.prepareStepDelayer.blockProposed = true
+		m.prepareStepDelayer.m.Unlock()
+		return true
+	}
+
+	// We still need to wait, create a channel and discard the old candidate if any
 	ch := make(chan bool)
+	m.prepareStepDelayer.ch = ch
+	// We cannot defer the unlock here because the channel read is blocking
+	m.prepareStepDelayer.m.Unlock()
 
-	// First time to build a block for current height, cancel previous timer if any
-	if m.latestPrepareRequest.delayedHeight < currentHeight {
-		// Discard the request building the old height
-		if m.latestPrepareRequest.ch != nil {
-			m.latestPrepareRequest.ch <- false
-		}
-		// Discard the timer for the old height
-		if m.latestPrepareRequest.cancelFunc != nil {
-			m.latestPrepareRequest.cancelFunc()
-		}
-
-		m.latestPrepareRequest.ch = ch
-		m.latestPrepareRequest.blockProposed = false
-		m.latestPrepareRequest.deadlinePassed = false
-		m.latestPrepareRequest.delayedHeight = currentHeight
-
-		// DISCUSS: This may be the the wrong time/place to start the timer,
-		// this means that its starts after the first NewRound message satisfying quorum is received
-		// We may start it when first NewRound message ever is received
-		minBlockTime := time.Duration(m.pacemakerCfg.MinBlockTimeMsec * uint64(time.Millisecond))
-		ctx, cancel := context.WithCancel(context.TODO())
-		m.latestPrepareRequest.cancelFunc = cancel
-
-		go func() {
-			select {
-			case <-ctx.Done():
-				return
-			case <-m.GetBus().GetRuntimeMgr().GetClock().After(minBlockTime):
-				m.latestPrepareRequest.m.Lock()
-				defer m.latestPrepareRequest.m.Unlock()
-
-				// After the timeout, if there was any candidate request waiting for a signal, tell it to build the block
-				if m.latestPrepareRequest.ch != nil {
-					m.latestPrepareRequest.ch <- true
-					m.latestPrepareRequest.blockProposed = true
-				}
-
-				// From now on, build the block ASAP
-				m.latestPrepareRequest.deadlinePassed = true
-			}
-		}()
-
-		return ch
-	}
-
-	if m.latestPrepareRequest.blockProposed {
-		go func() { ch <- false }()
-
-		return ch
-	}
-
-	if m.latestPrepareRequest.ch != nil {
-		m.latestPrepareRequest.ch <- false
-	}
-
-	m.latestPrepareRequest.ch = ch
-
-	if m.latestPrepareRequest.deadlinePassed {
-		go func() {
-			ch <- true
-			m.latestPrepareRequest.blockProposed = true
-		}()
-	}
-
-	return ch
+	return <-ch
 }
 
 func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {

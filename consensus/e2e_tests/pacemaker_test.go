@@ -172,12 +172,7 @@ func forcePacemakerTimeout(t *testing.T, clockMock *clock.Mock, paceMakerTimeout
 	advanceTime(t, clockMock, paceMakerTimeout+10*time.Millisecond)
 }
 
-// TODO: Add more tests for minBlockTime behavior:
-// 1. Block preparation triggers ASAP if conditions are met AFTER minBlockTime has triggered.
-// 2. Block preparation is always discarded if a new one with better QC is received within minBlockTime.
-// 3. Mempool reaped is the one present at minBlockTime or later.
-// 4. Successive blocks timings are at least minBlockTime apart.
-func TestPacemakerMinBlockTime(t *testing.T) {
+func TestPacemaker_MinBlockTime(t *testing.T) {
 	// Test preparation
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
@@ -267,6 +262,26 @@ func TestPacemakerMinBlockTime(t *testing.T) {
 	require.Equal(t, uint64(clockMock.Now().UnixMilli()), paceMakerMinBlockTimeMsec)
 	// Leader is at proposal step
 	require.Equal(t, consensus.Prepare, step)
+}
+
+// TODO: Block preparation triggers ASAP if conditions are met AFTER minBlockTime has triggered.
+func TestPacemaker_MinBlockTime_BlockPrepAsapAfterTrigger(t *testing.T) {
+	t.Skip()
+}
+
+// TODO: Block preparation is always discarded if a new one with better QC is received within minBlockTime.
+func TestPacemaker_MinBlockTime_AllowOnlyLatestBlockPrep(t *testing.T) {
+	t.Skip()
+}
+
+// TODO: Mempool reaped is the one present at minBlockTime or later.
+func TestPacemaker_MinBlockTime_DelayReapMempool(t *testing.T) {
+	t.Skip()
+}
+
+// TODO: Successive blocks timings are at least minBlockTime apart.
+func TestPacemaker_MinBlockTime_BehaviorAcrossMultipleBlocks(t *testing.T) {
+	t.Skip()
 }
 
 // TODO: Implement these tests and use them as a starting point for new ones. Consider using ChatGPT to help you out :)

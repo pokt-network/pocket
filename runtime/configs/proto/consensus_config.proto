@@ -15,5 +15,5 @@ message PacemakerConfig {
   uint64 timeout_msec = 1;
   bool manual = 2;
   uint64 debug_time_between_steps_msec = 3;
-  uint64 min_block_time_msec = 4;
+  uint64 min_block_time_msec = 4; // consenus protocol could produce blocks as soon as quorum is reached. This option allows to set min time between blocks and give more time to the mempool to fill up
 }
