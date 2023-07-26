@@ -124,8 +124,8 @@ func (s *bulkStoreCache) GetAllStores() map[string]modules.ProvableStore {
 	return s.ls.stores
 }
 
-// FlushAllEntries caches all the entries for all stores in the bulkStoreCache
-func (s *bulkStoreCache) FlushAllEntries() error {
+// FlushdCachesToStore caches all the entries for all stores in the bulkStoreCache
+func (s *bulkStoreCache) FlushCachesToStore() error {
 	s.ls.m.Lock()
 	defer s.ls.m.Unlock()
 	s.logger.Info().Msg("🚽 Flushing All Cache Entries to Disk 🚽")
@@ -134,7 +134,7 @@ func (s *bulkStoreCache) FlushAllEntries() error {
 		return err
 	}
 	for _, store := range s.ls.stores {
-		if err := store.FlushEntries(disk); err != nil {
+		if err := store.FlushCache(disk); err != nil {
 			s.logger.Error().Err(err).Str("store", string(store.GetCommitmentPrefix())).Msg("🚨 Error Flushing Cache 🚨")
 			return err
 		}

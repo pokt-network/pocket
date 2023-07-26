@@ -154,7 +154,7 @@ func TestProvableStore_GetAndProve(t *testing.T) {
 	}
 }
 
-func TestProvableStore_FlushEntries(t *testing.T) {
+func TestProvableStore_FlushCache(t *testing.T) {
 	provableStore := newTestProvableStore(t)
 	kvs := []struct {
 		key   []byte
@@ -183,7 +183,7 @@ func TestProvableStore_FlushEntries(t *testing.T) {
 		}
 	}
 	cache := kvstore.NewMemKVStore()
-	require.NoError(t, provableStore.FlushEntries(cache))
+	require.NoError(t, provableStore.FlushCache(cache))
 	keys, values, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, keys, 3)
@@ -227,7 +227,7 @@ func TestProvableStore_PruneCache(t *testing.T) {
 		}
 	}
 	cache := kvstore.NewMemKVStore()
-	require.NoError(t, provableStore.FlushEntries(cache))
+	require.NoError(t, provableStore.FlushCache(cache))
 	keys, _, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, keys, 3) // 3 entries in cache should be flushed to disk
@@ -270,12 +270,12 @@ func TestProvableStore_RestoreCache(t *testing.T) {
 	}
 
 	cache := kvstore.NewMemKVStore()
-	require.NoError(t, provableStore.FlushEntries(cache))
+	require.NoError(t, provableStore.FlushCache(cache))
 	keys, values, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, keys, 3)
 	require.NoError(t, cache.ClearAll())
-	require.NoError(t, provableStore.FlushEntries(cache))
+	require.NoError(t, provableStore.FlushCache(cache))
 	newKeys, _, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, newKeys, 0)
@@ -290,7 +290,7 @@ func TestProvableStore_RestoreCache(t *testing.T) {
 	newKeys, _, err = cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, newKeys, 0)
-	require.NoError(t, provableStore.FlushEntries(cache))
+	require.NoError(t, provableStore.FlushCache(cache))
 	newKeys, newValues, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, newKeys, 3)

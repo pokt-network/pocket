@@ -249,7 +249,7 @@ func TestIBC_GetIBCEvent(t *testing.T) {
 	}
 	for i, event := range events {
 		db.Height = int64(i + 1)
-		if i == 3 {
+		if i == 3 { // add 2 events at height 3
 			db.Height = int64(i)
 		}
 		require.NoError(t, db.SetIBCEvent(event))

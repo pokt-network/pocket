@@ -166,8 +166,8 @@ func (p *provableStore) Root() ics23.CommitmentRoot {
 	return root
 }
 
-// FlushEntries writes all local changes to disk and clears the in-memory cache
-func (p *provableStore) FlushEntries(store kvstore.KVStore) error {
+// FlushCache writes all local changes to disk and clears the in-memory cache
+func (p *provableStore) FlushCache(store kvstore.KVStore) error {
 	p.m.Lock()
 	defer p.m.Unlock()
 	for _, entry := range p.cache {

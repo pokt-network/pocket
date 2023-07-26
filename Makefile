@@ -318,7 +318,9 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 	$(PROTOC_SHARED) -I=./p2p/types/proto --go_out=./p2p/types ./p2p/types/proto/*.proto
 
 	# IBC
-	make copy_ics23_proto
+	@if test ! -e "./ibc/types/proto/proofs.proto"; then \
+		make download_ics23_proto; \
+	fi
 	$(PROTOC_SHARED) -I=./ibc/types/proto --go_out=./ibc/types ./ibc/types/proto/*.proto
 	$(PROTOC_SHARED) -I=./ibc/client/types/proto --go_out=./ibc/client/types ./ibc/client/types/proto/*.proto
 	$(PROTOC_SHARED) -I=./ibc/client/types/proto -I=./ibc/client/light_clients/types/proto -I=./shared/core/types/proto -I=./ibc/types/proto --go_out=./ibc/client/light_clients/types ./ibc/client/light_clients/types/proto/*.proto
@@ -328,15 +330,15 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 # CONSIDERATION: Some proto files contain unused gRPC services so we may need to add the following
 #                if/when we decide to include it: `grpc--go-grpc_opt=paths=source_relative --go-grpc_out=./output/path`
 
-.PHONY: copy_ics23_proto
-copy_ics23_proto:
-	echo "Downloading cosmos/ics23 proto definitions..."
-	curl -s -o ./ibc/types/proto/proofs.proto https://raw.githubusercontent.com/cosmos/ics23/master/proto/cosmos/ics23/v1/proofs.proto && \
+.PHONY: download_ics23_proto
+download_ics23_proto:
+	echo "Downloading cosmos/ics23 proto definitions..."; \
+	curl -s -o ./ibc/types/proto/proofs.proto https://raw.githubusercontent.com/cosmos/ics23/master/proto/cosmos/ics23/v1/proofs.proto; \
 	$(SEDI) \
-        -e '/^package/{N;d;}' \
-        -e 's@github.com/.*"@github.com/pokt-network/pocket/ibc/types"@g' \
+		-e '/^package/{N;d;}' \
+		-e 's@github.com/.*"@github.com/pokt-network/pocket/ibc/types"@g' \
 		./ibc/types/proto/proofs.proto && \
-	awk 'BEGIN { print "// ===== !! THIS IS CLONED FROM cosmos/ics23 !! =====\n" } { print }' ./ibc/types/proto/proofs.proto > tmpfile && mv tmpfile ./ibc/types/proto/proofs.proto
+	awk 'BEGIN { print "// ===== !! THIS IS CLONED FROM cosmos/ics23 !! =====\n" } { print }' ./ibc/types/proto/proofs.proto > tmpfile && mv tmpfile ./ibc/types/proto/proofs.proto; \
 
 .PHONY: protogen_docker_m1
 ## TECHDEBT: Test, validate & update.
