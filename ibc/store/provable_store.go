@@ -67,8 +67,8 @@ func newProvableStore(bus modules.Bus, prefix coreTypes.CommitmentPrefix, privat
 // keys are automatically prefixed with the CommitmentPrefix if not present
 func (p *provableStore) Get(key []byte) ([]byte, error) {
 	prefixed := applyPrefix(p.prefix, key)
-	currHeight := int64(p.bus.GetConsensusModule().CurrentHeight())
-	rCtx, err := p.bus.GetPersistenceModule().NewReadContext(currHeight)
+	currHeight := p.bus.GetConsensusModule().CurrentHeight()
+	rCtx, err := p.bus.GetPersistenceModule().NewReadContext(int64(currHeight))
 	if err != nil {
 		return nil, err
 	}
