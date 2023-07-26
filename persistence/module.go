@@ -25,7 +25,7 @@ var (
 // TODO: convert address and public key to string not bytes in all account and actor functions
 // TODO: remove address parameter from all pool operations
 type persistenceModule struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
 	logger *modules.Logger
 
@@ -40,10 +40,6 @@ type persistenceModule struct {
 	// It is needed to avoid tx replay attacks and for business logic around transaction validation.
 	// IMPORTANT: It doubles as the data store for the transaction tree in state tree set.
 	txIndexer indexer.TxIndexer
-
-	// stateTrees manages all of the merkle trees maintained by the
-	// persistence module that roll up into the state commitment.
-	stateTrees modules.TreeStoreModule
 
 	// Only one write context is allowed at a time
 	writeContext *PostgresContext
@@ -103,21 +99,22 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		return nil, err
 	}
 
-	treeModule, err := trees.Create(
+	_, err = trees.Create(
 		bus,
 		trees.WithTreeStoreDirectory(persistenceCfg.TreesStoreDir),
 		trees.WithLogger(m.logger))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create TreeStoreModule: %w", err)
 	}
 
 	m.config = persistenceCfg
 	m.genesisState = genesisState
 	m.networkId = runtimeMgr.GetConfig().NetworkId
 
+	// TECHDEBT: fetch blockstore from bus once it's a proper submodule
 	m.blockStore = blockStore
+	// TECHDEBT: fetch txIndexer from bus
 	m.txIndexer = txIndexer
-	m.stateTrees = treeModule
 
 	// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
 	// 		     this forces the genesis state to be reloaded on every node startup until state
@@ -180,7 +177,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		stateHash:  "",
 		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
-		stateTrees: m.stateTrees,
+		stateTrees: m.GetBus().GetTreeStore(),
 		networkId:  m.networkId,
 	}
 
@@ -212,7 +209,7 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 		stateHash:  "",
 		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
-		stateTrees: m.stateTrees,
+		stateTrees: m.GetBus().GetTreeStore(),
 		networkId:  m.networkId,
 	}, nil
 }
@@ -236,10 +233,6 @@ func (m *persistenceModule) GetBlockStore() blockstore.BlockStore {
 
 func (m *persistenceModule) GetTxIndexer() indexer.TxIndexer {
 	return m.txIndexer
-}
-
-func (m *persistenceModule) GetTreeStore() modules.TreeStoreModule {
-	return m.stateTrees
 }
 
 func (m *persistenceModule) GetNetworkID() string {

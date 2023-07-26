@@ -17,7 +17,7 @@ import (
 var _ modules.RuntimeMgr = &Manager{}
 
 type Manager struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
 	config       *configs.Config
 	genesisState *genesis.GenesisState
@@ -104,6 +104,7 @@ func WithRandomPK() func(*Manager) {
 	return WithPK(privateKey.String())
 }
 
+// TECHDEBT(#750): separate consensus and P2P (identity vs communication) keys.
 func WithPK(pk string) func(*Manager) {
 	return func(b *Manager) {
 		if b.config.Consensus == nil {

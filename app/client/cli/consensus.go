@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/pokt-network/pocket/app/client/cli/flags"

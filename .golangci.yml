@@ -7,18 +7,16 @@ linters:
     - govet
     - ineffassign
     - staticcheck
-    - typecheck
     - unused
-
     # Additional linters
     - gosec
     - misspell
     - promlinter
     - unparam
     - goimports
-
     # Gocritic allows to use ruleguard; custom linting rules
     - gocritic
+
 linters-settings:
   # Gocritic settings; https://go-critic.com/overview
   gocritic:
@@ -56,7 +54,7 @@ linters-settings:
         failOn: dsl
         rules: "build/linters/*.go"
 run:
-  go: "1.19"
+  go: "1.20"
   skip-dirs:
     - build/linters
   build-tags:

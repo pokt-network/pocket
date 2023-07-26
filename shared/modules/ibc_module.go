@@ -1,55 +1,21 @@
 package modules
 
-//go:generate mockgen -destination=./mocks/ibc_module_mock.go github.com/pokt-network/pocket/shared/modules IBCModule,IBCHost,IBCHandler
+import "google.golang.org/protobuf/types/known/anypb"
+
+//go:generate mockgen -destination=./mocks/ibc_module_mock.go github.com/pokt-network/pocket/shared/modules IBCModule,IBCHandler
 
 const IBCModuleName = "ibc"
 
 type IBCModule interface {
 	Module
 
-	// GetHost returns the IBC host of the modules
-	GetHost() IBCHost
+	HandleEvent(*anypb.Any) error
 }
 
-// IBCHost is the interface used by the host machine (a Pocket node) to interact with the IBC module
-// the host is responsible for managing the IBC state and interacting with consensus in order for
-// any IBC packets to be sent to another host on a different chain (via an IBC relayer). The hosts
-// are also responsible for receiving any IBC packets from another chain and verifying them through
-// the light clients they manage
-// https://github.com/cosmos/ibc/tree/main/spec/core/ics-024-host-requirements
-type IBCHost interface {
-	IBCHandler
-
-	// GetTimestamp returns the current unix timestamp for the host machine
-	GetTimestamp() uint64
-}
-
-// TODO: Uncomment interface functions as they are defined and potentially change their signatures
-// where necessary
+// INCOMPLETE: Split into multiple interfaces per ICS component and embed in the handler
 // IBCHandler is the interface through which the different IBC sub-modules can be interacted with
 // https://github.com/cosmos/ibc/tree/main/spec/core/ics-025-handler-interface
 type IBCHandler interface {
-	// === Client Lifecycle Management ===
-	// https://github.com/cosmos/ibc/tree/main/spec/core/ics-002-client-semantics
-
-	// CreateClient creates a new client with the given client state and initial consensus state
-	// and initialises its unique identifier in the IBC store
-	// CreateClient(clientState clientState, consensusState consensusState) error
-
-	// UpdateClient updates an existing client with the given ClientMessage, given that
-	// the ClientMessage can be verified using the existing ClientState and ConsensusState
-	// UpdateClient(identifier Identifier, clientMessage ClientMessage) error
-
-	// QueryConsensusState returns the ConsensusState at the given height for the given client
-	// QueryConsensusState(identifier Identifier, height Height) ConsensusState
-
-	// QueryClientState returns the ClientState for the given client
-	// QueryClientState(identifier Identifier) ClientState
-
-	// SubmitMisbehaviour submits evidence for a misbehaviour to the client, possibly invalidating
-	// previously valid state roots and thus preventing future updates
-	// SubmitMisbehaviour(identifier Identifier, clientMessage ClientMessage) error
-
 	// === Connection Lifecycle Management ===
 	// https://github.com/cosmos/ibc/tree/main/spec/core/ics-003-connection-semantics
 

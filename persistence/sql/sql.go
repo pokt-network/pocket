@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/pokt-network/pocket/persistence/indexer"
 	ptypes "github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
@@ -91,16 +90,6 @@ func GetAccountsUpdated(
 	return accounts, nil
 }
 
-// GetTransactions takes a transaction indexer and returns the transactions for the current height
-func GetTransactions(txi indexer.TxIndexer, height uint64) ([]*coreTypes.IndexedTransaction, error) {
-	// TECHDEBT(#813): Avoid this cast to int64
-	indexedTxs, err := txi.GetByHeight(int64(height), false)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get transactions by height: %w", err)
-	}
-	return indexedTxs, nil
-}
-
 // GetPools returns the pools updated at the given height
 func GetPools(pgtx pgx.Tx, height uint64) ([]*coreTypes.Account, error) {
 	pools, err := GetAccountsUpdated(pgtx, ptypes.Pool, height)
@@ -163,6 +152,36 @@ func GetParams(pgtx pgx.Tx, height uint64) ([]*coreTypes.Param, error) {
 	}
 
 	return paramSlice, nil
+}
+
+// GetIBCStoreUpdates returns the set of key-value pairs updated at the current height for the IBC store
+func GetIBCStoreUpdates(pgtx pgx.Tx, height uint64) (keys, values [][]byte, err error) {
+	fields := "key,value"
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE height=%d ORDER BY key ASC", fields, ptypes.IBCStoreTableName, height)
+	rows, err := pgtx.Query(context.TODO(), query)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	var hexKey, hexValue string
+	for rows.Next() {
+		if err := rows.Scan(&hexKey, &hexValue); err != nil {
+			return nil, nil, err
+		}
+		key, err := hex.DecodeString(hexKey)
+		if err != nil {
+			return nil, nil, err
+		}
+		value, err := hex.DecodeString(hexValue)
+		if err != nil {
+			return nil, nil, err
+		}
+		keys = append(keys, key)
+		values = append(values, value)
+	}
+
+	return keys, values, nil
 }
 
 func getActor(tx pgx.Tx, actorSchema ptypes.ProtocolActorSchema, address []byte, height int64) (actor *coreTypes.Actor, err error) {

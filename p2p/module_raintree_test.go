@@ -9,18 +9,14 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"testing"
 
-	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/pokt-network/pocket/internal/testutil"
-	"github.com/pokt-network/pocket/p2p/protocol"
-	"github.com/pokt-network/pocket/p2p/raintree"
 )
 
 // TODO(#314): Add the tooling and instructions on how to generate unit tests in this file.
@@ -220,11 +216,13 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 // 1. It creates and configures a "real" P2P module where all the other components of the node are mocked.
 // 2. It then triggers a single message and waits for all of the expected messages transmission to complete before announcing failure.
 func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig TestNetworkSimulationConfig) {
+	var readWriteWaitGroup sync.WaitGroup
+
 	// Configure & prepare test module
 	numValidators := len(networkSimulationConfig)
 	runtimeConfigs := createMockRuntimeMgrs(t, numValidators)
 	genesisMock := runtimeConfigs[0].GetGenesis()
-	busMocks := createMockBuses(t, runtimeConfigs)
+	busMocks := createMockBuses(t, runtimeConfigs, &readWriteWaitGroup)
 
 	valIds := make([]string, 0, numValidators)
 	for valId := range networkSimulationConfig {
@@ -241,7 +239,6 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 
 	// Create connection and bus mocks along with a shared WaitGroup to track the number of expected
 	// reads and writes throughout the mocked local network
-	var wg sync.WaitGroup
 	for i, valId := range valIds {
 		expectedCall := networkSimulationConfig[valId]
 		expectedReads := expectedCall.numNetworkReads
@@ -249,50 +246,49 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 
 		log.Printf("[valId: %s] expected reads: %d\n", valId, expectedReads)
 		log.Printf("[valId: %s] expected writes: %d\n", valId, expectedWrites)
-		wg.Add(expectedReads)
-		wg.Add(expectedWrites)
+		readWriteWaitGroup.Add(expectedReads)
+		readWriteWaitGroup.Add(expectedWrites)
 
 		persistenceMock := preparePersistenceMock(t, busMocks[i], genesisMock)
 		consensusMock := prepareConsensusMock(t, busMocks[i])
-		telemetryMock := prepareTelemetryMock(t, busMocks[i], valId, &wg, expectedWrites)
+		currentHeightProviderMock := prepareCurrentHeightProviderMock(t, busMocks[i])
+
+		busMocks[i].RegisterModule(currentHeightProviderMock)
+		busMocks[i].EXPECT().
+			GetCurrentHeightProvider().
+			Return(currentHeightProviderMock).
+			AnyTimes()
+
+		telemetryMock := prepareTelemetryMock(t, busMocks[i], valId, &readWriteWaitGroup, expectedWrites)
 
 		prepareBusMock(busMocks[i], persistenceMock, consensusMock, telemetryMock)
 	}
 
 	libp2pMockNet := mocknet.New()
-	defer func() {
-		err := libp2pMockNet.Close()
-		require.NoError(t, err)
-	}()
 
 	// Inject the connection and bus mocks into the P2P modules
 	p2pModules := createP2PModules(t, busMocks, libp2pMockNet)
 
-	for serviceURL, p2pMod := range p2pModules {
+	for _, p2pMod := range p2pModules {
 		err := p2pMod.Start()
 		require.NoError(t, err)
-
-		sURL := strings.Clone(serviceURL)
-		mod := *p2pMod
-		p2pMod.host.SetStreamHandler(protocol.PoktProtocolID, func(stream libp2pNetwork.Stream) {
-			log.Printf("[valID: %s] Read\n", sURL)
-			(&mod).router.(*raintree.RainTreeRouter).HandleStream(stream)
-			wg.Done()
-		})
 	}
 
 	// Wait for completion
-	defer waitForNetworkSimulationCompletion(t, &wg)
+	defer waitForNetworkSimulationCompletion(t, &readWriteWaitGroup)
 	t.Cleanup(func() {
 		// Stop all p2p modules
 		for _, p2pMod := range p2pModules {
 			err := p2pMod.Stop()
 			require.NoError(t, err)
 		}
+
+		err := libp2pMockNet.Close()
+		require.NoError(t, err)
 	})
 
 	// Send the first message (by the originator) to trigger a RainTree broadcast
-	p := &anypb.Any{}
+	p := &anypb.Any{TypeUrl: "test"}
 	p2pMod := p2pModules[origNode]
 	require.NoError(t, p2pMod.Broadcast(p))
 }

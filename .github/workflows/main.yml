@@ -15,10 +15,9 @@ on:
     #   - "docs/**"
     #   - "**.md"
 
-
 env:
   # Even though we can test against multiple versions, this one is considered a target version.
-  TARGET_GOLANG_VERSION: "1.19"
+  TARGET_GOLANG_VERSION: "1.20"
   PROTOC_VERSION: "3.19.4"
 
 jobs:
@@ -26,7 +25,7 @@ jobs:
     runs-on: custom-runner
     strategy:
       matrix:
-        go: ["1.19"] # As we are relying on generics, we can't go lower than 1.18.
+        go: ["1.20"] # As we are relying on generics, we can't go lower than 1.18.
       fail-fast: false
     name: Go ${{ matrix.go }} test
     steps:
@@ -87,14 +86,6 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: ./coverage.out
-      - name: golangci-lint
-        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: --timeout=10m --build-tags=test
-          skip-cache: true
-          only-new-issues: true
 
   # TODO(@okdas): reuse artifacts built by the previous job instead
   # of going through the build process in container build job again
@@ -152,7 +143,6 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             TARGET_GOLANG_VERSION=${{ env.TARGET_GOLANG_VERSION }}
-
 
   # Run e2e tests on devnet if the PR has a label "e2e-devnet-test"
   e2e-tests:

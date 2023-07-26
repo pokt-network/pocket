@@ -38,6 +38,7 @@ const (
 	TransactionsTreeName = "transactions"
 	ParamsTreeName       = "params"
 	FlagsTreeName        = "flags"
+	IBCTreeName          = "ibc"
 )
 
 var actorTypeToMerkleTreeName = map[coreTypes.ActorType]string{
@@ -60,7 +61,7 @@ var stateTreeNames = []string{
 	// Account Trees
 	AccountTreeName, PoolTreeName,
 	// Data Trees
-	TransactionsTreeName, ParamsTreeName, FlagsTreeName,
+	TransactionsTreeName, ParamsTreeName, FlagsTreeName, IBCTreeName,
 }
 
 // stateTree is a wrapper around the SMT that contains an identifying
@@ -73,23 +74,25 @@ type stateTree struct {
 
 var _ modules.TreeStoreModule = &treeStore{}
 
-// treeStore stores a set of merkle trees that
-// it manages. It fulfills the modules.TreeStore interface.
-// * It is responsible for atomic commit or rollback behavior
-// of the underlying trees by utilizing the lazy loading
-// functionality provided by the underlying smt library.
+// treeStore stores a set of merkle trees that it manages.
+// It fulfills the modules.treeStore interface
+// * It is responsible for atomic commit or rollback behavior of the underlying
+// trees by utilizing the lazy loading functionality of the smt library.
+// TECHDEBT(#880): treeStore is exported for testing purposes to avoid import cycle errors.
+// Make it private and export a custom struct with a test build tag when necessary.
 type treeStore struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
-	logger       *modules.Logger
+	logger *modules.Logger
+
 	treeStoreDir string
 	rootTree     *stateTree
 	merkleTrees  map[string]*stateTree
 }
 
-// GetTree returns the name, root hash, and nodeStore for the matching tree tree
-// stored in the TreeStore. This enables the caller to import the smt and not
-// change the one stored
+// GetTree returns the root hash and nodeStore for the matching tree stored in the TreeStore.
+// This enables the caller to import the SMT without changing the one stored unless they call
+// `Commit()` to write to the nodestore.
 func (t *treeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
 	if name == RootTreeName {
 		return t.rootTree.tree.Root(), t.rootTree.nodeStore
@@ -100,12 +103,26 @@ func (t *treeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
 	return nil, nil
 }
 
+// GetTreeHashes returns a map of tree names to their root hashes for all
+// the trees tracked by the treestore, excluding the root tree
+func (t *treeStore) GetTreeHashes() map[string]string {
+	hashes := make(map[string]string, len(t.merkleTrees))
+	for treeName, stateTree := range t.merkleTrees {
+		hashes[treeName] = hex.EncodeToString(stateTree.tree.Root())
+	}
+	return hashes
+}
+
 // Update takes a transaction and a height and updates
 // all of the trees in the treeStore for that height.
 func (t *treeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
-	txi := t.GetBus().GetPersistenceModule().GetTxIndexer()
 	t.logger.Info().Msgf("🌴 updating state trees at height %d", height)
-	return t.updateMerkleTrees(pgtx, txi, height)
+	txi := t.GetBus().GetPersistenceModule().GetTxIndexer()
+	stateHash, err := t.updateMerkleTrees(pgtx, txi, height)
+	if err != nil {
+		return "", fmt.Errorf("failed to update merkle trees: %w", err)
+	}
+	return stateHash, nil
 }
 
 // DebugClearAll is used by the debug cli to completely reset all merkle trees.
@@ -127,7 +144,9 @@ func (t *treeStore) DebugClearAll() error {
 }
 
 // updateMerkleTrees updates all of the merkle trees in order defined by `numMerkleTrees`
-// * it returns the new state hash capturing the state of all the trees or an error if one occurred
+// * It returns the new state hash capturing the state of all the trees or an error if one occurred.
+// * This function does not commit state to disk. The caller must manually invoke `Commit` to persist
+// changes to disk.
 func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
 	for treeName := range t.merkleTrees {
 		switch treeName {
@@ -167,7 +186,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 
 		// Data Merkle Trees
 		case TransactionsTreeName:
-			indexedTxs, err := sql.GetTransactions(txi, height)
+			indexedTxs, err := getTransactions(txi, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get transactions: %w", err)
 			}
@@ -190,30 +209,48 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			if err := t.updateFlagsTree(flags); err != nil {
 				return "", fmt.Errorf("failed to update flags tree - %w", err)
 			}
-		// Default should not happen; panic and log the treeType - this is a strong code smell.
+		case IBCTreeName:
+			keys, values, err := sql.GetIBCStoreUpdates(pgtx, height)
+			if err != nil {
+				return "", fmt.Errorf("failed to get IBC store updates: %w", err)
+			}
+			if err := t.updateIBCTree(keys, values); err != nil {
+				return "", fmt.Errorf("failed to update IBC tree: %w", err)
+			}
+		// Default
 		default:
 			t.logger.Panic().Msgf("unhandled merkle tree type: %s", treeName)
 		}
 	}
 
-	if err := t.commit(); err != nil {
+	if err := t.Commit(); err != nil {
 		return "", fmt.Errorf("failed to commit: %w", err)
 	}
 	return t.getStateHash(), nil
 }
 
-func (t *treeStore) commit() error {
-	for treeName, stateTree := range t.merkleTrees {
-		if err := stateTree.tree.Commit(); err != nil {
-			return fmt.Errorf("failed to commit %s: %w", treeName, err)
+// Commit commits changes in the sub-trees to the root tree and then commits updates for each sub-tree.
+func (t *treeStore) Commit() error {
+	if err := t.rootTree.tree.Commit(); err != nil {
+		t.logger.Err(err).Msg("TECHDEBT: failed to commit root tree: changes to sub-trees will not be committed - this should be investigated")
+		return fmt.Errorf("failed to commit root tree: %w", err)
+	}
+
+	for name, treeStore := range t.merkleTrees {
+		if err := treeStore.tree.Commit(); err != nil {
+			t.logger.Err(err).Msgf("TECHDEBT: failed to commit to %s tree: changes will not be saved - this should be investigated", name)
+			return fmt.Errorf("failed to commit %s: %w", name, err)
 		}
 	}
+
 	return nil
 }
 
 func (t *treeStore) getStateHash() string {
 	for _, stateTree := range t.merkleTrees {
-		if err := t.rootTree.tree.Update([]byte(stateTree.name), stateTree.tree.Root()); err != nil {
+		key := []byte(stateTree.name)
+		val := stateTree.tree.Root()
+		if err := t.rootTree.tree.Update(key, val); err != nil {
 			log.Fatalf("failed to update root tree with %s tree's hash: %v", stateTree.name, err)
 		}
 	}
@@ -340,4 +377,33 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 	}
 
 	return nil
+}
+
+func (t *treeStore) updateIBCTree(keys, values [][]byte) error {
+	if len(keys) != len(values) {
+		return fmt.Errorf("keys and values must be the same length")
+	}
+	for i, key := range keys {
+		value := values[i]
+		if value == nil {
+			if err := t.merkleTrees[IBCTreeName].tree.Delete(key); err != nil {
+				return err
+			}
+			continue
+		}
+		if err := t.merkleTrees[IBCTreeName].tree.Update(key, value); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// getTransactions takes a transaction indexer and returns the transactions for the current height
+func getTransactions(txi indexer.TxIndexer, height uint64) ([]*coreTypes.IndexedTransaction, error) {
+	// TECHDEBT(#813): Avoid this cast to int64
+	indexedTxs, err := txi.GetByHeight(int64(height), false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get transactions by height: %w", err)
+	}
+	return indexedTxs, nil
 }

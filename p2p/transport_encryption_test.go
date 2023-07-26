@@ -1,3 +1,5 @@
+//go:build test
+
 package p2p
 
 import (
@@ -14,6 +16,7 @@ import (
 	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/p2p/protocol"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	mock_types "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
@@ -23,7 +26,7 @@ import (
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 )
 
-func TestP2pModule_Insecure_Error(t *testing.T) {
+func TestP2pModule_RainTreeRouter_Insecure_Error(t *testing.T) {
 	// TECHDEBT(#609): refactor mock setup with similar test utilities.
 	ctrl := gomock.NewController(t)
 	hostname := "127.0.0.1"
@@ -54,7 +57,7 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
 	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
 
-	busMock := createMockBus(t, runtimeMgrMock)
+	busMock := createMockBus(t, runtimeMgrMock, nil)
 	busMock.EXPECT().GetConsensusModule().Return(mockConsensusModule).AnyTimes()
 	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
 	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
@@ -62,6 +65,14 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 	genesisStateMock := createMockGenesisState(keys[:1])
 	persistenceMock := preparePersistenceMock(t, busMock, genesisStateMock)
 	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
+
+	currentHeightProviderMock := prepareCurrentHeightProviderMock(t, busMock)
+	busMock.RegisterModule(currentHeightProviderMock)
+	busMock.EXPECT().GetCurrentHeightProvider().Return(currentHeightProviderMock).AnyTimes()
+
+	pstore := new(typesP2P.PeerAddrMap)
+	pstoreProviderMock := preparePeerstoreProviderMock(t, busMock, pstore)
+	busMock.RegisterModule(pstoreProviderMock)
 
 	telemetryMock.EXPECT().GetBus().Return(busMock).AnyTimes()
 	telemetryMock.EXPECT().SetBus(busMock).AnyTimes()
@@ -73,7 +84,10 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 	dnsDone := testutil.PrepareDNSMockFromServiceURLs(t, serviceURLs)
 	t.Cleanup(dnsDone)
 
-	p2pMod, err := Create(busMock)
+	routerMock := mock_types.NewMockRouter(ctrl)
+	routerMock.EXPECT().Close().Times(1)
+
+	p2pMod, err := Create(busMock, WithUnstakedActorRouter(routerMock))
 	require.NoError(t, err)
 
 	err = p2pMod.Start()
@@ -114,6 +128,6 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	_, err = clearNode.NewStream(ctx, libp2pPeerInfo.ID, protocol.PoktProtocolID)
+	_, err = clearNode.NewStream(ctx, libp2pPeerInfo.ID, protocol.RaintreeProtocolID)
 	require.ErrorContains(t, err, "failed to negotiate security protocol: protocols not supported:")
 }

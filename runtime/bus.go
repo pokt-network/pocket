@@ -45,7 +45,7 @@ func (m *bus) GetModulesRegistry() modules.ModulesRegistry {
 	return m.modulesRegistry
 }
 
-func (m *bus) RegisterModule(module modules.Module) {
+func (m *bus) RegisterModule(module modules.Submodule) {
 	module.SetBus(m)
 	m.modulesRegistry.RegisterModule(module)
 }
@@ -69,6 +69,10 @@ func (m *bus) GetRuntimeMgr() modules.RuntimeMgr {
 
 func (m *bus) GetPersistenceModule() modules.PersistenceModule {
 	return getModuleFromRegistry[modules.PersistenceModule](m, modules.PersistenceModuleName)
+}
+
+func (m *bus) GetTreeStoreModule() modules.TreeStoreModule {
+	return getModuleFromRegistry[modules.TreeStoreModule](m, modules.TreeStoreSubmoduleName)
 }
 
 func (m *bus) GetP2PModule() modules.P2PModule {
@@ -123,8 +127,28 @@ func (m *bus) GetIBCModule() modules.IBCModule {
 	return getModuleFromRegistry[modules.IBCModule](m, modules.IBCModuleName)
 }
 
+func (m *bus) GetTreeStore() modules.TreeStoreModule {
+	return getModuleFromRegistry[modules.TreeStoreModule](m, modules.TreeStoreSubmoduleName)
+}
+
+func (m *bus) GetIBCHost() modules.IBCHostSubmodule {
+	return getModuleFromRegistry[modules.IBCHostSubmodule](m, modules.IBCHostSubmoduleName)
+}
+
+func (m *bus) GetBulkStoreCacher() modules.BulkStoreCacher {
+	return getModuleFromRegistry[modules.BulkStoreCacher](m, modules.BulkStoreCacherModuleName)
+}
+
+func (m *bus) GetEventLogger() modules.EventLogger {
+	return getModuleFromRegistry[modules.EventLogger](m, modules.EventLoggerModuleName)
+}
+
+func (m *bus) GetCurrentHeightProvider() modules.CurrentHeightProvider {
+	return getModuleFromRegistry[modules.CurrentHeightProvider](m, modules.CurrentHeightProviderSubmoduleName)
+}
+
 // getModuleFromRegistry is a helper function to get a module from the registry that handles errors and casting via generics
-func getModuleFromRegistry[T modules.Module](m *bus, moduleName string) T {
+func getModuleFromRegistry[T modules.Submodule](m *bus, moduleName string) T {
 	mod, err := m.modulesRegistry.GetModule(moduleName)
 	if err != nil {
 		logger.Global.Logger.Fatal().

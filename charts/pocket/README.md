@@ -105,7 +105,7 @@ privateKeySecretKeyRef:
 | persistence.accessModes | list | `["ReadWriteOnce"]` | persistent Volume Access Modes |
 | persistence.annotations | object | `{}` | annotations of the persistent volume claim |
 | persistence.dataSource | object | `{}` | custom data source of the persistent volume claim |
-| persistence.enabled | bool | `true` | enable persistent volume claim |
+| persistence.enabled | bool | `false` | enable persistent volume claim |
 | persistence.existingClaim | string | `""` | name of an existing PVC to use for persistence |
 | persistence.reclaimPolicy | string | `"Delete"` | persistent volume reclaim policy |
 | persistence.selector | object | `{}` | selector to match an existing Persistent Volume |

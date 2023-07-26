@@ -23,8 +23,8 @@ import (
 var e2eLogger = pocketLogger.Global.CreateLoggerForModule("e2e")
 
 const (
-	// defines the host & port scheme that LocalNet uses for naming validators.
-	// e.g. validator-001 thru validator-999
+	// Each actor is represented e.g. validator-001-pocket:42069 thru validator-999-pocket:42069.
+	// Defines the host & port scheme that LocalNet uses for naming actors.
 	validatorServiceURLTmpl = "validator-%s-pocket:%d"
 	// validatorA maps to suffix ID 001 and is also used by the cluster-manager
 	// though it has no special permissions.
@@ -50,6 +50,7 @@ type rootSuite struct {
 	// clientset is the kubernetes API we acquire from the user's $HOME/.kube/config
 	clientset *kubernetes.Clientset
 	// validator holds command results between runs and reports errors to the test suite
+	// TECHDEBT: Rename `validator` to something more appropriate
 	validator *validatorPod
 	// validatorA maps to suffix ID 001 of the kube pod that we use as our control agent
 
@@ -207,9 +208,7 @@ func (s *rootSuite) unstakeValidator() {
 }
 
 // getPrivateKey generates a new keypair from the private hex key that we get from the clientset
-func (s *rootSuite) getPrivateKey(
-	validatorId string,
-) cryptoPocket.PrivateKey {
+func (s *rootSuite) getPrivateKey(validatorId string) cryptoPocket.PrivateKey {
 	privHexString := s.validatorKeys[validatorId]
 	privateKey, err := cryptoPocket.NewPrivateKey(privHexString)
 	require.NoErrorf(s, err, "failed to extract privkey")
@@ -301,6 +300,8 @@ func (s *rootSuite) getServicerPrivateKey(
 // getClientset uses the default path `$HOME/.kube/config` to build a kubeconfig
 // and then connects to that cluster and returns a *Clientset or an error
 func getClientset(t gocuke.TestingT) (*kubernetes.Clientset, error) {
+	t.Helper()
+
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get home dir: %w", err)

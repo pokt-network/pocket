@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "github.com/pokt-network/pocket/shared/core/types";
+
+message IBCEvent {
+    string topic = 1;
+    repeated Attribute attributes = 2;
+}
+
+message Attribute {
+    bytes key = 1;
+    bytes value = 2;
+}

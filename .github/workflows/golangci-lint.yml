@@ -1,0 +1,40 @@
+name: golangci-lint
+# Copied from https://github.com/golangci/golangci-lint-action
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+
+env:
+  # Even though we can test against multiple versions, this one is considered a target version.
+  TARGET_GOLANG_VERSION: "1.20"
+  PROTOC_VERSION: "3.19.4"
+
+jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.TARGET_GOLANG_VERSION }}
+          cache: false
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: install CI dependencies
+        run: make install_ci_deps
+      - name: generate protobufs, RPC server, RPC client and mocks
+        run: make protogen_clean && make protogen_local && make mockgen && make generate_rpc_openapi
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --timeout=10m --build-tags=test
+          skip-cache: true
