@@ -181,12 +181,7 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	case messaging.TxGossipMessageContentType:
 		return node.GetBus().GetUtilityModule().HandleUtilityMessage(message.Content)
 	case messaging.DebugMessageEventType:
-		if err := node.GetBus().GetP2PModule().HandleEvent(message.Content); err != nil {
-			return err
-		}
-		if err := node.handleDebugMessage(message); err != nil {
-			return err
-		}
+		return node.handleDebugMessage(message)
 	case messaging.ConsensusNewHeightEventType:
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
 		err_ibc := node.GetBus().GetIBCModule().HandleEvent(message.Content)
@@ -210,6 +205,7 @@ func (node *Node) handleDebugMessage(message *messaging.PocketEnvelope) error {
 		return err
 	}
 	switch debugMessage.Action {
+	// Consensus Debug
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
 		messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE,
 		messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
@@ -217,6 +213,9 @@ func (node *Node) handleDebugMessage(message *messaging.PocketEnvelope) error {
 		messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ,
 		messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_METADATA_REQ:
 		return node.GetBus().GetConsensusModule().HandleDebugMessage(debugMessage)
+	// P2P Debug
+	case messaging.DebugMessageAction_DEBUG_P2P_PRINT_PEER_LIST:
+		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
 	// Persistence Debug
 	case messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		return node.GetBus().GetPersistenceModule().HandleDebugMessage(debugMessage)
