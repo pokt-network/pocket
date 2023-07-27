@@ -12,20 +12,20 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
-var (
-	listCmd = &cobra.Command{
+var ErrRouterType = fmt.Errorf("must specify one of --staked, --unstaked, or --all")
+
+func init() {
+	PeerCmd.AddCommand(NewListCommand())
+}
+
+func NewListCommand() *cobra.Command {
+	return &cobra.Command{
 		Use:     "List",
 		Short:   "List the known peers",
 		Long:    "Prints a table of the Peer ID, Pokt Address and Service URL of the known peers",
 		Aliases: []string{"list", "ls"},
 		RunE:    listRunE,
 	}
-
-	ErrRouterType = fmt.Errorf("must specify one of --staked, --unstaked, or --all")
-)
-
-func init() {
-	PeerCmd.AddCommand(listCmd)
 }
 
 func listRunE(cmd *cobra.Command, _ []string) error {
