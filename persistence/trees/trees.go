@@ -15,6 +15,7 @@ package trees
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"hash"
 	"log"
@@ -322,7 +323,14 @@ func (t *treeStore) Rollback() error {
 		return nil
 	}
 	t.logger.Err(ErrFailedRollback)
-	return ErrFailedRollback
+	// emergency shut down to prevent improper commit to trees
+	errs := []error{ErrFailedRollback}
+	for _, st := range t.merkleTrees {
+		if err := st.nodeStore.Stop(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
 }
 
 // save commits any pending changes to the trees and creates a copy of the current worldState,

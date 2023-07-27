@@ -46,10 +46,9 @@ func (p *PostgresContext) SetSavePoint() error {
 
 // RollbackToSavepoint triggers a rollback for the current pgx transaction and the underylying submodule stores.
 func (p *PostgresContext) RollbackToSavePoint() error {
-	ctx, _ := p.getCtxAndTx()
-	pgErr := p.tx.Rollback(ctx)
-	treesErr := p.stateTrees.Rollback()
-	return errors.Join(pgErr, treesErr)
+	err := p.stateTrees.Rollback()
+	p.Release()
+	return err
 }
 
 // Full details in the thread from the PR review: https://github.com/pokt-network/pocket/pull/285#discussion_r1018471719
