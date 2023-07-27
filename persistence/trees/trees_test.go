@@ -12,7 +12,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	core_types "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -25,7 +25,7 @@ var (
 	defaultChains          = []string{"0001"}
 	defaultStakeBig        = big.NewInt(1000000000000000)
 	defaultStake           = utils.BigIntToString(defaultStakeBig)
-	defaultStakeStatus     = int32(coreTypes.StakeStatus_Staked)
+	defaultStakeStatus     = int32(core_types.StakeStatus_Staked)
 	defaultPauseHeight     = int64(-1) // pauseHeight=-1 implies not paused
 	defaultUnstakingHeight = int64(-1) // unstakingHeight=-1 implies not unstaking
 
@@ -121,7 +121,7 @@ func newTestDefaultConfig(t *testing.T, databaseURL string) *configs.Config {
 	}
 	return cfg
 }
-func createAndInsertDefaultTestApp(t *testing.T, db *persistence.PostgresContext) (*coreTypes.Actor, error) {
+func createAndInsertDefaultTestApp(t *testing.T, db *persistence.PostgresContext) (*core_types.Actor, error) {
 	t.Helper()
 	app := newTestApp(t)
 
@@ -146,14 +146,14 @@ func createAndInsertDefaultTestApp(t *testing.T, db *persistence.PostgresContext
 }
 
 // TECHDEBT(#796): Test helpers should be consolidated in a single place
-func newTestApp(t *testing.T) *coreTypes.Actor {
+func newTestApp(t *testing.T) *core_types.Actor {
 	operatorKey, err := crypto.GeneratePublicKey()
 	require.NoError(t, err)
 
 	outputAddr, err := crypto.GenerateAddress()
 	require.NoError(t, err)
 
-	return &coreTypes.Actor{
+	return &core_types.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		Chains:          defaultChains,

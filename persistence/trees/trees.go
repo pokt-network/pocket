@@ -100,17 +100,17 @@ type treeStore struct {
 	rootTree     *stateTree
 	merkleTrees  map[string]*stateTree
 
-	// PrevState holds a previous view of the Worldstate.
+	// prevState holds a previous view of the worldState.
 	// The tree store rolls back to this view if errors are encountered during block application.
-	PrevState *worldstate
+	prevState *worldState
 }
 
-// worldstate holds a (de)serializable view of the entire tree state.
+// worldState holds a (de)serializable view of the entire tree state.
 // TECHDEBT(#566) - Hook this up to node CLI subcommands
-type worldstate struct {
-	TreeStoreDir string
-	RootTree     *stateTree
-	MerkleTrees  map[string]*stateTree
+type worldState struct {
+	treeStoreDir string
+	rootTree     *stateTree
+	merkleTrees  map[string]*stateTree
 }
 
 // GetTree returns the root hash and nodeStore for the matching tree stored in the TreeStore.
@@ -303,47 +303,47 @@ func (t *treeStore) getStateHash() string {
 // AtomicStore Implementation //
 ////////////////////////////////
 
-// Savepoint generates a new savepoint for the tree store and saves it internally.
+// Savepoint generates a new savepoint (i.e. a worldState) for the tree store and saves it internally.
 func (t *treeStore) Savepoint() error {
 	w, err := t.save()
 	if err != nil {
 		return err
 	}
-	t.PrevState = w
+	t.prevState = w
 	return nil
 }
 
-// Rollback rolls back to the last saved world state maintained by the treeStore.
+// Rollback rolls back to the last saved worldState maintained by the treeStore.
 // Rollback intentionally can't return an error because at this point we're out of tricks
 // to recover from problems.
 func (t *treeStore) Rollback() error {
-	if t.PrevState != nil {
-		t.merkleTrees = t.PrevState.MerkleTrees
-		t.rootTree = t.PrevState.RootTree
+	if t.prevState != nil {
+		t.merkleTrees = t.prevState.merkleTrees
+		t.rootTree = t.prevState.rootTree
 		return nil
 	}
 	t.logger.Err(ErrFailedRollback)
 	return ErrFailedRollback
 }
 
-// save commits any pending changes to the trees and creates a copy of the current state of the
-// tree store then saves that copy as a rollback point for later use if errors are encountered.
+// save commits any pending changes to the trees and creates a copy of the current worldState,
+// then saves that copy as a rollback point for later use if errors are encountered.
 // OPTIMIZE: Consider saving only the root hash of each tree and the tree directory here and then
 // load the trees up in Rollback instead of setting them up here.
-func (t *treeStore) save() (*worldstate, error) {
+func (t *treeStore) save() (*worldState, error) {
 	if err := t.Commit(); err != nil {
 		return nil, err
 	}
 
-	w := &worldstate{
-		TreeStoreDir: t.treeStoreDir,
-		MerkleTrees:  map[string]*stateTree{},
+	w := &worldState{
+		treeStoreDir: t.treeStoreDir,
+		merkleTrees:  map[string]*stateTree{},
 	}
 
 	for treeName := range t.merkleTrees {
 		root, nodeStore := t.GetTree(treeName)
 		tree := smt.ImportSparseMerkleTree(nodeStore, smtTreeHasher, root)
-		w.MerkleTrees[treeName] = &stateTree{
+		w.merkleTrees[treeName] = &stateTree{
 			name:      treeName,
 			tree:      tree,
 			nodeStore: nodeStore,
@@ -352,7 +352,7 @@ func (t *treeStore) save() (*worldstate, error) {
 
 	root, nodeStore := t.GetTree(RootTreeName)
 	tree := smt.ImportSparseMerkleTree(nodeStore, smtTreeHasher, root)
-	w.RootTree = &stateTree{
+	w.rootTree = &stateTree{
 		name:      RootTreeName,
 		tree:      tree,
 		nodeStore: nodeStore,

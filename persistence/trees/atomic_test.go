@@ -60,10 +60,10 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 
 	// set a new savepoint
 	require.NoError(t, ts.Savepoint())
-	require.NotEmpty(t, ts.PrevState.MerkleTrees)
-	require.NotEmpty(t, ts.PrevState.RootTree)
+	require.NotEmpty(t, ts.prevState.merkleTrees)
+	require.NotEmpty(t, ts.prevState.rootTree)
 	// assert that savepoint creation doesn't mutate state hash
-	require.Equal(t, hash1, hex.EncodeToString(ts.PrevState.RootTree.tree.Root()))
+	require.Equal(t, hash1, hex.EncodeToString(ts.prevState.rootTree.tree.Root()))
 
 	// verify that creating a savepoint does not change state hash
 	hash2 := ts.getStateHash()
@@ -73,7 +73,7 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 	// validate that state tree was updated and a previous savepoint is created
 	for _, treeName := range stateTreeNames {
 		require.NotEmpty(t, ts.merkleTrees[treeName])
-		require.NotEmpty(t, ts.PrevState.MerkleTrees[treeName])
+		require.NotEmpty(t, ts.prevState.merkleTrees[treeName])
 	}
 
 	// insert additional test data into all of the trees
