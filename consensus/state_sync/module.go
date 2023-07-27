@@ -27,11 +27,11 @@ type StateSyncModule interface {
 	modules.Module
 	StateSyncServerModule
 
-	HandleBlockCommittedEvent(*messaging.ConsensusNewHeightEvent) error
-	HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error
+	HandleBlockCommittedEvent(*messaging.ConsensusNewHeightEvent)
+	HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse)
 
 	// TECHDEBT: This function can be removed once the dependency of state sync on the FSM module is removed.
-	StartSynchronousStateSync() error
+	StartSynchronousStateSync()
 }
 
 var (
@@ -79,18 +79,20 @@ func (m *stateSync) Start() error {
 // 2. Requests missing blocks until the maximum seen block is retrieved
 // 3. Perform (2) one-by-one, applying and validating each block while doing so
 // 4. Once all blocks are received and committed, stop the synchronous state sync process
-func (m *stateSync) StartSynchronousStateSync() error {
+func (m *stateSync) StartSynchronousStateSync() {
 	consensusMod := m.bus.GetConsensusModule()
 	currentHeight := consensusMod.CurrentHeight()
 	nodeAddress := consensusMod.GetNodeAddress()
 	nodeAddressBz, err := hex.DecodeString(nodeAddress)
 	if err != nil {
-		return err
+		m.logger.Error().Err(err).Msg("Failed to decode node address")
+		return
 	}
 
 	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
 	if err != nil {
-		return err
+		m.logger.Error().Err(err).Msg("Failed to create read context")
+		return
 	}
 	defer readCtx.Release()
 
@@ -115,12 +117,14 @@ func (m *stateSync) StartSynchronousStateSync() error {
 		}
 		anyProtoStateSyncMsg, err := anypb.New(stateSyncGetBlockMsg)
 		if err != nil {
-			return err
+			m.logger.Error().Err(err).Msg("Failed to create Any proto")
+			return
 		}
 
 		// Broadcast the block request
 		if err := m.GetBus().GetP2PModule().Broadcast(anyProtoStateSyncMsg); err != nil {
-			return err
+			m.logger.Error().Err(err).Msg("Failed to broadcast state sync message")
+			return
 		}
 
 		// Wait for the consensus module to commit the requested block and re-try on timeout
@@ -138,27 +142,30 @@ func (m *stateSync) StartSynchronousStateSync() error {
 	// Checked if the synched node is a validator or not
 	isValidator, err := readCtx.GetValidatorExists(nodeAddressBz, int64(currentHeight))
 	if err != nil {
-		return err
+		m.logger.Error().Err(err).Msg("Failed to check if validator exists")
+		return
 	}
 
 	// Send out the appropriate FSM event now that the node is caught up
 	if isValidator {
-		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
+		err = m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
+	} else {
+		err = m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator)
 	}
-	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator)
+	if err != nil {
+		m.logger.Error().Err(err).Msg("Failed to send state machine event")
+		return
+	}
 }
 
-func (m *stateSync) HandleStateSyncMetadataResponse(res *typesCons.StateSyncMetadataResponse) error {
+func (m *stateSync) HandleStateSyncMetadataResponse(res *typesCons.StateSyncMetadataResponse) {
 	m.logger.Info().Msg("Handling state sync metadata response")
-
 	m.metadataReceived <- res
-	return nil
 }
 
-func (m *stateSync) HandleBlockCommittedEvent(msg *messaging.ConsensusNewHeightEvent) error {
+func (m *stateSync) HandleBlockCommittedEvent(msg *messaging.ConsensusNewHeightEvent) {
 	m.logger.Info().Msg("Handling state sync block committed event")
 	m.committedBlocksChannel <- msg.Height
-	return nil
 }
 
 func (m *stateSync) Stop() error {
@@ -197,23 +204,21 @@ func (m *stateSync) GetModuleName() string {
 // metadataSyncLoop periodically sends metadata requests to its peers to collect &
 // aggregate metadata related to synching the state.
 // It is intended to be run as a background process via a goroutine.
-func (m *stateSync) metadataSyncLoop() error {
-	logger := m.logger.With().Str("source", "metadataSyncLoop").Logger()
+func (m *stateSync) metadataSyncLoop() {
+	metaSyncLoopLogger := m.logger.With().Str("source", "metadataSyncLoop").Logger()
 	ctx := context.TODO()
 
 	ticker := time.NewTicker(metadataSyncPeriod)
 	for {
 		select {
 		case <-ticker.C:
-			logger.Info().Msg("Background metadata sync check triggered")
+			metaSyncLoopLogger.Info().Msg("Background metadata sync check triggered")
 			if err := m.broadcastMetadataRequests(); err != nil {
-				logger.Error().Err(err).Msg("Failed to send metadata requests")
-				return err
+				metaSyncLoopLogger.Error().Err(err).Msg("Failed to send metadata requests")
 			}
 
 		case <-ctx.Done():
 			ticker.Stop()
-			return nil
 		}
 	}
 }

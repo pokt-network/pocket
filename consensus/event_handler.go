@@ -42,8 +42,8 @@ func (m *consensusModule) HandleEvent(event *anypb.Any) error {
 		if !ok {
 			return fmt.Errorf("failed to cast event to ConsensusNewHeightEvent")
 		}
-		return m.stateSync.HandleBlockCommittedEvent(blockCommittedEvent)
-
+		m.stateSync.HandleBlockCommittedEvent(blockCommittedEvent)
+		return nil
 	default:
 		return typesCons.ErrUnknownStateSyncMessageType(event.MessageName())
 	}

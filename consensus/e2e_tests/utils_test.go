@@ -32,7 +32,6 @@ import (
 	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/pokt-network/pocket/state_machine"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -55,6 +54,7 @@ type idToPrivKeyMapping map[typesCons.NodeId]cryptoPocket.PrivateKey
 
 /*** Node Generation Helpers ***/
 
+//nolint:unparam // validatorCount will be varied in the future
 func generateNodeRuntimeMgrs(t *testing.T, validatorCount int, clockMgr clock.Clock) []*runtime.Manager {
 	t.Helper()
 
@@ -126,18 +126,17 @@ func createTestConsensusPocketNode(
 	consensusModule, ok := consensusMod.(modules.ConsensusModule)
 	require.True(t, ok)
 
-	// _, err = state_machine.Create(bus, state_machine.WithDebugEventsChannel(sharedNetworkChannel))
 	_, err = state_machine.Create(bus)
 	require.NoError(t, err)
 
 	runtimeMgr := (bus).GetRuntimeMgr()
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
-	p2pMock := baseP2PMock(t, eventsChannel)
-	utilityMock := baseUtilityMock(t, eventsChannel, runtimeMgr.GetGenesis(), consensusModule)
-	telemetryMock := baseTelemetryMock(t, eventsChannel)
-	loggerMock := baseLoggerMock(t, eventsChannel)
-	rpcMock := baseRpcMock(t, eventsChannel)
+	p2pMock := baseP2PMock(t, sharedNetworkChannel)
+	utilityMock := baseUtilityMock(t, sharedNetworkChannel, runtimeMgr.GetGenesis(), consensusModule)
+	telemetryMock := baseTelemetryMock(t, sharedNetworkChannel)
+	loggerMock := baseLoggerMock(t, sharedNetworkChannel)
+	rpcMock := baseRpcMock(t, sharedNetworkChannel)
 	ibcMock, hostMock := ibcUtils.IBCMockWithHost(t, bus)
 	bus.RegisterModule(hostMock)
 
@@ -193,10 +192,6 @@ func startAllTestPocketNodes(t *testing.T, pocketNodes idToNodeMapping) error {
 // HACK: Look for ways to avoid using reflections in the testing package. It was a quick & dirty way to keep going.
 func getConsensusNodeState(node *shared.Node) typesCons.ConsensusNodeState {
 	return getConsensusModImpl(node).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(typesCons.ConsensusNodeState)
-}
-
-func getConsensusModElem(node *shared.Node) reflect.Value {
-	return reflect.ValueOf(node.GetBus().GetConsensusModule()).Elem()
 }
 
 func getConsensusModImpl(node *shared.Node) reflect.Value {
@@ -270,6 +265,8 @@ func waitForNetworkConsensusEvents(
 
 // IMPROVE: Consider unifying this function with WaitForNetworkConsensusEvents
 // This is a helper for 'waitForEventsInternal' that creates the `includeFilter` function based on state sync message specific parameters.
+//
+//nolint:unparam // failOnExtraMessages will be varied in the future
 func waitForNetworkStateSyncEvents(
 	t *testing.T,
 	clck *clock.Mock,
@@ -735,46 +732,6 @@ func triggerNextView(t *testing.T, pocketNodes idToNodeMapping) {
 	for _, node := range pocketNodes {
 		triggerDebugMessage(t, node, messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW)
 	}
-	return nil
-}
-
-// TODO(#352): implement this function.
-// waitForNodeToRequestMissingBlock waits for unsynced node to request missing block form the network
-func waitForNodeToRequestMissingBlock(
-	t *testing.T,
-	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
-	allNodes IdToNodeMapping,
-	startingHeight uint64,
-	targetHeight uint64,
-) (*anypb.Any, error) {
-	return &anypb.Any{}, nil
-}
-
-// TODO(#352): implement this function.
-// waitForNodeToReceiveMissingBlock requests block request of the unsynced node
-// for given node to node to catch up to the target height by sending the requested block.
-func waitForNodeToReceiveMissingBlock(
-	t *testing.T,
-	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
-	allNodes IdToNodeMapping,
-	blockReq *anypb.Any,
-) (*anypb.Any, error) {
-	return &anypb.Any{}, nil
-}
-
-// TODO(#352): implement this function.
-// waitForNodeToCatchUp waits for given node to node to catch up to the target height by sending the requested block.
-func waitForNodeToCatchUp(
-	t *testing.T,
-	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
-	unsyncedNode *shared.Node,
-	blockResponse *anypb.Any,
-	targetHeight uint64,
-) error {
-	return nil
 }
 
 func generatePlaceholderBlock(height uint64, leaderAddrr cryptoPocket.Address) *coreTypes.Block {
@@ -872,8 +829,8 @@ func generateQuorumCertificate(t *testing.T, validatorPrivKeys idToPrivKeyMappin
 
 	return &typesCons.QuorumCertificate{
 		Height:             block.BlockHeader.Height,
-		Round:              1,                  // assume everything succeeds on the first round for now
-		Step:               consensus.NewRound, // TODO_IN_THIS_COMMIT: Figure out if this shold be Prepare/NewRound or something else
+		Round:              1, // assume everything succeeds on the first round for now
+		Step:               consensus.NewRound,
 		Block:              block,
 		ThresholdSignature: thresholdSig,
 	}
@@ -971,22 +928,6 @@ func assertRound(t *testing.T, nodeId typesCons.NodeId, expected, actual uint8) 
 func startNode(t *testing.T, pocketNode *shared.Node) {
 	err := pocketNode.Start()
 	require.NoError(t, err)
-}
-
-// checkIdentical verifies that all items in the array are equal.
-// Returns true if all items are equal or array is empty, false otherwise.
-func checkIdentical(arr []*anypb.Any) bool {
-	if len(arr) == 0 {
-		return true
-	}
-
-	first := arr[0]
-	for _, msg := range arr {
-		if !proto.Equal(first, msg) {
-			return false
-		}
-	}
-	return true
 }
 
 func prepareStateSyncGetBlockMessage(t *testing.T, peerAddress string, height uint64) *anypb.Any {

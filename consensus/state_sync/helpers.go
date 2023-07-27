@@ -2,7 +2,6 @@ package state_sync
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -18,22 +17,12 @@ func (m *stateSync) sendStateSyncMessage(msg *typesCons.StateSyncMessage, dst cr
 	return nil
 }
 
-func (m *stateSync) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
-	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
-	if err != nil {
-		return nil, err
-	}
-	defer readCtx.Release()
-	return readCtx.GetAllValidators(int64(height))
-}
-
 // TECHDEBT(#686): This should be an ongoing background passive state sync process.
 // For now, aggregating the messages when requests is good enough.
-func (m *stateSync) getAggregatedStateSyncMetadata() (uint64, uint64) {
+func (m *stateSync) getAggregatedStateSyncMetadata() (minHeight, maxHeight uint64) {
 	chanLen := len(m.metadataReceived)
 	m.logger.Info().Msgf("Looping over %d state sync metadata responses", chanLen)
 
-	minHeight, maxHeight := uint64(1), uint64(1)
 	for i := 0; i < chanLen; i++ {
 		metadata := <-m.metadataReceived
 		if metadata.MaxHeight > maxHeight {
@@ -43,6 +32,5 @@ func (m *stateSync) getAggregatedStateSyncMetadata() (uint64, uint64) {
 			minHeight = metadata.MinHeight
 		}
 	}
-
-	return minHeight, maxHeight
+	return
 }
