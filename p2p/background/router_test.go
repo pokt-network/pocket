@@ -322,8 +322,8 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 							t.Fatal(err)
 						}
 					}
+					// ignore negative WaitGroup counter error
 					if er != nil && er.Error() == "sync: negative WaitGroup counter" {
-						// ignore negative WaitGroup counter error
 						return
 					} else if strErr == "sync: negative WaitGroup counter" {
 						return
