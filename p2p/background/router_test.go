@@ -311,21 +311,9 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 			// This test should be redesigned using atomic counters or
 			// something similar to avoid this issue.
 			defer func() {
-				if err := recover(); err != nil {
-					var ok bool
-					var er error
-					var strErr string
-					er, ok = err.(error)
-					if !ok {
-						strErr, ok = err.(string)
-						if !ok {
-							t.Fatal(err)
-						}
-					}
+				if rcv := recover(); err != nil {
 					// ignore negative WaitGroup counter error
-					if er != nil && er.Error() == "sync: negative WaitGroup counter" {
-						return
-					} else if strErr == "sync: negative WaitGroup counter" {
+					if msg, ok := rcv.(string); ok && msg == "sync: negative WaitGroup counter" {
 						return
 					}
 					// fail the test for anything else; converting the panic into
