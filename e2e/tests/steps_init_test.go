@@ -33,6 +33,8 @@ const (
 	validatorB = "002"
 	chainId    = "0001"
 
+	// 001 servicer is in session 0 for applicatio 000
+	//	The list of servicers in the session is decided by the 'servicers' section of the genesis, from 'build/localnet/manifest/configs.yaml' file
 	servicerA = "001"
 	appA      = "000"
 	serviceA  = "0001"
@@ -85,22 +87,33 @@ func (s *rootSuite) Before() {
 		e2eLogger.Fatal().Err(err).Msg("failed to get validator key map")
 	}
 
+	skmap, err := pocketk8s.FetchServicerPrivateKeys(clientSet)
+	if err != nil {
+		e2eLogger.Fatal().Err(err).Msg("failed to get validator key map")
+	}
+
+	akmap, err := pocketk8s.FetchApplicationPrivateKeys(clientSet)
+	if err != nil {
+		e2eLogger.Fatal().Err(err).Msg("failed to get validator key map")
+	}
+	
 	s.validator = new(validatorPod)
 	s.clientset = clientSet
 	s.validatorKeys = vkmap
+	s.servicerKeys = skmap
+	s.appKeys = akmap
 
-	// ADD_IN_THIS_PR: use pocketk8s to populate
+	/*
 	s.servicerKeys = map[string]string{
 		// 000 servicer NOT in session
-		//	The list of servicers in the session is decided by the 'servicers' section of the genesis, from 'build/localnet/manifest/configs.yaml' file
 		"000": "acbca21f295caefdfe480ceba85f3fed31a50915162f94867f9c23d8f474f4c6d1130c5eb920af8edd5b6bfa39d33aa787f421c8ba0786de4ca4e7703553bb97",
-		// 001 servicer in session
 		"001": "eec4072b095acf60be9d6be4093b14a24e2ddb6e9d385d980a635815961d025856915c1270bc8d9280a633e0be51647f62388a851318381614877ef2ed84a495",
 	}
 
 	s.appKeys = map[string]string{
 		"000": "468cc03083d72f2440d3d08d12143b9b74cca9460690becaa2499a4f04fddaa805a25e527bf6f51676f61f2f1a96efaa748218ac82f54d3cdc55a4881389eb60",
 	}
+	*/
 
 	s.relaychains = map[string]*relaychainSettings{
 		relaychainEth: {},

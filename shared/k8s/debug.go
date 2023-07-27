@@ -77,8 +77,6 @@ func fetchPrivateKeys(clientset *kubernetes.Clientset, resourceName string) (map
 	return privateKeysMap, nil
 }
 
-// ADD_IN_THIS_PR: add the following functions in a separate PR: FetchServicerPrivateKeys and FetchAppPrivateKeys
-
 func getNamespace() (string, error) {
 	_, err := os.Stat(kubernetesServiceAccountNamespaceFile)
 	if err == nil {
