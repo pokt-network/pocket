@@ -232,6 +232,9 @@ Add the following to VSCode `launch.json` configuration
 
 Then you have just to set your breakpoints and start the debugging session (no need to rebuild or restart the binary).
 
+[Watch demo](https://github.com/pokt-network/pocket/assets/231488/3525161f-2098-488a-8f36-8747e40320a6)
+
+
 ## Troubleshooting
 
 ### Why?
