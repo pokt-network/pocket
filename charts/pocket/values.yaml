@@ -117,6 +117,11 @@ config:
     enabled: false
   fisherman:
     enabled: false
+  ibc:
+    enabled: true
+    stores_dir: "/pocket/data/ibc"
+    host:
+      private_key: "" # @ignored This value is needed but ignored - use privateKeySecretKeyRef instead
 
 genesis:
   preProvisionedGenesis:
