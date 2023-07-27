@@ -27,6 +27,8 @@ And implement the basic transaction functionality:
 - Pause
 - Unpause
 
+And implement [the trustless relay validation and execution](TRUSTLESS_RELAY_VALIDATION.md)
+
 Added governance params:
 
 - BlocksPerSessionParamName
