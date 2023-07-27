@@ -1,11 +1,11 @@
 package persistence
 
 import (
+	"bytes"
 	"encoding/hex"
-	"errors"
 	"fmt"
 
-	"github.com/dgraph-io/badger/v3"
+	"github.com/pokt-network/pocket/persistence/trees"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -13,21 +13,17 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (p *persistenceModule) TransactionExists(transactionHash string) (bool, error) {
-	hash, err := hex.DecodeString(transactionHash)
+func (p *persistenceModule) TransactionExists(txHash, txProtoBz []byte) (bool, error) {
+	exists, err := p.GetBus().GetTreeStore().Prove(trees.TransactionsTreeName, txHash, txProtoBz)
 	if err != nil {
 		return false, err
 	}
-	res, err := p.txIndexer.GetByHash(hash)
-	if res == nil {
-		// check for not found
-		if err != nil && errors.Is(err, badger.ErrKeyNotFound) {
-			return false, nil
-		}
-		return false, err
+	// exclusion proof verification
+	if bytes.Equal(txProtoBz, nil) && exists {
+		return false, nil
 	}
-
-	return true, nil
+	// inclusion proof verification
+	return exists, nil
 }
 
 func (p *PostgresContext) GetMinimumBlockHeight() (latestHeight uint64, err error) {

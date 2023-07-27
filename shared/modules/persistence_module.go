@@ -33,7 +33,9 @@ type PersistenceModule interface {
 
 	// Indexer operations
 	GetTxIndexer() indexer.TxIndexer
-	TransactionExists(transactionHash string) (bool, error)
+
+	// TreeStore operations
+	TransactionExists(txHash, txProtoBz []byte) (bool, error)
 
 	// Debugging / development only
 	HandleDebugMessage(*messaging.DebugMessage) error
