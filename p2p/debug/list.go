@@ -34,14 +34,14 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 		// if !isStaked ...
 		pstore, err := pstoreProvider.GetStakedPeerstoreAtCurrentHeight()
 		if err != nil {
-			return fmt.Errorf("getting unstaked peerstore: %v", err)
+			return fmt.Errorf("error getting staked peerstore: %v", err)
 		}
 
 		peers = pstore.GetPeerList()
 	case UnstakedRouterType:
 		pstore, err := pstoreProvider.GetUnstakedPeerstore()
 		if err != nil {
-			return fmt.Errorf("getting unstaked peerstore: %v", err)
+			return fmt.Errorf("error getting unstaked peerstore: %v", err)
 		}
 
 		peers = pstore.GetPeerList()
@@ -52,11 +52,11 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 		// if !isStaked ...
 		stakedPStore, err := pstoreProvider.GetStakedPeerstoreAtCurrentHeight()
 		if err != nil {
-			return fmt.Errorf("getting unstaked peerstore: %v", err)
+			return fmt.Errorf("error getting staked peerstore: %v", err)
 		}
 		unstakedPStore, err := pstoreProvider.GetUnstakedPeerstore()
 		if err != nil {
-			return fmt.Errorf("getting unstaked peerstore: %v", err)
+			return fmt.Errorf("error getting unstaked peerstore: %v", err)
 		}
 
 		unstakedPeers := unstakedPStore.GetPeerList()
@@ -113,7 +113,7 @@ func peerListRowConsumerFactory(peers types.PeerList) utils.RowConsumer {
 		for _, peer := range peers {
 			libp2pAddrInfo, err := utils.Libp2pAddrInfoFromPeer(peer)
 			if err != nil {
-				return fmt.Errorf("converting peer to libp2p addr info: %w", err)
+				return fmt.Errorf("error converting peer to libp2p addr info: %w", err)
 			}
 
 			err = provideRow(
