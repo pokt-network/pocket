@@ -185,12 +185,10 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	case messaging.ConsensusNewHeightEventType:
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
 		err_ibc := node.GetBus().GetIBCModule().HandleEvent(message.Content)
-		// TODO: Remove this lib once we move to Go 1.2
 		return errors.Join(err_p2p, err_ibc)
 	case messaging.StateMachineTransitionEventType:
 		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
-		// TODO: Remove this lib once we move to Go 1.2
 		return errors.Join(err_consensus, err_p2p)
 	default:
 		logger.Global.Warn().Msgf("Unsupported message content type: %s", contentType)
