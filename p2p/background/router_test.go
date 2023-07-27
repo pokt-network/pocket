@@ -312,8 +312,20 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 			// something similar to avoid this issue.
 			defer func() {
 				if err := recover(); err != nil {
-					if err.(error).Error() == "sync: negative WaitGroup counter" {
+					var ok bool
+					var er error
+					var strErr string
+					er, ok = err.(error)
+					if !ok {
+						strErr, ok = err.(string)
+						if !ok {
+							t.Fatal(err)
+						}
+					}
+					if er != nil && er.Error() == "sync: negative WaitGroup counter" {
 						// ignore negative WaitGroup counter error
+						return
+					} else if strErr == "sync: negative WaitGroup counter" {
 						return
 					}
 					// fail the test for anything else; converting the panic into
