@@ -102,15 +102,24 @@ local_resource(
 docker_build_with_restart(
     "pocket-image",
     root_dir,
-    dockerfile_contents="""FROM debian:bullseye
+    dockerfile_contents="""FROM golang:1.20-bullseye
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
 COPY bin/pocket-linux /usr/local/bin/pocket
 WORKDIR /
 """,
     only=["./bin/pocket-linux"],
     entrypoint=[
+        "dlv",
+        "exec",
         "/usr/local/bin/pocket",
-        "-config=/pocket/configs/config.json",
-        "-genesis=/pocket/configs/genesis.json",
+        "--headless",
+        "--listen=:7081",
+        "--api-version=2",
+        "--accept-multiclient",
+        "--continue",
+        "--",
+        "--config=/pocket/configs/config.json",
+        "--genesis=/pocket/configs/genesis.json",
     ],
     live_update=[sync("bin/pocket-linux", "/usr/local/bin/pocket")],
 )

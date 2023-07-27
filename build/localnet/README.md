@@ -206,6 +206,32 @@ The k8s manifests that `tilt` submits to the cluster can be found in [this direc
 
 Tilt continuously monitors files on local filesystem in [specific directories](Tiltfile#L27), and it rebuilds the binary and distributes it to the pods on every code change. This allows developers to iterate on the code and see the changes immediately (i.e. hot-reloading).
 
+## Connect to a pod debugging server
+
+LocalNet pocket nodes have a dlv debugging server opened on port 7081. In order to connect a debugging client (VSCode, GoLand) and be able to set breakpoints, we need to setup a tunnel with the pod we want to debug.
+
+```
+kubectl port-forward validator-001-pocket-0 7081:7081
+```
+
+### Configure VSCode debugger
+
+Add the following to VSCode `launch.json` configuration
+
+```
+{
+  "name": "Debug Pocket Node",
+  "type": "go",
+  "request": "attach",
+  "mode": "remote",
+  "remotePath": "${workspaceFolder}",
+  "port": 7081,
+  "host": "localhost"
+}
+```
+
+Then you have just to set your breakpoints and start the debugging session (no need to rebuild or restart the binary).
+
 ## Troubleshooting
 
 ### Why?
