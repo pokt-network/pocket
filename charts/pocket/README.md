@@ -63,11 +63,15 @@ privateKeySecretKeyRef:
 | config.persistence.trees_store_dir | string | `"/pocket/data/trees"` |  |
 | config.persistence.tx_indexer_path | string | `"/pocket/data/tx-indexer"` |  |
 | config.private_key | string | `""` |  |
+| config.ibc.enabled | bool | `true` | |
+| config.ibc.stores_dir | string | `"/pocket/data/ibc"` | |
+| config.ibc.host.private_key | string | `""` | |
 | config.root_directory | string | `"/go/src/github.com/pocket-network"` |  |
 | config.rpc.enabled | bool | `true` |  |
 | config.rpc.port | string | `"50832"` |  |
 | config.rpc.timeout | int | `30000` |  |
 | config.rpc.use_cors | bool | `false` |  |
+| config.validator.enabled | bool | `true` | |
 | config.servicer.enabled | bool | `false` |  |
 | config.telemetry.address | string | `"0.0.0.0:9000"` |  |
 | config.telemetry.enabled | bool | `true` |  |
