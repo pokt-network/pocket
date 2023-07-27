@@ -1,6 +1,10 @@
 package cli
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+)
 
 func init() {
 	nodeCmd := NewNodeCommand()
@@ -14,5 +18,20 @@ func NewNodeCommand() *cobra.Command {
 		Aliases: []string{"node", "n"},
 	}
 
+	cmd.AddCommand(nodeSaveCommands()...)
+
 	return cmd
+}
+
+func nodeSaveCommands() []*cobra.Command {
+	cmds := []*cobra.Command{
+		{
+			Use: "Save",
+			RunE: func(cmd *cobra.Command, args []string) error {
+				return fmt.Errorf("not impl")
+			},
+			Short: "save a backup of world state",
+		},
+	}
+	return cmds
 }
