@@ -57,12 +57,12 @@ func listRunE(cmd *cobra.Command, _ []string) error {
 	}
 	debugMsgAny, err := anypb.New(debugMsg)
 	if err != nil {
-		return fmt.Errorf("creating anypb from debug message: %w", err)
+		return fmt.Errorf("error creating anypb from debug message: %w", err)
 	}
 
 	if localFlag {
 		if err := debug.PrintPeerList(bus, routerType); err != nil {
-			return fmt.Errorf("printing peer list: %w", err)
+			return fmt.Errorf("error printing peer list: %w", err)
 		}
 		return nil
 	}
@@ -85,16 +85,16 @@ func sendToStakedPeers(cmd *cobra.Command, debugMsgAny *anypb.Any) error {
 
 	pstore, err := helpers.FetchPeerstore(cmd)
 	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Unable to retrieve the pstore")
+		logger.Global.Fatal().Err(err).Msg("unable to retrieve the pstore")
 	}
 
 	if pstore.Size() == 0 {
-		logger.Global.Fatal().Msg("No validators found")
+		logger.Global.Fatal().Msg("no validators found")
 	}
 
 	for _, peer := range pstore.GetPeerList() {
 		if err := bus.GetP2PModule().Send(peer.GetAddress(), debugMsgAny); err != nil {
-			logger.Global.Error().Err(err).Msg("Failed to send debug message")
+			logger.Global.Error().Err(err).Msg("failed to send debug message")
 		}
 	}
 	return nil
