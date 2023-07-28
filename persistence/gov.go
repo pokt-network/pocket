@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -188,4 +189,8 @@ func (p *PostgresContext) getLatestParamsOrFlagsQuery(tableName string) string {
 	}
 	// Return a query to select all params or queries but only the most recent update for each
 	return fmt.Sprintf("SELECT DISTINCT ON (name) %s FROM %s ORDER BY name ASC,%s.height DESC", fields, tableName, tableName)
+}
+
+func (p *PostgresContext) SetUpgrade(version string, height int64) error {
+	return errors.New("not implemented")
 }

@@ -31,6 +31,8 @@ func (u *baseUtilityUnitOfWork) handleMessage(msg typesUtil.Message) (err coreTy
 		return u.handleUpdateIBCStore(x)
 	case *ibcTypes.PruneIBCStore:
 		return u.handlePruneIBCStore(x)
+	case *typesUtil.MessageUpgrade:
+		return u.handleMessageUpgrade(x)
 	default:
 		return coreTypes.ErrUnknownMessage(x)
 	}
@@ -235,6 +237,14 @@ func (u *baseUtilityUnitOfWork) handleUpdateIBCStore(message *ibcTypes.UpdateIBC
 func (u *baseUtilityUnitOfWork) handlePruneIBCStore(message *ibcTypes.PruneIBCStore) coreTypes.Error {
 	if err := u.persistenceRWContext.SetIBCStoreEntry(message.Key, nil); err != nil {
 		return coreTypes.ErrIBCUpdatingStore(err)
+	}
+	return nil
+}
+
+func (u *baseUtilityUnitOfWork) handleMessageUpgrade(message *typesUtil.MessageUpgrade) coreTypes.Error {
+	u.logger.Info().Str("version", message.Version).Int64("height", message.Height).Msg("setting upgrade")
+	if err := u.persistenceRWContext.SetUpgrade(message.Version, message.Height); err != nil {
+		return coreTypes.ErrSettingUpgrade(err)
 	}
 	return nil
 }

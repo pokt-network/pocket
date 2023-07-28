@@ -48,7 +48,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 150
+// NextCode: 151
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -199,6 +199,7 @@ const (
 	CodeIBCStoreDoesNotExistError         Code = 147
 	CodeIBCKeyDoesNotExistError           Code = 148
 	CodeInvalidProtocolVersionError       Code = 149
+	CodeSettingUpgradeError               Code = 150
 )
 
 const (
@@ -346,6 +347,7 @@ const (
 	IBCStoreDoesNotExistError         = "ibc store does not exist in the store manager"
 	IBCKeyDoesNotExistError           = "key does not exist in the ibc store"
 	InvalidProtocolVersionError       = "the protocol version is invalid"
+	SettingUpgradeError               = "an error occurred setting the upgrade"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -927,4 +929,8 @@ func ErrIBCKeyDoesNotExist(key string) Error {
 
 func ErrInvalidProtocolVersion(version string) Error {
 	return NewError(CodeInvalidProtocolVersionError, fmt.Sprintf("%s: %s", InvalidProtocolVersionError, version))
+}
+
+func ErrSettingUpgrade(err error) Error {
+	return NewError(CodeSettingUpgradeError, fmt.Sprintf("%s: %s", SettingUpgradeError, err.Error()))
 }

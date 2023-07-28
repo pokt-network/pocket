@@ -40,7 +40,7 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	return nil
+	return ctx.String(http.StatusOK, coreTypes.TxHash(txBz))
 }
 
 func (s *rpcServer) PostV1ClientGetSession(ctx echo.Context) error {
