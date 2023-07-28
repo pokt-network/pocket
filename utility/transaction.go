@@ -7,19 +7,21 @@ import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 // HandleTransaction implements the exposed functionality of the shared utilityModule interface.
 func (u *utilityModule) HandleTransaction(txProtoBytes []byte) error {
-	txHash := coreTypes.TxHash(txProtoBytes)
+	txHash := crypto.SHA3Hash(txProtoBytes)
 
 	// Is the tx already in the mempool (in memory)?
-	if u.mempool.Contains(txHash) {
+	if u.mempool.Contains(hex.EncodeToString(txHash)) {
 		return coreTypes.ErrDuplicateTransaction()
 	}
 
 	// Is the tx already committed & indexed (on disk)?
-	if txExists, err := u.GetBus().GetPersistenceModule().TransactionExists(txHash); err != nil {
+	txExists, err := u.GetBus().GetPersistenceModule().TransactionExists(txHash, txProtoBytes)
+	if err != nil {
 		return err
 	} else if txExists {
 		return coreTypes.ErrTransactionAlreadyCommitted()

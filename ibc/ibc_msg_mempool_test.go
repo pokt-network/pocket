@@ -250,10 +250,39 @@ func TestHandleMessage_ErrorAlreadyInMempool(t *testing.T) {
 func TestHandleMessage_ErrorAlreadyCommitted(t *testing.T) {
 	// Prepare the environment
 	_, _, utilityMod, persistenceMod, _ := prepareEnvironment(t, 0, 0, 0, 0)
-	idxTx := prepareIndexedMessage(t, persistenceMod.GetTxIndexer())
+
+	privKey, err := crypto.GeneratePrivateKey()
+	require.NoError(t, err)
+	_, validPruneTx := preparePruneMessage(t, []byte("key"))
+	require.NoError(t, err)
+	err = validPruneTx.Sign(privKey)
+	require.NoError(t, err)
+	txProtoBytes, err := codec.GetCodec().Marshal(validPruneTx)
+	require.NoError(t, err)
+
+	idxTx := &coreTypes.IndexedTransaction{
+		Tx:            txProtoBytes,
+		Height:        0,
+		Index:         0,
+		ResultCode:    0,
+		Error:         "h5law",
+		SignerAddr:    "h5law",
+		RecipientAddr: "h5law",
+		MessageType:   "h5law",
+	}
+
+	// Index a test transaction
+	err = persistenceMod.GetTxIndexer().Index(idxTx)
+	require.NoError(t, err)
+
+	rwCtx, err := persistenceMod.NewRWContext(0)
+	require.NoError(t, err)
+	_, err = rwCtx.ComputeStateHash()
+	require.NoError(t, err)
+	rwCtx.Release()
 
 	// Error on having an indexed transaction
-	err := utilityMod.HandleTransaction(idxTx.Tx)
+	err = utilityMod.HandleTransaction(idxTx.Tx)
 	require.Error(t, err)
 	require.EqualError(t, err, coreTypes.ErrTransactionAlreadyCommitted().Error())
 }

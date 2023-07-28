@@ -44,6 +44,9 @@ privateKeySecretKeyRef:
 | config.consensus.pacemaker_config.timeout_msec | int | `10000` |  |
 | config.consensus.private_key | string | `""` |  |
 | config.fisherman.enabled | bool | `false` |  |
+| config.ibc.enabled | bool | `true` |  |
+| config.ibc.host.private_key | string | `""` |  |
+| config.ibc.stores_dir | string | `"/pocket/data/ibc"` |  |
 | config.logger.format | string | `"json"` |  |
 | config.logger.level | string | `"debug"` |  |
 | config.p2p.hostname | string | `""` |  |
@@ -74,6 +77,7 @@ privateKeySecretKeyRef:
 | config.telemetry.endpoint | string | `"/metrics"` |  |
 | config.utility.max_mempool_transaction_bytes | int | `1073741824` |  |
 | config.utility.max_mempool_transactions | int | `9000` |  |
+| config.validator.enabled | bool | `true` |  |
 | externalPostgresql.database | string | `""` | name of the external database |
 | externalPostgresql.enabled | bool | `false` | use external postgres database |
 | externalPostgresql.host | string | `""` | host of the external database |

@@ -113,10 +113,17 @@ config:
     port: "50832"
     timeout: 30000
     use_cors: false
+  validator:
+    enabled: true
   servicer:
     enabled: false
   fisherman:
     enabled: false
+  ibc:
+    enabled: true
+    stores_dir: "/pocket/data/ibc"
+    host:
+      private_key: "" # @ignored This value is needed but ignored - use privateKeySecretKeyRef instead
 
 genesis:
   preProvisionedGenesis:
