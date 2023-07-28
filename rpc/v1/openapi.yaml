@@ -953,39 +953,35 @@ paths:
                   - "servicer"
   /v1/node/backup:
     post:
-      summary: Create a backup of all node databases
-      description: Create a backup at the specified location
+      tags:
+        - node
+      summary: Creates a backup of all node databases in the specified directory
       requestBody:
-        required: true
+        description: Request backup creation in the specified dir 
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
+              $ref: "#/components/schemas/NodeBackup"
+            example:
+              dir: /path/to/backup/dir/
+        required: true
       responses:
-        '200':
-          description: OK
+        "200":
+          description: Returns account data at the specified height
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  location:
-                    type: string
-                    description: The location of the saved file
-        '400':
-          description: Bad Request
+                $ref: "#/components/schemas/Account"
+        "400":
+          description: Bad request
           content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Description of the error
+            text/plain:
+              example: "TODO"
+        "500":
+          description: An error occurred while retrieving the account data at the specified height
+          content:
+            text/plain:
+              example: "TODO"
 
 
 externalDocs:
@@ -1911,7 +1907,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PartialSignature"
-
+    NodeBackup: 
+      type: object
+      properties:
+        dir:
+          type: string
+        
   securitySchemes: {}
   links: {}
   callbacks: {}

@@ -3,6 +3,8 @@ package cli
 import (
 	"fmt"
 
+	"github.com/pokt-network/pocket/app/client/cli/flags"
+	"github.com/pokt-network/pocket/rpc"
 	"github.com/spf13/cobra"
 )
 
@@ -10,6 +12,10 @@ func init() {
 	nodeCmd := NewNodeCommand()
 	rootCmd.AddCommand(nodeCmd)
 }
+
+var (
+	dir string
+)
 
 func NewNodeCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -26,11 +32,28 @@ func NewNodeCommand() *cobra.Command {
 func nodeSaveCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
-			Use: "Save",
+			Use:     "Save",
+			Short:   "save a backup of node databases in the provided directory",
+			Example: "node save --dir /dir/path/here/",
 			RunE: func(cmd *cobra.Command, args []string) error {
-				return fmt.Errorf("not impl")
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
+				if err != nil {
+					return err
+				}
+				resp, err := client.PostV1NodeBackup(cmd.Context(), rpc.NodeBackup{
+					Dir: &dir,
+				})
+				if err != nil {
+					return err
+				}
+				var dest []byte
+				_, err = resp.Body.Read(dest)
+				if err != nil {
+					return err
+				}
+				fmt.Printf("%s", dest)
+				return nil
 			},
-			Short: "save a backup of world state",
 		},
 	}
 	return cmds

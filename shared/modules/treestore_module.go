@@ -23,6 +23,7 @@ type TreeStoreModule interface {
 	treeStoreFactory
 
 	AtomicStore
+	Archivable
 
 	// Update returns the computed state hash for a given height.
 	// * Height is passed through to the Update function and is used to query the TxIndexer for transactions
@@ -42,4 +43,9 @@ type TreeStoreModule interface {
 	GetTree(name string) ([]byte, kvstore.KVStore)
 	// GetTreeHashes returns a map of tree names to their root hashes
 	GetTreeHashes() map[string]string
+}
+
+type Archivable interface {
+	Backup(dir string) error
+	Load(dir string) error
 }
