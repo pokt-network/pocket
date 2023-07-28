@@ -14,10 +14,6 @@ import (
 
 var ErrRouterType = fmt.Errorf("must specify one of --staked, --unstaked, or --all")
 
-func init() {
-	PeerCmd.AddCommand(NewListCommand())
-}
-
 func NewListCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "List",

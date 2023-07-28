@@ -38,7 +38,9 @@ func init() {
 		log.Fatalf(flagBindErrFormat, "verbose", err)
 	}
 
-	rootCmd.AddCommand(peer.PeerCmd)
+	// Add subdir commands
+	// DISCUSS: Should we put the peer commands as the other commands are so we dont have to do this?
+	rootCmd.AddCommand(peer.NewPeerCommand())
 }
 
 var rootCmd = &cobra.Command{
