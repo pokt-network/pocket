@@ -20,7 +20,7 @@ const (
 func (rtr *rainTreeRouter) getPeerstoreSize(level uint32, height uint64) int {
 	peersView, maxNumLevels := rtr.peersManager.getPeersViewWithLevels()
 
-	// TECHDEBT(#810, 811): use `bus.GetPeerstoreProvider()` instead once available.
+	// TECHDEBT(#811): use `bus.GetPeerstoreProvider()` instead once available.
 	pstoreProvider, err := peerstore_provider.GetPeerstoreProvider(rtr.GetBus())
 	if err != nil {
 		// Should never happen; enforced by a `rtr.getPeerstoreProvider()` call
