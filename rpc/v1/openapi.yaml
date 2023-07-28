@@ -951,6 +951,42 @@ paths:
                 node_roles:
                   - "validator"
                   - "servicer"
+  /v1/node/backup:
+    post:
+      summary: Create a backup of all node databases
+      description: Create a backup at the specified location
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location:
+                    type: string
+                    description: The location of the saved file
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+
 
 externalDocs:
   description: Find out more about Pocket Network
