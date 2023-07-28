@@ -11,9 +11,9 @@ _NOTE: Consider turning off the `gofmt` in your IDE to prevent unexpected format
 
 ## Unable to start LocalNet - permission denied
 
-- **Issue**: when trying to run `make compose_and_watch` on an operating system with SELinux, the command gives the error:
+- **Issue**: when trying to run `make lightweight_localnet` on an operating system with SELinux, the command gives the error:
 
-```
+```bash
 Recreating validator2 ... done
 Recreating validator4 ... done
 Recreating validator1 ... done

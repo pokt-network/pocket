@@ -422,7 +422,7 @@ Deprecate PrePersistence
 - Added PopulateGenesisState function to persistence module
 - Fixed the stake status iota issue
 - Discovered and documented (with TODO) double setting parameters issue
-- Attached to the Utility Module and using in `make compose_and_watch`
+- Attached to the Utility Module and using in `make lightweight_localnet`
 
 ## [0.0.0.1] - 2022-07-05
 
