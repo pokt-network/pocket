@@ -57,6 +57,11 @@ spec:
                 secretKeyRef:
                   name: validators-private-keys
                   key: "001"
+            - name: POCKET_IBC_HOST_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: validators-private-keys
+                  key: "001"
             - name: POSTGRES_USER
               value: "postgres"
             - name: POSTGRES_PASSWORD

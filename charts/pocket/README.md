@@ -77,6 +77,7 @@ privateKeySecretKeyRef:
 | config.telemetry.endpoint | string | `"/metrics"` |  |
 | config.utility.max_mempool_transaction_bytes | int | `1073741824` |  |
 | config.utility.max_mempool_transactions | int | `9000` |  |
+| config.validator.enabled | bool | `true` |  |
 | externalPostgresql.database | string | `""` | name of the external database |
 | externalPostgresql.enabled | bool | `false` | use external postgres database |
 | externalPostgresql.host | string | `""` | host of the external database |
