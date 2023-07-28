@@ -35,8 +35,8 @@ var (
 // TECHDEBT: Make these values configurable
 // TECHDEBT: Consider using an exponential backoff instead
 const (
-	connectMaxRetries   = 7
-	connectRetryTimeout = time.Second * 3
+	connectMaxRetries   = 5
+	connectRetryTimeout = time.Second * 2
 )
 
 type backgroundRouterFactory = modules.FactoryWithConfig[typesP2P.Router, *config.BackgroundConfig]
