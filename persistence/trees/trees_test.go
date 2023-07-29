@@ -37,7 +37,7 @@ var (
 )
 
 const (
-	trees_hash1 = "5282ee91a3ec0a6f2b30e4780b369bae78c80ef3ea40587fef6ae263bf41f244"
+	treesHash1 = "5282ee91a3ec0a6f2b30e4780b369bae78c80ef3ea40587fef6ae263bf41f244"
 )
 
 func TestTreeStore_Update(t *testing.T) {
@@ -55,7 +55,7 @@ func TestTreeStore_Update(t *testing.T) {
 		hash1, err := context.ComputeStateHash()
 		require.NoError(t, err)
 		require.NotEmpty(t, hash1)
-		require.Equal(t, hash1, trees_hash1)
+		require.Equal(t, hash1, treesHash1)
 
 		_, err = createAndInsertDefaultTestApp(t, context)
 		require.NoError(t, err)
