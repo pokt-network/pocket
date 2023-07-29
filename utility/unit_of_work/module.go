@@ -156,10 +156,6 @@ func (uow *baseUtilityUnitOfWork) processProposalBlockTransactions() (err error)
 			return err
 		}
 
-		if uow.logger.GetLevel().String() == "debug" {
-			uow.logger.Debug().Str("tx", txHash).Msgf("processing transaction: %+v", tx)
-		}
-
 		if err := tx.ValidateBasic(); err != nil {
 			return err
 		}

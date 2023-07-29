@@ -136,8 +136,6 @@ func govCommands() []*cobra.Command {
 					return err
 				}
 
-				// TODO(0xbigboss): be nice and validate the inputs before submitting, instead of reverting tx.
-
 				msg := &types.MessageUpgrade{
 					Signer:  pk.Address(),
 					Version: version,
