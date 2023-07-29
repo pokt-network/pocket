@@ -40,7 +40,14 @@ func (p *PostgresContext) InitGenesisParams(params *genesis.Params) error {
 		return fmt.Errorf("cannot initialize params at height %d", p.Height)
 	}
 	_, err := tx.Exec(ctx, types.InsertParams(params, p.Height))
-	p.SetUpgrade(params.AclOwner, "1.0.0", p.Height)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `
+INSERT INTO upgrades (signer, version, height, created) VALUES ($1, $2, $3, $4)
+ON CONFLICT (version)
+DO UPDATE SET signer=EXCLUDED.signer, version=EXCLUDED.version, height=EXCLUDED.height, created=EXCLUDED.created
+`, params.AclOwner, "1.0.0", p.Height, p.Height)
 	return err
 }
 
@@ -197,10 +204,14 @@ func (p *PostgresContext) getLatestParamsOrFlagsQuery(tableName string) string {
 	return fmt.Sprintf("SELECT DISTINCT ON (name) %s FROM %s ORDER BY name ASC,%s.height DESC", fields, tableName, tableName)
 }
 
-func (p *PostgresContext) SetUpgrade(signer string, version string, height int64) error {
+func (p *PostgresContext) SetUpgrade(signer, version string, height int64) error {
 	ctx, tx := p.getCtxAndTx()
 	_, err := tx.Exec(ctx, `
 INSERT INTO upgrades(signer, version, height, created) VALUES ($1, $2, $3, $4)
-	`, signer, version, height, p.Height)
-	return err
+`, signer, version, height, p.Height)
+	if err != nil {
+		p.logger.Debug().Err(err).Msg("failed to insert upgrade")
+		return err
+	}
+	return nil
 }

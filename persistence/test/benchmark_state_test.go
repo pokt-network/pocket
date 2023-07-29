@@ -113,8 +113,12 @@ MethodLoop:
 			arg := method.Type.In(i)
 			switch arg.Kind() {
 			case reflect.String:
-				// String values in modifier functions are usually amounts
-				v = reflect.ValueOf(getRandomIntString(maxStringAmount))
+				if methodName == "SetUpgrade" {
+					v = reflect.ValueOf(fmt.Sprintf("%d.0.0", p.Height+1))
+				} else {
+					// String values in modifier functions are usually amounts
+					v = reflect.ValueOf(getRandomIntString(maxStringAmount))
+				}
 			case reflect.Slice:
 				switch arg.Elem().Kind() {
 				case reflect.Uint8:

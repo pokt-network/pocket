@@ -161,6 +161,9 @@ select signer, version, height, created from upgrades where created = $1
 
 	upgrade := new(coreTypes.Upgrade)
 	if err := row.Scan(&upgrade.Signer, &upgrade.Version, &upgrade.Height, &upgrade.Created); err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
 

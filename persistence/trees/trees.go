@@ -487,6 +487,9 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 }
 
 func (t *treeStore) updateUpgradeTree(upgrade *coreTypes.Upgrade) error {
+	if upgrade == nil {
+		return nil
+	}
 	upgradeBz, err := codec.GetCodec().Marshal(upgrade)
 	if err != nil {
 		return err
