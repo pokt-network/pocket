@@ -77,6 +77,7 @@ func TestInsertParams(t *testing.T) {
 				"('message_pause_servicer_fee', -1, 'STRING', '10000')," +
 				"('message_unpause_servicer_fee', -1, 'STRING', '10000')," +
 				"('message_change_parameter_fee', -1, 'STRING', '10000')," +
+				"('message_upgrade_fee', -1, 'STRING', '10000')," +
 				"('acl_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('blocks_per_session_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('app_minimum_stake_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
@@ -131,7 +132,8 @@ func TestInsertParams(t *testing.T) {
 				"('message_unstake_servicer_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('message_pause_servicer_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('message_unpause_servicer_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('message_change_parameter_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45') " +
+				"('message_change_parameter_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('message_upgrade_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45') " +
 				"ON CONFLICT ON CONSTRAINT params_pkey DO UPDATE SET value=EXCLUDED.value, type=EXCLUDED.type",
 		},
 	}

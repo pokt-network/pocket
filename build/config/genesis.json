@@ -1589,9 +1589,7 @@
     {
       "actor_type": 1,
       "address": "00101f2ff54811e84df2d767c661f57a06349b7e",
-      "chains": [
-        "0001"
-      ],
+      "chains": ["0001"],
       "output": "00101f2ff54811e84df2d767c661f57a06349b7e",
       "paused_height": -1,
       "public_key": "bb851ac31120a4c8848738582f358599abbc3d84638f8fa79f74aeafad1eede0",
@@ -1604,9 +1602,7 @@
     {
       "actor_type": 3,
       "address": "0010336c3a2cc1ec71fecc45c360214f757194aa",
-      "chains": [
-        "0001"
-      ],
+      "chains": ["0001"],
       "output": "0010336c3a2cc1ec71fecc45c360214f757194aa",
       "paused_height": -1,
       "public_key": "d913a05a6f4bde35413bdcc6343238960cfc7d8aff425fb712dcaa52f1476dbf",
@@ -1652,6 +1648,8 @@
     "fisherman_unstaking_blocks_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
     "message_change_parameter_fee": "10000",
     "message_change_parameter_fee_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
+    "message_upgrade_fee": "10000",
+    "message_upgrade_fee_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
     "message_double_sign_fee": "10000",
     "message_double_sign_fee_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
     "message_edit_stake_app_fee": "10000",
@@ -1761,9 +1759,7 @@
     {
       "actor_type": 2,
       "address": "00104055c00bed7c983a48aac7dc6335d7c607a7",
-      "chains": [
-        "0001"
-      ],
+      "chains": ["0001"],
       "output": "00104055c00bed7c983a48aac7dc6335d7c607a7",
       "paused_height": -1,
       "public_key": "dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
@@ -1774,9 +1770,7 @@
     {
       "actor_type": 2,
       "address": "001022b138896c4c5466ac86b24a9bbe249905c2",
-      "chains": [
-        "0001"
-      ],
+      "chains": ["0001"],
       "output": "001022b138896c4c5466ac86b24a9bbe249905c2",
       "paused_height": -1,
       "public_key": "56915c1270bc8d9280a633e0be51647f62388a851318381614877ef2ed84a495",

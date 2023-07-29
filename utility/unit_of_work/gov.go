@@ -93,6 +93,8 @@ func prepareGovParamParamTypesMap() map[string]int {
 		typesUtil.MessagePauseServicerFee:                  BIGINT,
 		typesUtil.MessageUnpauseServicerFee:                BIGINT,
 		typesUtil.MessageChangeParameterFee:                BIGINT,
+		typesUtil.MessageUpgradeFee:                        BIGINT,
+		// TODO: 0xbigboss MessageCancelUpgrade
 	}
 }
 
@@ -209,6 +211,9 @@ func (u *baseUtilityUnitOfWork) getFee(msg typesUtil.Message, actorType coreType
 		}
 	case *typesUtil.MessageChangeParameter:
 		return getGovParam[*big.Int](u, typesUtil.MessageChangeParameterFee)
+	// TODO: 0xbigboss MessageCancelUpgrade
+	case *typesUtil.MessageUpgrade:
+		return getGovParam[*big.Int](u, typesUtil.MessageUpgradeFee)
 	default:
 		return nil, coreTypes.ErrUnknownMessage(x)
 	}

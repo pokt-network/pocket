@@ -13,7 +13,6 @@ import (
 // the logic in this will likely grow in complexity.
 
 // IMPROVE: Consider return a slice of `crypto.Address` types instead of `[][]byte`
-// TODO(0xbigboss): Will need signer candidate verification
 func (u *baseUtilityUnitOfWork) getSignerCandidates(msg typesUtil.Message) ([][]byte, coreTypes.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageSend:
@@ -30,6 +29,9 @@ func (u *baseUtilityUnitOfWork) getSignerCandidates(msg typesUtil.Message) ([][]
 		return u.getUpdateIBCStoreSingerCandidates(x)
 	case *ibcTypes.PruneIBCStore:
 		return u.getPruneIBCStoreSingerCandidates(x)
+	case *typesUtil.MessageUpgrade:
+		return u.getMessageUpgradeSignerCandidates(x)
+	// TODO: 0xbigboss MessageCancelUpgrade
 	default:
 		return nil, coreTypes.ErrUnknownMessage(x)
 	}
@@ -86,3 +88,9 @@ func (u *baseUtilityUnitOfWork) getUpdateIBCStoreSingerCandidates(msg *ibcTypes.
 func (u *baseUtilityUnitOfWork) getPruneIBCStoreSingerCandidates(msg *ibcTypes.PruneIBCStore) ([][]byte, coreTypes.Error) {
 	return [][]byte{msg.Signer}, nil
 }
+
+func (u *baseUtilityUnitOfWork) getMessageUpgradeSignerCandidates(msg *typesUtil.MessageUpgrade) ([][]byte, coreTypes.Error) {
+	return [][]byte{msg.Signer}, nil
+}
+
+// TODO: 0xbigboss MessageCancelUpgrade

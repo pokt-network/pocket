@@ -49,3 +49,5 @@ func (msg *MessageUpgrade) GetCanonicalBytes() []byte {
 	}
 	return bz
 }
+
+// TODO: 0xbigboss MessageCancelUpgrade

@@ -82,6 +82,7 @@ func DefaultParams() *genesis.Params {
 		MessagePauseServicerFee:               utils.BigIntToString(big.NewInt(10000)),
 		MessageUnpauseServicerFee:             utils.BigIntToString(big.NewInt(10000)),
 		MessageChangeParameterFee:             utils.BigIntToString(big.NewInt(10000)),
+		MessageUpgradeFee:                     utils.BigIntToString(big.NewInt(10000)), // TODO: 0xbigboss MessageCancelUpgrade
 		AclOwner:                              DefaultParamsOwner.Address().String(),
 		BlocksPerSessionOwner:                 DefaultParamsOwner.Address().String(),
 		AppMinimumStakeOwner:                  DefaultParamsOwner.Address().String(),
@@ -137,5 +138,6 @@ func DefaultParams() *genesis.Params {
 		MessagePauseServicerFeeOwner:          DefaultParamsOwner.Address().String(),
 		MessageUnpauseServicerFeeOwner:        DefaultParamsOwner.Address().String(),
 		MessageChangeParameterFeeOwner:        DefaultParamsOwner.Address().String(),
+		MessageUpgradeFeeOwner:                DefaultParamsOwner.Address().String(), // TODO: 0xbigboss MessageCancelUpgrade
 	}
 }

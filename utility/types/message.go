@@ -37,7 +37,6 @@ var (
 	_ Message = &MessageUnstake{}
 	_ Message = &MessageUnpause{}
 	_ Message = &MessageChangeParameter{}
-	_ Message = &MessageUpgrade{}
 )
 
 func (msg *MessageSend) ValidateBasic() coreTypes.Error {

@@ -33,6 +33,7 @@ func (u *baseUtilityUnitOfWork) handleMessage(msg typesUtil.Message) (err coreTy
 		return u.handlePruneIBCStore(x)
 	case *typesUtil.MessageUpgrade:
 		return u.handleMessageUpgrade(x)
+	// TODO: 0xbigboss MessageCancelUpgrade
 	default:
 		return coreTypes.ErrUnknownMessage(x)
 	}
@@ -248,6 +249,8 @@ func (u *baseUtilityUnitOfWork) handleMessageUpgrade(message *typesUtil.MessageU
 	}
 	return nil
 }
+
+// TODO: 0xbigboss MessageCancelUpgrade
 
 func (u *baseUtilityUnitOfWork) checkBelowMaxChains(actorType coreTypes.ActorType, chains []string) coreTypes.Error {
 	// validators don't have chains field

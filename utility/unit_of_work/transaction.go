@@ -18,9 +18,6 @@ func (u *baseUtilityUnitOfWork) HandleTransaction(tx *coreTypes.Transaction, ind
 	if err != nil {
 		return nil, err
 	}
-	if u.logger.GetLevel().String() == "debug" {
-		u.logger.Debug().Msgf("handling transaction: %+v", msg)
-	}
 	msgHandlingResult := u.handleMessage(msg)
 	return typesUtil.TxToIdxTx(tx, u.height, index, msg, msgHandlingResult)
 }

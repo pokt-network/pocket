@@ -1792,6 +1792,7 @@ data:
         "message_pause_servicer_fee": "10000",
         "message_unpause_servicer_fee": "10000",
         "message_change_parameter_fee": "10000",
+        "message_upgrade_fee": "10000",
         "acl_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
         "blocks_per_session_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
         "app_minimum_stake_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
@@ -1846,7 +1847,8 @@ data:
         "message_unstake_servicer_fee_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
         "message_pause_servicer_fee_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
         "message_unpause_servicer_fee_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
-        "message_change_parameter_fee_owner": "da034209758b78eaea06dd99c07909ab54c99b45"
+        "message_change_parameter_fee_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
+        "message_upgrade_fee_owner": "da034209758b78eaea06dd99c07909ab54c99b45"
       },
       "genesis_time": {
         "seconds": 1663610702,

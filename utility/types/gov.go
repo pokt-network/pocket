@@ -83,6 +83,9 @@ const (
 
 	// Parameter / flags gov params
 	MessageChangeParameterFee = "message_change_parameter_fee"
+
+	// Upgrade gov params
+	MessageUpgradeFee = "message_upgrade_fee"
 )
 
 // TECHDEBT: The parameters below are equivalent to the list above with the suffix `_owner`. There
@@ -154,4 +157,6 @@ const (
 	MessageUnpauseServicerFeeOwner        = "message_unpause_servicer_fee_owner"
 
 	MessageChangeParameterFeeOwner = "message_change_parameter_fee_owner"
+
+	MessageUpgradeFeeOwner = "message_upgrade_fee_owner"
 )
