@@ -10,6 +10,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/utils"
+	"github.com/stretchr/testify/require"
 )
 
 var DefaultStakeBig = big.NewInt(1000000000000000)
@@ -39,10 +40,11 @@ func Test_leaderUtilityUnitOfWork_CreateProposalBlock(t *testing.T) {
 				leaderUOW: func(t *testing.T) *leaderUtilityUnitOfWork {
 					ctrl := gomock.NewController(t)
 
-					mockUtilityMod := newDefaultMockUtilityModule(t, ctrl)
 					mockrwcontext := newDefaultMockRWContext(t, ctrl)
-
+					mockrwcontext.EXPECT().RollbackToSavePoint().Times(1)
 					mockrwcontext.EXPECT().ComputeStateHash().Return("", fmt.Errorf("rollback error"))
+
+					mockUtilityMod := newDefaultMockUtilityModule(t, ctrl)
 					mockbus := mockModules.NewMockBus(ctrl)
 					mockbus.EXPECT().GetUtilityModule().Return(mockUtilityMod).AnyTimes()
 
@@ -55,15 +57,40 @@ func Test_leaderUtilityUnitOfWork_CreateProposalBlock(t *testing.T) {
 			wantErr: true,
 			wantTxs: nil,
 		},
+		{
+			name: "should apply a unit of work",
+			args: args{},
+			fields: fields{
+				leaderUOW: func(t *testing.T) *leaderUtilityUnitOfWork {
+					ctrl := gomock.NewController(t)
+
+					mockrwcontext := newDefaultMockRWContext(t, ctrl)
+					mockrwcontext.EXPECT().ComputeStateHash().Return("foo", nil).Times(1)
+
+					mockUtilityMod := newDefaultMockUtilityModule(t, ctrl)
+					mockbus := mockModules.NewMockBus(ctrl)
+					mockbus.EXPECT().GetUtilityModule().Return(mockUtilityMod).AnyTimes()
+
+					luow := NewLeaderUOW(0, mockrwcontext, mockrwcontext)
+					luow.SetBus(mockbus)
+
+					return luow
+				},
+			},
+			wantErr:       false,
+			wantStateHash: "foo",
+			wantTxs:       [][]byte{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			luow := tt.fields.leaderUOW(t)
-			_, gotTxs, err := luow.CreateProposalBlock(tt.args.proposer, tt.args.maxTxBytes)
+			gotHash, gotTxs, err := luow.CreateProposalBlock(tt.args.proposer, tt.args.maxTxBytes)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("leaderUtilityUnitOfWork.CreateProposalBlock() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+			require.Equal(t, gotHash, tt.wantStateHash)
 			if !reflect.DeepEqual(gotTxs, tt.wantTxs) {
 				t.Errorf("leaderUtilityUnitOfWork.CreateProposalBlock() gotTxs = %v, want %v", gotTxs, tt.wantTxs)
 			}
@@ -76,7 +103,6 @@ func newDefaultMockRWContext(t *testing.T, ctrl *gomock.Controller) *mockModules
 
 	mockrwcontext := mockModules.NewMockPersistenceRWContext(ctrl)
 	mockrwcontext.EXPECT().SetPoolAmount(gomock.Any(), gomock.Any()).AnyTimes()
-	mockrwcontext.EXPECT().RollbackToSavePoint().Times(1)
 	mockrwcontext.EXPECT().GetIntParam(gomock.Any(), gomock.Any()).Return(0, nil).AnyTimes()
 	mockrwcontext.EXPECT().GetPoolAmount(gomock.Any(), gomock.Any()).Return(utils.BigIntToString(DefaultStakeBig), nil).Times(1)
 	mockrwcontext.EXPECT().AddAccountAmount(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
