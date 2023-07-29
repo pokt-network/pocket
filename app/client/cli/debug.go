@@ -127,9 +127,9 @@ func newDebugSubCommands() []*cobra.Command {
 				if !slices.Contains(validActors, actor) {
 					logger.Global.Fatal().Msg("Invalid actor type provided")
 				}
-				sedCmd := exec.Command("sed", "-i", fmt.Sprintf("/%s:/,/count:/ s/count: [0-9]*/count: %s/", actor, numActors), "/usr/local/localnet_config.yaml")
-				err := sedCmd.Run()
-				if err != nil {
+				sedReplaceCmd := fmt.Sprintf("/%s:/,/count:/ s/count: [0-9]*/count: %s/", actor, numActors)
+				sedCmd := exec.Command("sed", "-i", sedReplaceCmd, "/usr/local/localnet_config.yaml")
+				if err := sedCmd.Run(); err != nil {
 					log.Fatal(err)
 				}
 			},

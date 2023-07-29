@@ -1,4 +1,4 @@
-// // go:build e2e
+//go:build e2e
 
 package e2e
 
@@ -161,8 +161,8 @@ func (s *rootSuite) TheNetworkHasActorsOfType(num int64, actor string) {
 }
 
 func (s *rootSuite) ShouldBeUnreachable(pod string) {
-	validate := func(res *string) bool {
-		return res != nil && strings.Contains(*res, "Unable to connect to the RPC")
+	validate := func(res string) bool {
+		return strings.Contains(res, "Unable to connect to the RPC")
 	}
 	args := []string{
 		"Query",
@@ -329,10 +329,10 @@ func getResponseFromStdout[T any](t gocuke.TestingT, stdout string, validate fun
 	return nil
 }
 
-func getStrFromStdout(t gocuke.TestingT, stdout string, validate func(res *string) bool) *string {
+func getStrFromStdout(t gocuke.TestingT, stdout string, validate func(res string) bool) *string {
 	t.Helper()
 	for _, s := range strings.Split(stdout, "\n") {
-		if !validate(&s) {
+		if !validate(s) {
 			continue
 		}
 		return &s

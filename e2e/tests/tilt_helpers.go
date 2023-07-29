@@ -1,4 +1,5 @@
-// // go:build e2e
+//go:build e2e
+
 package e2e
 
 import (
@@ -14,17 +15,14 @@ func (s *rootSuite) syncLocalNetConfigFromHostToLocalFS() {
 		return
 	}
 	sedCmd := exec.Command("tilt", "trigger", "syncback_localnet_config")
-	err := sedCmd.Run()
-	if err != nil {
+	if err := sedCmd.Run(); err != nil {
 		e2eLogger.Err(err).Msgf("syncLocalNetConfigFromHostToLocalFS: failed to run command: '%s'", sedCmd.String())
 		log.Fatal(err)
 	}
 }
 
 func isPackageInstalled(pkg string) bool {
-	_, err := exec.LookPath(pkg)
-	// check error
-	if err != nil {
+	if _, err := exec.LookPath(pkg); err != nil {
 		// the executable is not found, return false
 		if execErr, ok := err.(*exec.Error); ok && execErr.Err == exec.ErrNotFound {
 			return false

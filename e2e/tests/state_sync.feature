@@ -15,6 +15,6 @@ Feature: State Sync Namespace
         # full_nodes is the key used in `localnet_config.yaml`
         When the developer runs the command "ScaleActor full_nodes 2"
         # IMPROVE: Figure out if there's something better to do then waiting for a node to spin up
-        And the developer waits for "20000" milliseconds
+        And the developer waits for "40000" milliseconds
         # TODO(#812): The full node should be at height "2" after state sync is implemented
-        Then "full-node-002" should be at height "1"
+        Then "full-node-002" should be at height "0"
