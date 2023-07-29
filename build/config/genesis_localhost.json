@@ -27,6 +27,10 @@
     {
       "address": "88a792b7aca673620132ef01f50e62caa58eca83",
       "amount": "100000000000000"
+    },
+    {
+      "address": "da034209758b78eaea06dd99c07909ab54c99b45",
+      "amount": "100000000000000"
     }
   ],
   "pools": [
