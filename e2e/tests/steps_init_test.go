@@ -253,9 +253,8 @@ func (s *rootSuite) TheApplicationHasAValidServicer() {
 }
 
 // An Application requests the account balance of a specific address at a specific height
- func (s *rootSuite) TheApplicationSendsAGetBalanceRelayAtASpecificHeightToAnEthereumServicer() {
+func (s *rootSuite) TheApplicationSendsAGetBalanceRelayAtASpecificHeightToAnEthereumServicer() {
 	// ADD_IN_THIS_PR: Add a servicer staked for the Ethereum RelayChain
-	// ADD_IN_THIS_PR: Verify the response: correct id and correct jsonrpc
 	params := fmt.Sprintf("%q: [%q, %q]", "params", s.relaychains[relaychainEth].account, s.relaychains[relaychainEth].height)
 	checkBalanceRelay := fmt.Sprintf("{%s, %s}", `"method": "eth_getBalance", "id": "1", "jsonrpc": "2.0"`, params)
 
@@ -267,6 +266,14 @@ func (s *rootSuite) TheApplicationHasAValidServicer() {
 
 func (s *rootSuite) TheRelayResponseContains(relayResponse string) {
 	require.Contains(s, s.validator.result.Stdout, relayResponse)
+}
+
+func (s *rootSuite) TheRelayResponseIsValidJsonRpc() {
+	require.Contains(s, s.validator.result.Stdout, `"jsonrpc":"2.0"`)
+}
+
+func (s *rootSuite) TheRelayResponseHasValidId() {
+	require.Contains(s, s.validator.result.Stdout, `"id":1`)
 }
 
 func (s *rootSuite) sendTrustlessRelay(relayPayload string, servicerAddr, appAddr string) {

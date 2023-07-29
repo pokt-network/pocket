@@ -31,11 +31,15 @@ enum RESTRequestType {
 	RESTRequestTypeDELETE = 3;
 }
 
+message JSONRPCId {
+	bytes id = 1;
+}
+
 message JSONRPCPayload {
     // JSONRPC version 2 expected a field named "id".
     // See the JSONRPC spec in the following link for more details:
     //   https://www.jsonrpc.org/specification#request_object
-    bytes id = 1;
+    JSONRPCId id = 1;
     // JSONRPC version 2 expects a field named "jsonrpc" with a value of "2.0".
     // See the JSONRPC spec in the following link for more details:
     //   https://www.jsonrpc.org/specification#request_object

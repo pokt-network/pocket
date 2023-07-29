@@ -10,6 +10,8 @@ Feature: Trustless Relays
     When the application sends a get balance relay at a specific height to an Ethereum Servicer
     # Balance: 1,160,126.46817237178258965 ETH  = 0xf5aa94f49d4fd1f8dcd2
     Then the relay response contains 0xf5aa94f49d4fd1f8dcd2
+    And the relay response is valid json rpc
+    And the relay response has valid id
     # TECHDEBT: replace validator with client
     And the validator should have exited without error
 

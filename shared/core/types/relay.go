@@ -54,3 +54,10 @@ func (p *RESTPayload) Validate() error {
 	}
 	return nil
 }
+
+// MarshalJSON is a custom marshaller for JSONRPCId type to return the byte array as-is.
+//
+//	This is to ensure the specified ID gets sent correctly when serializing the relay that contains the ID.
+func (i *JSONRPCId) MarshalJSON() ([]byte, error) {
+	return i.Id, nil
+}

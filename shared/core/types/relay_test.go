@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,7 +17,7 @@ func TestRelay_Validate(t *testing.T) {
 			name: "valid Relay: JSONRPC",
 			relay: &Relay{
 				RelayPayload: &Relay_JsonRpcPayload{
-					JsonRpcPayload: &JSONRPCPayload{JsonRpc: "2.0", Method: "eth_blockNumber"},
+					JsonRpcPayload: &JSONRPCPayload{Jsonrpc: "2.0", Method: "eth_blockNumber"},
 				},
 			},
 		},
@@ -37,7 +38,7 @@ func TestRelay_Validate(t *testing.T) {
 			name: "invalid Relay: invalid JSONRPC Payload",
 			relay: &Relay{
 				RelayPayload: &Relay_JsonRpcPayload{
-					JsonRpcPayload: &JSONRPCPayload{JsonRpc: "foo"},
+					JsonRpcPayload: &JSONRPCPayload{Jsonrpc: "foo"},
 				},
 			},
 			expected: errInvalidJSONRPC,
@@ -69,16 +70,16 @@ func TestRelay_ValidateJsonRpc(t *testing.T) {
 	}{
 		{
 			name:    "valid JSONRPC",
-			payload: &JSONRPCPayload{JsonRpc: "2.0", Method: "eth_blockNumber"},
+			payload: &JSONRPCPayload{Jsonrpc: "2.0", Method: "eth_blockNumber"},
 		},
 		{
-			name:     "invalid JSONRPC: invalid JsonRpc field value",
-			payload:  &JSONRPCPayload{JsonRpc: "foo", Method: "eth_blockNumber"},
+			name:     "invalid JSONRPC: invalid Jsonrpc field value",
+			payload:  &JSONRPCPayload{Jsonrpc: "foo", Method: "eth_blockNumber"},
 			expected: errInvalidJSONRPC,
 		},
 		{
 			name:     "invalid JSONRPC: Method field not set",
-			payload:  &JSONRPCPayload{JsonRpc: "2.0"},
+			payload:  &JSONRPCPayload{Jsonrpc: "2.0"},
 			expected: errInvalidJSONRPCMissingMethod,
 		},
 	}
@@ -114,4 +115,17 @@ func TestRelay_ValidateREST(t *testing.T) {
 			require.ErrorIs(t, err, testCase.expected)
 		})
 	}
+}
+
+func TestRelay_MarshalJSONRPC(t *testing.T) {
+	payload := JSONRPCPayload{
+		Id:      &JSONRPCId{Id: []byte(`"1"`)},
+		Jsonrpc: "2.0",
+		Method:  "eth_blockNumber",
+	}
+	expected := []byte(`{"id":"1","jsonrpc":"2.0","method":"eth_blockNumber"}`)
+
+	bz, err := json.Marshal(payload)
+	require.NoError(t, err)
+	require.Equal(t, bz, expected)
 }
