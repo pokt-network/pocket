@@ -288,6 +288,25 @@ func (s *rpcServer) txBytesToRPCTxMsg(txBz []byte, messageType string) (*TxMessa
 				ParameterValue: values[1],
 			},
 		}
+	case "MessageUpgrade":
+		m := new(utilTypes.MessageUpgrade)
+		if err := anypb.UnmarshalTo(m); err != nil {
+			return nil, err
+		}
+		fee, err := s.calculateMessageFeeForActor(m.GetActorType(), messageType)
+		if err != nil {
+			return nil, err
+		}
+		txMsg.Fee = Fee{
+			Amount: fee,
+			Denom:  "upokt",
+		}
+		txMsg.Message = MessageUpgrade{
+			Signer:  hex.EncodeToString(m.GetSigner()),
+			Version: m.GetVersion(),
+			Height:  m.GetHeight(),
+		}
+	// TODO: 0xbigboss MessageCancelUpgrade
 	default:
 		return nil, fmt.Errorf("unknown message type: %s", messageType)
 	}
@@ -308,6 +327,10 @@ func (s *rpcServer) calculateMessageFeeForActor(actorType coreTypes.ActorType, m
 	if messageType == "MessageChangeParameter" {
 		return readCtx.GetStringParam(utilTypes.MessageChangeParameterFee, height)
 	}
+	if messageType == "MessageUpgrade" {
+		return readCtx.GetStringParam(utilTypes.MessageUpgradeFee, height)
+	}
+	// TODO: 0xbigboss MessageCancelUpgrade
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		switch messageType {

@@ -46,6 +46,7 @@ const (
 	TransactionsTreeName = "transactions"
 	ParamsTreeName       = "params"
 	FlagsTreeName        = "flags"
+	UpgradesTreeName     = "upgrades"
 	IBCTreeName          = "ibc"
 )
 
@@ -69,7 +70,7 @@ var stateTreeNames = []string{
 	// Account Trees
 	AccountTreeName, PoolTreeName,
 	// Data Trees
-	TransactionsTreeName, ParamsTreeName, FlagsTreeName, IBCTreeName,
+	TransactionsTreeName, ParamsTreeName, FlagsTreeName, UpgradesTreeName, IBCTreeName,
 }
 
 // stateTree is a wrapper around the SMT that contains an identifying
@@ -249,6 +250,14 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			}
 			if err := t.updateFlagsTree(flags); err != nil {
 				return "", fmt.Errorf("failed to update flags tree - %w", err)
+			}
+		case UpgradesTreeName:
+			upgrade, err := sql.GetUpgrade(pgtx, height)
+			if err != nil {
+				return "", fmt.Errorf("failed to get upgrade from transaction: %w", err)
+			}
+			if err := t.updateUpgradeTree(upgrade); err != nil {
+				return "", fmt.Errorf("failed to update upgrade tree - %w", err)
 			}
 		case IBCTreeName:
 			keys, values, err := sql.GetIBCStoreUpdates(pgtx, height)
@@ -474,6 +483,18 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 		}
 	}
 
+	return nil
+}
+
+func (t *treeStore) updateUpgradeTree(upgrade *coreTypes.Upgrade) error {
+	upgradeBz, err := codec.GetCodec().Marshal(upgrade)
+	if err != nil {
+		return err
+	}
+	upgradeKey := crypto.SHA3Hash([]byte(upgrade.Version))
+	if err := t.merkleTrees[UpgradesTreeName].tree.Update(upgradeKey, upgradeBz); err != nil {
+		return err
+	}
 	return nil
 }
 

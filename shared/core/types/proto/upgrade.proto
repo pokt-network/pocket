@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "github.com/pokt-network/pocket/shared/core/types";
+
+// Upgrade the network to a new version
+message Upgrade {
+  // Address of the account that is initiating the upgrade
+  string signer = 1;
+  // Version of the software to upgrade to in semver 2.0 format
+  string version = 2;
+  // Height at which the upgrade must be performed
+  int64 height = 3;
+  // Height upgrade was created
+  int64 created = 4;
+}

@@ -151,7 +151,7 @@ type PersistenceWriteContext interface {
 	SetFlag(paramName string, value any, enabled bool) error
 
 	// Upgrade Operations
-	SetUpgrade(version string, height int64) error
+	SetUpgrade(signer string, version string, height int64) error
 
 	// IBC Operations
 	// SetIBCStoreEntry sets the key-value pair in the ibc_entries table at the current height the
@@ -172,8 +172,8 @@ type PersistenceReadContext interface {
 	Release()                  // Releases the read context
 
 	// Version queries
-	GetVersionAtHeight(height int64) (string, error) // TODO(0xbigboss): Implement this
-	GetRevisionNumber(height int64) uint64           // TODO(#882): Implement this
+	GetVersionAtHeight(height int64) (string, error)
+	GetRevisionNumber(height int64) uint64 // TODO(#882): Implement this
 
 	// Supported Chains Queries
 	GetSupportedChains(height int64) ([]string, error) // TODO: Implement this

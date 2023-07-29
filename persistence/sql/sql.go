@@ -154,6 +154,19 @@ func GetParams(pgtx pgx.Tx, height uint64) ([]*coreTypes.Param, error) {
 	return paramSlice, nil
 }
 
+func GetUpgrade(pgtx pgx.Tx, height uint64) (*coreTypes.Upgrade, error) {
+	row := pgtx.QueryRow(context.Background(), `
+select signer, version, height, created from upgrades where created = $1
+`, height)
+
+	upgrade := new(coreTypes.Upgrade)
+	if err := row.Scan(&upgrade.Signer, &upgrade.Version, &upgrade.Height, &upgrade.Created); err != nil {
+		return nil, err
+	}
+
+	return upgrade, nil
+}
+
 // GetIBCStoreUpdates returns the set of key-value pairs updated at the current height for the IBC store
 func GetIBCStoreUpdates(pgtx pgx.Tx, height uint64) (keys, values [][]byte, err error) {
 	fields := "key,value"

@@ -1694,6 +1694,21 @@ components:
           type: "string"
         parameter_value:
           type: "string"
+    MessageUpgrade:
+      type: object
+      required:
+        - signer
+        - version
+        - height
+      properties:
+        signer:
+          type: string
+        version:
+          type: string
+        height:
+          type: integer
+          format: int64
+    # TODO: 0xbigboss MessageCancelUpgrade
     PartialSignature:
       type: object
       required:
@@ -1815,6 +1830,8 @@ components:
             - $ref: "#/components/schemas/MessageUnstake"
             - $ref: "#/components/schemas/MessageUnpause"
             - $ref: "#/components/schemas/MessageChangeParameter"
+            - $ref: "#/components/schemas/MessageUpgrade"
+            # TODO: 0xbigboss MessageCancelUpgrade
         nonce:
           type: string
         signature:

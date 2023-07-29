@@ -1635,6 +1635,10 @@ var expectedGenesis = &genesis.GenesisState{
 			Address: "099044a5282c4089976c6b13ab13e5423dae55ce",
 			Amount:  "100000000000000",
 		},
+		{
+			Address: "da034209758b78eaea06dd99c07909ab54c99b45",
+			Amount:  "100000000000000",
+		},
 	},
 	Applications: []*types.Actor{
 		{

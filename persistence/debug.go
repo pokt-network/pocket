@@ -13,6 +13,7 @@ var nonActorClearFunctions = []func() string{
 	types.Pool.ClearAllAccounts,
 	types.ClearAllGovParamsQuery,
 	types.ClearAllGovFlagsQuery,
+	types.ClearAllUpgradesQuery,
 	types.ClearAllBlocksQuery,
 	types.ClearAllIBCStoreQuery,
 	types.ClearAllIBCEventsQuery,

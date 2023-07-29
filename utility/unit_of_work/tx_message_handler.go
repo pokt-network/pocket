@@ -243,8 +243,11 @@ func (u *baseUtilityUnitOfWork) handlePruneIBCStore(message *ibcTypes.PruneIBCSt
 }
 
 func (u *baseUtilityUnitOfWork) handleMessageUpgrade(message *typesUtil.MessageUpgrade) coreTypes.Error {
-	u.logger.Info().Str("version", message.Version).Int64("height", message.Height).Msg("setting upgrade")
-	if err := u.persistenceRWContext.SetUpgrade(message.Version, message.Height); err != nil {
+	u.logger.Debug().Str("version", message.Version).Int64("height", message.Height).Msg("setting upgrade")
+
+	// validate new upgrade
+
+	if err := u.persistenceRWContext.SetUpgrade(hex.EncodeToString(message.Signer), message.Version, message.Height); err != nil {
 		return coreTypes.ErrSettingUpgrade(err)
 	}
 	return nil

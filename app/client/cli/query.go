@@ -379,7 +379,7 @@ func queryHeightCommands() []*cobra.Command {
 			Use:     "Upgrade [--height]",
 			Short:   "Get the upgrade version",
 			Long:    "Queries the node RPC to obtain the upgrade version for the given (or latest if unspecified) height",
-			Aliases: []string{"param"},
+			Aliases: []string{"upgrade"},
 			Args:    cobra.ExactArgs(0),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)

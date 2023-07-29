@@ -35,6 +35,22 @@ const (
 		enabled BOOLEAN NOT NULL,
 		PRIMARY KEY(name, height)
 		)`
+
+	UpgradesTableSchema = `
+create table if not exists upgrades
+(
+    signer  text        not null,
+    version varchar(10) not null,
+    height  bigint      not null unique,
+    created bigint      not null unique,
+    primary key (version)
+);
+comment on table upgrades is 'stores the upgrade history of the network';
+comment on column upgrades.signer is 'the address of the signer of the upgrade';
+comment on column upgrades.version is 'the semver 2.0 version of the upgrade';
+comment on column upgrades.height is 'the activation height of the upgrade';
+comment on column upgrades.created is 'the height the upgrade was created';
+`
 )
 
 var (
@@ -146,4 +162,8 @@ func ClearAllGovParamsQuery() string {
 
 func ClearAllGovFlagsQuery() string {
 	return fmt.Sprintf(`DELETE FROM %s`, FlagsTableName)
+}
+
+func ClearAllUpgradesQuery() string {
+	return "DELETE FROM upgrades"
 }

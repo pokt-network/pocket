@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"strconv"
 
@@ -12,10 +11,16 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// TODO(0xbigboss): Implement this function
 func (p *PostgresContext) GetVersionAtHeight(height int64) (string, error) {
-	// This is a placeholder function for the RPC endpoint "v1/query/upgrade"
-	return "", nil
+	ctx, tx := p.getCtxAndTx()
+	var version string
+	row := tx.QueryRow(ctx, `
+	SELECT version FROM upgrades WHERE height <= $1 ORDER BY height DESC LIMIT 1
+`, height)
+	if err := row.Scan(&version); err != nil {
+		return "", err
+	}
+	return version, nil
 }
 
 // TODO(#882): Implement this function
@@ -35,6 +40,7 @@ func (p *PostgresContext) InitGenesisParams(params *genesis.Params) error {
 		return fmt.Errorf("cannot initialize params at height %d", p.Height)
 	}
 	_, err := tx.Exec(ctx, types.InsertParams(params, p.Height))
+	p.SetUpgrade(params.AclOwner, "1.0.0", p.Height)
 	return err
 }
 
@@ -191,6 +197,10 @@ func (p *PostgresContext) getLatestParamsOrFlagsQuery(tableName string) string {
 	return fmt.Sprintf("SELECT DISTINCT ON (name) %s FROM %s ORDER BY name ASC,%s.height DESC", fields, tableName, tableName)
 }
 
-func (p *PostgresContext) SetUpgrade(version string, height int64) error {
-	return errors.New("not implemented")
+func (p *PostgresContext) SetUpgrade(signer string, version string, height int64) error {
+	ctx, tx := p.getCtxAndTx()
+	_, err := tx.Exec(ctx, `
+INSERT INTO upgrades(signer, version, height, created) VALUES ($1, $2, $3, $4)
+	`, signer, version, height, p.Height)
+	return err
 }
