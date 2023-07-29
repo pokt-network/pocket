@@ -1,4 +1,3 @@
-# TECHDEBT: Validator should eventually be changed to full node or just node.
 Feature: Node Namespace
 
   Scenario: User Wants Help Using The Node Command 

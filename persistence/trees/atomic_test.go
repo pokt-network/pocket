@@ -171,7 +171,7 @@ func TestTreeStore_SaveAndLoad(t *testing.T) {
 		}
 
 		// Load sets a tree store to the provided worldstate
-		err = ts2.Load(w)
+		err = ts2.Load(tmpDir)
 		require.NoError(t, err)
 
 		hash2 := ts2.getStateHash()
