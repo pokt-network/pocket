@@ -35,6 +35,8 @@ services:
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
+    depends_on:
+      - db
     expose:
       - "7081" # dlv debug
       - "9000"
@@ -52,10 +54,10 @@ services:
     environment:
       - POCKET_RPC_USE_CORS=true
       - LIBP2P_DEBUG=info
-    # Uncomment to enable the pprof server
-    #  - PPROF_ENABLED=true
-    # Uncomment to enable DLV debugging
-    #   - DEBUG_PORT=7081
+      # Uncomment to enable the pprof server
+      #  - PPROF_ENABLED=true
+      # Uncomment to enable DLV debugging
+      - DEBUG_PORT=7081
 
   validator2:
     logging: *loki-logging
@@ -65,6 +67,8 @@ services:
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
+    depends_on:
+      - db
     expose:
       - "7082" # dlv debug
       - "42069"
@@ -80,8 +84,8 @@ services:
     security_opt:
       - "seccomp:unconfined"
     # Uncomment to enable DLV debugging
-    # environment:
-    #   - DEBUG_PORT=7082
+    environment:
+      - DEBUG_PORT=7082
 
   validator3:
     logging: *loki-logging
@@ -91,6 +95,8 @@ services:
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
+    depends_on:
+      - db
     expose:
       - "7083" # dlv debug
       - "42069"
@@ -106,8 +112,8 @@ services:
     security_opt:
       - "seccomp:unconfined"
     # Uncomment to enable DLV debugging
-    # environment:
-    #   - DEBUG_PORT=7083
+    environment:
+      - DEBUG_PORT=7083
 
   validator4:
     logging: *loki-logging
@@ -117,6 +123,8 @@ services:
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
+    depends_on:
+      - db
     expose:
       - "7084" # dlv debug
       - "42069"
@@ -131,9 +139,9 @@ services:
     # Needed for DLV debugging
     security_opt:
       - "seccomp:unconfined"
-  # Uncomment to enable DLV debugging
-  # environment:
-  #   - DEBUG_PORT=7084
+    # Uncomment to enable DLV debugging
+    environment:
+      - DEBUG_PORT=7084
 
   servicer1:
     logging: *loki-logging
@@ -151,6 +159,8 @@ services:
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
+    depends_on:
+      - db
     expose:
       - "7085" # dlv debug
       - "42069"
@@ -188,6 +198,8 @@ services:
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
+    depends_on:
+      - db
     expose:
       - "7086" # dlv debug
       - "42069"
