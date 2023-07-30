@@ -1,15 +1,19 @@
 Feature: Upgrade Protocol
 
-  Scenario: ACL Owner Successfully Submits a Protocol Upgrade Using CLI
-    Given the user is an ACL Owner
-    When the user runs the command "gov upgrade <owner> <version> <height>"
-    Then the user should be able to see standard output containing "<stdout>"
-    When the user runs the command "gov query upgrade"
+  Scenario: User can query the current protocol version using CLI
+    Given the user runs the command "query upgrade"
     Then the user should be able to see standard output containing "<version>"
 
     Examples:
-      | owner                                    | version | height | stdout |
-      | da034209758b78eaea06dd99c07909ab54c99b45 | 2.0.0   | 100    | 2.0.0  |
+      | version |
+      | 1.0.0   |
+
+  Scenario: ACL Owner Successfully Submits a Protocol Upgrade Using CLI
+    Given the user is an ACL Owner
+    When the user submits a major protocol upgrade
+    And the network commits the transactions
+    When the user runs the command "query upgrade"
+    Then the user should be able to see the new version
 
   Scenario: ACL Owner Submits an Invalid Protocol Upgrade Using CLI
     Given the user is an ACL Owner

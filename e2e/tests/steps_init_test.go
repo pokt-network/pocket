@@ -47,6 +47,8 @@ type rootSuite struct {
 	clientset *kubernetes.Clientset
 	// node holds command results between runs and reports errors to the test suite
 	node *nodePod
+	// Pending transaction hashes are stored here.
+	pendingTxs []string
 }
 
 func (s *rootSuite) Before() {
@@ -199,6 +201,66 @@ func (s *rootSuite) ShouldBeAtHeight(pod string, height int64) {
 	require.NotNil(s, res)
 
 	require.Equal(s, height, *res.Height)
+}
+
+// TheNetworkCommitsTheTransactions is a step that triggers the next view and verifies that all pending transactions are committed
+func (s *rootSuite) TheNetworkCommitsTheTransactions() {
+	if len(s.pendingTxs) == 0 {
+		e2eLogger.Info().Msg("no pending transactions to commit")
+		require.FailNow(s, "no pending transactions to commit")
+	}
+
+	// trigger the next view
+	_, err := s.validator.RunCommand("dui", "TriggerNextView")
+	require.NoError(s, err)
+
+	// Make a copy of the pendingTxs slice to keep track of the transactions still pending
+	remainingTxs := make([]string, len(s.pendingTxs))
+	copy(remainingTxs, s.pendingTxs)
+
+	// wait up to 10 iterations for all txs to be committed
+	for i := 0; i < 10; i++ {
+		// List to hold the transactions that are still pending after this iteration
+		stillPendingTxs := []string{}
+
+		// Iterate over each remaining transaction
+		for _, tx := range remainingTxs {
+
+			// check if the tx has been committed
+			res, err := s.validator.RunCommand("query", "tx", tx)
+			if err != nil {
+				e2eLogger.Info().Msgf("failed to query tx %s: %s", tx, err.Error())
+				stillPendingTxs = append(stillPendingTxs, tx)
+				continue
+			}
+			if strings.Contains(res.Stdout, "Key not found") {
+				e2eLogger.Info().Msgf("tx %s not found", tx)
+				stillPendingTxs = append(stillPendingTxs, tx)
+				continue
+			}
+			if strings.Contains(res.Stdout, "tx failed") {
+				e2eLogger.Info().Msgf("tx %s failed", tx)
+				stillPendingTxs = append(stillPendingTxs, tx)
+				continue
+			}
+			if strings.Contains(res.Stdout, "tx succeeded") {
+				e2eLogger.Info().Msgf("tx %s succeeded", tx)
+				// No need to add the transaction to stillPendingTxs
+			}
+		}
+
+		// Update the remainingTxs slice
+		remainingTxs = stillPendingTxs
+
+		if len(remainingTxs) == 0 {
+			break
+		}
+	}
+
+	if len(remainingTxs) > 0 {
+		e2eLogger.Info().Msg("Not all pending transactions committed after 10 attempts")
+		require.FailNow(s, "Not all pending transactions committed after 10 attempts")
+	}
 }
 
 func (s *rootSuite) TheUserShouldBeAbleToSeeStandardOutputContaining(arg1 string) {
