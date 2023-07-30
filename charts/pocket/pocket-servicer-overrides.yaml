@@ -12,3 +12,8 @@ config:
     services:
       "0001":
         url: "https://eth-mainnet.gateway.pokt.network"
+      # 9999 is chosen as the ID for a service that always times out when responding to relays
+      "9999":
+        # Port 22222 is used by the mock service node to support timeout test scenarios
+        url: "http://localhost:22222/timing_out_service"
+        TimeoutMsec: 50

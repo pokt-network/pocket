@@ -1665,7 +1665,7 @@ data:
         {
           "address": "00001fff518b1cdddd74c197d76ba5b5dedc0301",
           "public_key": "05a25e527bf6f51676f61f2f1a96efaa748218ac82f54d3cdc55a4881389eb60",
-          "chains": ["0001"],
+          "chains": ["0001", "9999"],
           "staked_amount": "1000000000000",
           "paused_height": -1,
           "unstaking_height": -1,
@@ -1698,7 +1698,7 @@ data:
         {
           "address": "001022b138896c4c5466ac86b24a9bbe249905c2",
           "public_key": "56915c1270bc8d9280a633e0be51647f62388a851318381614877ef2ed84a495",
-          "chains": ["0001"],
+          "chains": ["0001", "9999"],
           "service_url": "http://servicer-001-pocket:50832",
           "staked_amount": "1000000000000",
           "paused_height": -1,

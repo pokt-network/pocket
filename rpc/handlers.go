@@ -227,7 +227,7 @@ func buildJsonRPCRelayPayload(body *RelayRequest) *coreTypes.Relay {
 	}
 
 	if body.Payload.Id != nil {
-		payload.JsonRpcPayload.Id = &coreTypes.JsonRpcId{Id: []byte(*body.Payload.Id)}
+		payload.JsonRpcPayload.Id = &coreTypes.JSONRPCId{Id: []byte(*body.Payload.Id)}
 	}
 
 	if body.Payload.Params != nil {

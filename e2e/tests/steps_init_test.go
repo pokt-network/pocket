@@ -4,10 +4,12 @@ package e2e
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	pocketLogger "github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/defaults"
@@ -38,6 +40,7 @@ const (
 	servicerA = "001"
 	appA      = "000"
 	serviceA  = "0001"
+	timeoutService = "9999"
 
 	relaychainEth = "RelayChainETH" // used to refer to Ethereum chain when retrieving relaychain settings
 )
@@ -96,33 +99,26 @@ func (s *rootSuite) Before() {
 	if err != nil {
 		e2eLogger.Fatal().Err(err).Msg("failed to get validator key map")
 	}
-	
+
 	s.validator = new(validatorPod)
 	s.clientset = clientSet
 	s.validatorKeys = vkmap
 	s.servicerKeys = skmap
 	s.appKeys = akmap
-
-	/*
-	s.servicerKeys = map[string]string{
-		// 000 servicer NOT in session
-		"000": "acbca21f295caefdfe480ceba85f3fed31a50915162f94867f9c23d8f474f4c6d1130c5eb920af8edd5b6bfa39d33aa787f421c8ba0786de4ca4e7703553bb97",
-		"001": "eec4072b095acf60be9d6be4093b14a24e2ddb6e9d385d980a635815961d025856915c1270bc8d9280a633e0be51647f62388a851318381614877ef2ed84a495",
-	}
-
-	s.appKeys = map[string]string{
-		"000": "468cc03083d72f2440d3d08d12143b9b74cca9460690becaa2499a4f04fddaa805a25e527bf6f51676f61f2f1a96efaa748218ac82f54d3cdc55a4881389eb60",
-	}
-	*/
-
 	s.relaychains = map[string]*relaychainSettings{
 		relaychainEth: {},
 	}
-}
+	}
 
 // TestFeatures runs the e2e tests specified in any .features files in this directory
 // * This test suite assumes that a LocalNet is running that can be accessed by `kubectl`
 func TestFeatures(t *testing.T) {
+	// setup a mock service node that causes a timeout by sleeping for the specified duration
+	// 	22222 is the port used for service ID "0004" in charts/pocket/pocket-servicer-overrides.yaml
+	//	100 is the delay in milliseconds, selected to be more than the timeout value for service "0004" in charts/pocket/pocket-servicer-overrides.yaml
+	//  	This setup is done here to ensure the http path is registered exactly once.
+	setupMockServiceNodeWithTimeOut(22222, 100)
+
 	runner := gocuke.NewRunner(t, &rootSuite{}).Path("*.feature")
 	runTests(runner)
 }
@@ -261,7 +257,23 @@ func (s *rootSuite) TheApplicationSendsAGetBalanceRelayAtASpecificHeightToAnEthe
 	servicerPrivateKey := s.getServicerPrivateKey(s.servicerKey)
 	appPrivateKey := s.getAppPrivateKey(appA)
 
-	s.sendTrustlessRelay(checkBalanceRelay, servicerPrivateKey.Address().String(), appPrivateKey.Address().String())
+	s.sendTrustlessRelay(checkBalanceRelay, servicerPrivateKey.Address().String(), appPrivateKey.Address().String(), serviceA, true)
+}
+
+// An Application requests the account balance of a specific address at a specific height on "ServiceWithTimeout", i.e. timing out, service
+func (s *rootSuite) TheApplicationSendsAGetBalanceRelayAtASpecificHeightToTheServicewithtimeoutService() {
+	params := fmt.Sprintf("%q: [%q, %q]", "params", s.relaychains[relaychainEth].account, s.relaychains[relaychainEth].height)
+	checkBalanceRelay := fmt.Sprintf("{%s, %s}", `"method": "eth_getBalance", "id": "1", "jsonrpc": "2.0"`, params)
+
+	servicerPrivateKey := s.getServicerPrivateKey(s.servicerKey)
+	appPrivateKey := s.getAppPrivateKey(appA)
+
+	s.sendTrustlessRelay(checkBalanceRelay, servicerPrivateKey.Address().String(), appPrivateKey.Address().String(), timeoutService, false)
+}
+
+// Then the request times out without a response
+func (s *rootSuite) TheRequestTimesOutWithoutAResponse() {
+	require.Contains(s, s.validator.result.Stdout, "HTTP status code: 500")
 }
 
 func (s *rootSuite) TheRelayResponseContains(relayResponse string) {
@@ -276,21 +288,23 @@ func (s *rootSuite) TheRelayResponseHasValidId() {
 	require.Contains(s, s.validator.result.Stdout, `"id":1`)
 }
 
-func (s *rootSuite) sendTrustlessRelay(relayPayload string, servicerAddr, appAddr string) {
+func (s *rootSuite) sendTrustlessRelay(relayPayload string, servicerAddr, appAddr, serviceId string, shouldSucceed bool) {
 	args := []string{
 		"Servicer",
 		"Relay",
 		appAddr,
 		servicerAddr,
 		// IMPROVE: add ETH_Goerli as a chain/service to genesis
-		serviceA,
+		serviceId,
 		relayPayload,
 	}
 
 	// TECHDEBT: run the command from a client, i.e. not a validator, pod.
 	res, err := s.validator.RunCommand(args...)
 
-	require.NoError(s, err)
+	if shouldSucceed {
+		require.NoError(s, err)
+	}
 
 	s.validator.result = res
 }
@@ -349,4 +363,21 @@ func inClusterConfig(t gocuke.TestingT) *rest.Config {
 	require.NoError(t, err)
 
 	return config
+}
+
+// setupMockServiceNodeWithTimeout sets up an http server on localhost that causes a timeout by delaying the response
+//
+//	delay is the desired delay in milliseconds
+func setupMockServiceNodeWithTimeOut(port int, delay int64) {
+	http.HandleFunc("/timing_out_service", func(http.ResponseWriter, *http.Request) {
+		time.Sleep(time.Millisecond * time.Duration(delay))
+		return
+	})
+
+	go func() {
+		err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+		if err != nil {
+			e2eLogger.Fatal().Err(err).Msg("unexpected error in mock service")
+		}
+	}()
 }
