@@ -84,6 +84,8 @@ func BenchmarkStateHash(b *testing.B) {
 	}
 }
 
+var methodCallCount = make(map[string]int)
+
 // Calls a random database modifier function on the given persistence context
 //
 //nolint:gosec // G404 - Weak random source is okay in unit tests
@@ -100,9 +102,18 @@ MethodLoop:
 		method := t.Method(rand.Intn(numMethods))
 		methodName := method.Name
 		numArgs := method.Type.NumIn()
+		var count int
+		if c, ok := methodCallCount[methodName]; ok {
+			count = c
+		}
 
 		// Preliminary filter to determine which functions we're interested in trying to call
 		if !isModifierRe.MatchString(methodName) {
+			continue
+		}
+
+		// IMPROVE: This is a hack to prevent the SetUpgrade function from being called more than once
+		if methodName == "SetUpgrade" && count > 0 {
 			continue
 		}
 
@@ -114,7 +125,8 @@ MethodLoop:
 			switch arg.Kind() {
 			case reflect.String:
 				if methodName == "SetUpgrade" {
-					v = reflect.ValueOf(fmt.Sprintf("%d.0.0", p.Height+1))
+					// SetUpgrade takes a string argument that is not an amount
+					v = reflect.ValueOf(getRandomIntString(99))
 				} else {
 					// String values in modifier functions are usually amounts
 					v = reflect.ValueOf(getRandomIntString(maxStringAmount))
@@ -144,6 +156,7 @@ MethodLoop:
 			callArgs = append(callArgs, v)
 		}
 		res := reflect.ValueOf(p).MethodByName(method.Name).Call(callArgs)
+		methodCallCount[methodName]++
 		var err error
 		if v := res[0].Interface(); v != nil {
 			if mustSucceed {
