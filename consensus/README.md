@@ -146,7 +146,7 @@ The consensus module currently depends on the `PaceMaker`, `StateSync`, `LeaderE
 It has a bootstrapping state where it:
   * Initializes connections to the network through a bootstrap node
   * Gets the latest block then switches to one of the mutually exclusive modes: `sync` or `consensus`
-  * Keeps an updated current height (the greatest height seen on the network)
+  * Keeps an updated current height (the greatest block height seen on the network)
 
 ```mermaid
 sequenceDiagram
@@ -271,9 +271,10 @@ Note right of SyncRoutine: StateSync has finished<br />Switch to consensus mode
 In this mode, the current node is up to date w.r.t. the latest block applied by the network and can start now participating to the consensus process.
 
 This process is driven by:
-* A pace maker, that alerts the consensus flow about key timings in the block production process.
+* A pace maker, that alerts the consensus flow about key timings in the block production process
   * `MinBlockTime`: The earliest time a leader node could reap the mempool and start proposing a new block
   * `RoundTimeout`: How much time a round is allowed to take before calling for another
+  * Pacemaker uses a local clock and a node is only aware of the global pace through new round events
 * A random but deterministic process to elect the leader of each new round
   * Given a unique random seed known to all validators and information about the current height and round being validated, any validator is able to know who is the leader of a round without the need to communicate with others
   * The leader election strategy aims to give validators a chance of leading the round proportional to their stake
