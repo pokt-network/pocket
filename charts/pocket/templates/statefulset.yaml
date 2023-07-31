@@ -105,10 +105,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-          livenessProbe:
-            httpGet:
-              path: /v1/health
-              port: rpc
+            - name: POCKET_P2P_ENABLE_PEER_DISCOVERY_DEBUG_RPC
+              value: "true"
+#          livenessProbe:
+#            httpGet:
+#              path: /v1/health
+#              port: rpc
           readinessProbe:
             httpGet:
               path: /v1/health

@@ -1,6 +1,8 @@
 package persistence
 
 import (
+	"fmt"
+
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -12,8 +14,10 @@ var (
 	_ persistencePStoreProviderFactory     = &persistencePeerstoreProvider{}
 )
 
-type persistencePStoreProviderOption func(*persistencePeerstoreProvider)
-type persistencePStoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, persistencePStoreProviderOption]
+type (
+	persistencePStoreProviderOption  func(*persistencePeerstoreProvider)
+	persistencePStoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, persistencePStoreProviderOption]
+)
 
 type persistencePeerstoreProvider struct {
 	base_modules.IntegrableModule
@@ -56,7 +60,23 @@ func (persistencePSP *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(h
 	return peerstore_provider.ActorsToPeerstore(persistencePSP, validators)
 }
 
+func (persistencePSP *persistencePeerstoreProvider) GetStakedPeerstoreAtCurrentHeight() (typesP2P.Peerstore, error) {
+	currentHeight := persistencePSP.GetBus().GetCurrentHeightProvider().CurrentHeight()
+	return persistencePSP.GetStakedPeerstoreAtHeight(currentHeight)
+}
+
 // GetStakedPeerstoreAtHeight implements the respective `PeerstoreProvider` interface method.
 func (persistencePSP *persistencePeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
-	return peerstore_provider.GetUnstakedPeerstore(persistencePSP.GetBus())
+	// TECHDEBT(#810, #811): use `bus.GetUnstakedActorRouter()` once it's available.
+	unstakedActorRouterMod, err := persistencePSP.GetBus().GetModulesRegistry().GetModule(typesP2P.UnstakedActorRouterSubmoduleName)
+	if err != nil {
+		return nil, err
+	}
+
+	unstakedActorRouter, ok := unstakedActorRouterMod.(typesP2P.Router)
+	if !ok {
+		return nil, fmt.Errorf("unexpected unstaked actor router submodule type: %T", unstakedActorRouterMod)
+	}
+
+	return unstakedActorRouter.GetPeerstore(), nil
 }

@@ -5,6 +5,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -31,7 +32,7 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 		}
 
 		oldPeerList := m.stakedActorRouter.GetPeerstore().GetPeerList()
-		pstoreProvider, err := m.getPeerstoreProvider()
+		pstoreProvider, err := peerstore_provider.GetPeerstoreProvider(m.GetBus())
 		if err != nil {
 			return err
 		}
@@ -62,20 +63,8 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 		m.logger.Debug().Fields(messaging.TransitionEventToMap(stateMachineTransitionEvent)).Msg("Received state machine transition event")
 
 		if stateMachineTransitionEvent.NewState == string(coreTypes.StateMachineState_P2P_Bootstrapping) {
-			staked, err := m.isStakedActor()
-			if err != nil {
+			if err := m.bootstrap(); err != nil {
 				return err
-			}
-			if staked {
-				// TECHDEBT(#859): this will never happen as the peerstore is
-				// seeded from consensus during P2P module construction.
-				if m.stakedActorRouter.GetPeerstore().Size() == 0 {
-					m.logger.Warn().Msg("No peers in peerstore, bootstrapping")
-
-					if err := m.bootstrap(); err != nil {
-						return err
-					}
-				}
 			}
 
 			// TECHDEBT(#859): for unstaked actors, unstaked actor (background)
@@ -87,6 +76,13 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 			}
 		}
 
+	case messaging.DebugMessageEventType:
+		debugMessage, ok := evt.(*messaging.DebugMessage)
+		if !ok {
+			return fmt.Errorf("unexpected DebugMessage type: %T", evt)
+		}
+
+		return m.handleDebugMessage(debugMessage)
 	default:
 		return fmt.Errorf("unknown event type: %s", event.MessageName())
 	}

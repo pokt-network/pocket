@@ -311,9 +311,9 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 			// This test should be redesigned using atomic counters or
 			// something similar to avoid this issue.
 			defer func() {
-				if err := recover(); err != nil {
-					if err.(error).Error() == "sync: negative WaitGroup counter" {
-						// ignore negative WaitGroup counter error
+				if rcv := recover(); err != nil {
+					// ignore negative WaitGroup counter error
+					if msg, ok := rcv.(string); ok && msg == "sync: negative WaitGroup counter" {
 						return
 					}
 					// fail the test for anything else; converting the panic into
@@ -380,18 +380,13 @@ func bootstrap(t *testing.T, ctx context.Context, testHosts []libp2pHost.Host) {
 			continue
 		}
 
-		p2pAddr, err := multiaddr.NewMultiaddr(fmt.Sprintf("/p2p/%s", bootstrapHost.ID()))
-		require.NoError(t, err)
-
 		addrInfo := libp2pPeer.AddrInfo{
-			ID: bootstrapHost.ID(),
-			Addrs: []multiaddr.Multiaddr{
-				bootstrapAddr.Encapsulate(p2pAddr),
-			},
+			ID:    bootstrapHost.ID(),
+			Addrs: []multiaddr.Multiaddr{bootstrapAddr},
 		}
 
 		t.Logf("connecting to %s...", addrInfo.ID.String())
-		err = h.Connect(ctx, addrInfo)
+		err := h.Connect(ctx, addrInfo)
 		require.NoError(t, err)
 	}
 }

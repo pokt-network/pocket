@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/protocol"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/unicast"
 	"github.com/pokt-network/pocket/p2p/utils"
@@ -67,7 +68,7 @@ func (*rainTreeRouter) Create(
 	bus.RegisterModule(rtr)
 
 	currentHeightProvider := bus.GetCurrentHeightProvider()
-	pstoreProvider, err := rtr.getPeerstoreProvider()
+	pstoreProvider, err := peerstore_provider.GetPeerstoreProvider(bus)
 	if err != nil {
 		return nil, err
 	}
@@ -122,10 +123,10 @@ func (rtr *rainTreeRouter) broadcastAtLevel(data []byte, level uint32) error {
 		return err
 	}
 
-	// TECHDEBT(#810, #811): remove once `bus.GetPeerstoreProvider()` is available.
-	// Pre-handling the error from `rtr.getPeerstoreProvider()` before it is called
+	// TECHDEBT(#811): remove once `bus.GetPeerstoreProvider()` is available.
+	// Pre-handling the error from `GetPeerstoreProvider()` before it is called
 	// downstream in a context without an error return value.
-	if _, err = rtr.getPeerstoreProvider(); err != nil {
+	if _, err = peerstore_provider.GetPeerstoreProvider(rtr.GetBus()); err != nil {
 		return err
 	}
 

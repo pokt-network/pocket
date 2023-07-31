@@ -23,15 +23,14 @@ func FetchPeerstore(cmd *cobra.Command) (types.Peerstore, error) {
 	if err != nil {
 		return nil, err
 	}
-	// TECHDEBT(#811): use `bus.GetPeerstoreProvider()` after peerstore provider
-	// is retrievable as a proper submodule
-	pstoreProvider, err := bus.GetModulesRegistry().GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
+	// TECHDEBT(#811): Remove type casting once Peerstore is available as a submodule
+	pstoreProvider, err := peerstore_provider.GetPeerstoreProvider(bus)
 	if err != nil {
-		return nil, errors.New("retrieving peerstore provider")
+		return nil, err
 	}
 	currentHeightProvider := bus.GetCurrentHeightProvider()
 	height := currentHeightProvider.CurrentHeight()
-	pstore, err := pstoreProvider.(peerstore_provider.PeerstoreProvider).GetStakedPeerstoreAtHeight(height)
+	pstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(height)
 	if err != nil {
 		return nil, fmt.Errorf("retrieving peerstore at height %d", height)
 	}
