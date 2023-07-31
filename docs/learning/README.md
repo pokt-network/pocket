@@ -1,6 +1,6 @@
 # Learning Pocket <!-- omit in toc -->
 
-_This is a live document on how to get ramped up on all the knowledge you need to contribute to the Pocket Protocol._
+**IMPORTANT NOTE TO THE READER**: _This document aims to be the `"single source that links out to everything"`, so it is unlikely you will ever have the time to read everything in here. It is intended to be a reference for you to come back to when you need to learn something new. PLEASE update it with additional resources you find helpful along the way. You can ask [GPokT](https://gpoktn.streamlit.app/) for help if you need it._
 
 - [🏁 Where to Start?](#-where-to-start)
 - [🤫 Secret Zone](#-secret-zone)
@@ -11,9 +11,10 @@ _This is a live document on how to get ramped up on all the knowledge you need t
 - [📚 Technical References](#-technical-references)
   - [Pocket Specific](#pocket-specific)
   - [Consensus](#consensus)
-  - [Merkle Trees](#merkle-trees)
+  - [🌲 Trees](#-trees)
   - [Persistence](#persistence)
   - [Ethereum](#ethereum)
+  - [Rollups \& Sequencers Sequencers](#rollups--sequencers-sequencers)
   - [Cryptography](#cryptography)
   - [P2P](#p2p)
   - [Blogs](#blogs)
@@ -139,6 +140,7 @@ This is a general set of technical links and recommended reading our team has fo
 - [Pocket easy-to-learn Documents](https://docs.pokt.network/learn/)
   - This is the best starting point for anyone who is non-technical or very new to the project
 - [Pocket Network V1 Specifications](https://github.com/pokt-network/pocket-network-protocol)
+- [Relay Mining: Verifiable Multi-Tenant Distributed Rate Limiting](https://arxiv.org/abs/2305.10672)
 
 - First Pocket Network V1 Presentations: The original presentations for Pocket V1 presented at the Mexico 2021 offsite
 
@@ -156,8 +158,12 @@ This is a general set of technical links and recommended reading our team has fo
   - The original hotstuff whitepaper does a great job at explaining the algorithm on which HotPOKT is built
 - [Attacks on BFT Algorithms](https://arxiv.org/pdf/1904.04098.pdf)
   - Covers various attacks on different BFT algorithms
+- [Lessons from hotstuff](https://arxiv.org/pdf/2305.13556.pdf)
+  - A 2023 review and lookback on HotStuff consensus
+- [LazyLedger: A Distributed Data Availability Ledger With Client-Side Smart Contracts](https://arxiv.org/abs/1905.09274)
+  - The original Celestia whitepaper focused on data availability sampling and light clients
 
-### Merkle Trees
+### 🌲 Trees
 
 - [Jellyfish Merkle Tree](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
   - An easy-to-read paper on JMT's that contains a good amount of background of how Merkle Trees work
@@ -166,12 +172,26 @@ This is a general set of technical links and recommended reading our team has fo
     - The Verkle Tree whitepaper provides a good background on Merkle trees and some details on polynomial commitments
   - [Vitalik's Verkle Tree Review](https://vitalik.ca/general/2021/06/18/verkle.html)
     - Vitalik's analysis dives deeper into the math behind Verkle Trees with an alternative
+  - [Verkle Trees EIP](https://notes.ethereum.org/@vbuterin/verkle_tree_eip)
+    - A few notes from Vitalik on how Verkle Trees could be implemented in Ethereum
+  - [Verkle trie for Eth1 state](https://dankradfeist.de/ethereum/2021/06/18/verkle-trie-for-eth1.html)
+    - A few notes on how Verkle Trees can be use to make Ethereum Stateless
+  - [](https://github.com/gballet/go-verkle)
 - [Cosmos Discussion about Storage and IAVL](https://github.com/cosmos/cosmos-sdk/issues/7100)
   - This is a Github discussion between various Cosmos contributors of why and how to deprecate IAVL and goes into an intensive discussion of Merkle Tree alternatives
 - [State commitment and storage review](https://paper.dropbox.com/doc/State-commitments-and-storage-review--Box9ruOvLDPaPc6ykc5XDnVmAg-wKl2RINZWD9I0DUmZIFwQ)
   - This research report was a result of the discussion above and goes in depth into state commitments and storage alternatives
 - [Plasma Core Merkle Sum Tree](https://plasma-core.readthedocs.io/en/latest/specs/sum-tree.html)
   - A good reference to understand some of the underlying cryptography in V0's proof/claim lifecycle 9934927 (Add a couple more helpful links)
+- Vitalik
+  - [Vitalik's Blog on Polynomial Commitments](https://vitalik.ca/general/2021/01/26/snarks.html#polynomial-commitments)
+    - A technical and gentle introduction to polynomial commitments by Vitalik from 2021
+  - [Vitalik's Blog on Merkle Proofs](https://vitalik.ca/general/2021/06/18/verkle.html#merkle-proofs)
+    - A technical and gentle introduction to Merkle Proofs by Vitalik from 2021
+- [Indexed Merkle Trees](https://docs.aztec.network/aztec/protocol/trees/indexed-merkle-tree/)
+  - Some problems identified by the Aztec team on using sparse Merkle trees for nullifier and their solution
+- [Why you should probably never sort your Merkle tree's leaves](https://alinush.github.io/2023/02/05/Why-you-should-probably-never-sort-your-Merkle-trees-leaves.html)
+  - Vulnerabilities and performance issues that come with sorting Merkle tree leaves
 
 ### Persistence
 
@@ -183,11 +203,21 @@ This is a general set of technical links and recommended reading our team has fo
 
 - [Paths toward single-slot finality](https://notes.ethereum.org/@vbuterin/single_slot_finality)
   - An ethereum-pov explanation on the difficulty of having large validator networks
+- [A note on data availability and erasure coding](https://github.com/ethereum/research/wiki/A-note-on-data-availability-and-erasure-coding)
+  - A read 2018 that kicked off discussions related to Data Availability, leading to what Celestia is today as well as related work in the Ethereum ecosystem
+- [EigenLyaer](https://2039955362-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FPy2Kmkwju3mPSo9jrKKt%2Fuploads%2F9tExk4U2OdiRKGEsUWqW%2FEigenLayer_WhitePaper.pdf?alt=media&token=c20ac4bd-badd-4826-9fb6-492923741c9e); the re-staking protocol
 
+### Rollups & Sequencers Sequencers
+
+- Espresso Systems
+- https://hackmd.io/@EspressoSystems/EspressoSequencer
+  https://hackmd.io/@EspressoSystems/SharedSequencing
+- [RollUps aren't real](https://joncharbonneau.substack.com/p/rollups-arent-real?utm_source=profile&utm_medium=reader2)
 ### Cryptography
 
 - [Anoma Whitepaper](https://github.com/anoma/whitepaper/blob/main/whitepaper.pdf)
   - This whitepaper is a bit dense but introduces a great way of thinking about the building blocks of decentralized applications and blockchains focused on security and intent. It always provides a great historical background on both Bitcoin and Ethereum.
+  - This is the whitepaper is the foundation of "Intenet Driven Design" which has started to become a popular in 2023
 - [Threshold signatures presentation](https://docs.google.com/presentation/d/1G4XGqrBLwqMyDQce_xpPQUEMOK4lFrneuvGYU3MVDsI/edit#slide=id.g1246936523c_0_26)
   - A great presentation by Alin Tomescu (founding engineer) that builds intuition around threshold signatures, signature aggregation, etc
 - [ECDSA is not that bad: two-party signing without Schnorr or BLS](https://medium.com/cryptoadvance/ecdsa-is-not-that-bad-two-party-signing-without-schnorr-or-bls-1941806ec36f)
@@ -220,12 +250,12 @@ This is a general set of technical links and recommended reading our team has fo
 
 - [Pocket Network Blog](https://www.blog.pokt.network/)
 - [OG Pocket Network Blog](https://medium.com/@POKTnetwork)
-- [Vitalik's blog](https://vitalik.ca/categories/blockchains.html)
-- [Mike's blog](https://morourke.org/)
-- [Alin Tomescu](https://alinush.github.io/)
-- [Joachim Neu](https://www.jneu.net/)
-  - See the articles under the **Technical reports** section
-- [Decentralized Thoughts by Ittai Ibrahim](https://decentralizedthoughts.github.io/about-ittai); the RSS feed is available [here](https://decentralizedthoughts.github.io/feed.xml)
+- [Mike's blog](https://morourke.org/); yours truly
+- [Vitalik's blog](https://vitalik.ca/categories/blockchains.html); hopefully Vitalik needs no introduction if you're reading this
+- [Alin Tomescu](https://alinush.github.io/); Alin the is one of the founding engineers at Aptos Labs
+- [Joachim Neu](https://www.jneu.net/); focus on the articles under the **Technical reports** section
+- [Decentralized Thoughts by Ittai Ibrahim](about-ittai); The best blog about everything consensus blockchain related by one of the leading researchers in the field (the RSS feed is available [here](https://decentralizedthoughts.github.io/feed.xml))
+- [Polymer Labs](https://polymerlabs.medium.com/); polymer has very easy to digest and easy to read blogs on IBC and interoperability
 
 ## ❌ Non-suggested reads
 

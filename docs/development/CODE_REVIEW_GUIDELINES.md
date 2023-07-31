@@ -1,6 +1,6 @@
-# Pocket's Code Development & Review Guidelines <!-- omit in toc -->
+# Pocket's Code Review Guidelines <!-- omit in toc -->
 
-_This document is a living document and will be updated as the team learns and grows._
+_This document is a living document and will be updated as the team learns and grows. It is a supplement to the [code guidelines](./CODE_GUIDELINES.md)_
 
 ## Table of Contents <!-- omit in toc -->
 
@@ -18,6 +18,12 @@ _This document is a living document and will be updated as the team learns and g
   - [Finishing a Review](#finishing-a-review)
   - [Figure 3: Submitting A Review](#figure-3-submitting-a-review)
   - [Merging](#merging)
+- [Branch Cleanup](#branch-cleanup)
+- [Doing Code Review Tips](#doing-code-review-tips)
+  - [Checkboxes](#checkboxes)
+  - [Changes Since Last Review](#changes-since-last-review)
+  - [Merge with main - don't rebase and force push](#merge-with-main---dont-rebase-and-force-push)
+- [Resolving Comments](#resolving-comments)
 
 ## Code Quality
 
@@ -128,3 +134,44 @@ If you believe the Pull Request looks good to merge, select "Approve" and submit
 
 - Core member needs to approve PR
 - Core member can merge PR on behalf of contributor (following instructions above)
+
+## Branch Cleanup
+
+After a PR is merged in or a branch is no longer needed, the branch should be deleted. This avoid the buildup of too many old and unused branches that are no longer relevant.
+
+However, it is sometimes useful to keep a branch in place.
+
+1. If you merged in a PR but want to keep the branch around, please leave a comment [like this](https://github.com/pokt-network/pocket/pull/806#issuecomment-1589430420) to make sure it is not removed.
+
+![do not remove branch](https://github.com/pokt-network/pocket/assets/1892194/31174830-c748-4a39-b6d4-b0f0752765af)
+
+2. If your branch is not part of a PR, or should not be deleted by anyone but the owner, make sure to add a `do_no_delete` in the branch name itself.
+
+## Doing Code Review Tips
+
+### Checkboxes
+
+As you're reviewing a PR, you can select the `Viewed` checkbox to keep track of what you've reviewed or what has changed.
+
+If you submit an uncomplete review, you can show the author which files you have or haven't reviewed up to that point
+
+![checkbox reviewed files](https://github.com/pokt-network/pocket/assets/1892194/0d352548-7f5b-4bff-ab60-8fca46f915cd)
+
+### Changes Since Last Review
+
+If you're coming back to a PR you've already reviewed, you can use the "Show changes since your last review" to only inspect the difference.
+
+![show changes since your last review](https://github.com/pokt-network/pocket/assets/1892194/42dd5c5d-b13a-4419-8da5-33cb703ce18a)
+
+### Merge with main - don't rebase and force push
+
+As an author of a PR, rebasing, rewriting history and force pushing is okay until you have your first review. After that, it will lead to the error below to the reviewer if using the feature above. Please bias to doing a `git merge main` after at least one review has been completely.
+
+![missing changes](https://github.com/pokt-network/pocket/assets/1892194/1a8ae961-4934-4d4c-88c4-97d3720ff90b)
+
+## Resolving Comments
+
+1. If the author left an actionable comment: `resolve` the comment when you've addressed it.
+2. If the author left an actionable comment that you don't plan to address or need more information on: `do not resolve` the comment and leave a reply. If it will not be tended to, the author must resolve it.
+3. Once all comments have been resolved, the author should `re-request` a review.
+4. Once all comments have been resolved, the reviewer should `approve` a review if they have no more comments.
