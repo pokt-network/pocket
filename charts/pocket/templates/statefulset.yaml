@@ -81,6 +81,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.privateKeySecretKeyRef.name | quote }}
                   key: {{ .Values.privateKeySecretKeyRef.key | quote }}
+            - name: POCKET_IBC_HOST_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.privateKeySecretKeyRef.name | quote }}
+                  key: {{ .Values.privateKeySecretKeyRef.key | quote }}
           {{ end }}
             - name: POSTGRES_USER
             {{ include "pocket.postgresqlUserValueOrSecretRef" . | nindent 14 }}
