@@ -213,6 +213,7 @@ This is a general set of technical links and recommended reading our team has fo
 - https://hackmd.io/@EspressoSystems/EspressoSequencer
   https://hackmd.io/@EspressoSystems/SharedSequencing
 - [RollUps aren't real](https://joncharbonneau.substack.com/p/rollups-arent-real?utm_source=profile&utm_medium=reader2)
+
 ### Cryptography
 
 - [Anoma Whitepaper](https://github.com/anoma/whitepaper/blob/main/whitepaper.pdf)
