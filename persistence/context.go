@@ -12,7 +12,6 @@ import (
 	"github.com/pokt-network/pocket/persistence/indexer"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
-	"go.uber.org/multierr"
 )
 
 var _ modules.PersistenceRWContext = &PostgresContext{}
@@ -50,7 +49,7 @@ func (p *PostgresContext) RollbackToSavePoint() error {
 	ctx, _ := p.getCtxAndTx()
 	pgErr := p.tx.Rollback(ctx)
 	treesErr := p.stateTrees.Rollback()
-	return multierr.Combine(pgErr, treesErr)
+	return errors.Join(pgErr, treesErr)
 }
 
 // Full details in the thread from the PR review: https://github.com/pokt-network/pocket/pull/285#discussion_r1018471719
