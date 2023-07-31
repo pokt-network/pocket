@@ -148,7 +148,7 @@ func TestRelay_Admit(t *testing.T) {
 				sessionHeight(testSessionStartingHeight),
 				sessionServicers(testServicer1),
 			)
-			mockBus := mockBus(t, &config, uint64(testCurrentHeight), session, testCase.usedSessionTokens)
+			mockBus := mockBus(t, config, uint64(testCurrentHeight), session, testCase.usedSessionTokens)
 
 			servicerMod, err := CreateServicer(mockBus)
 			require.NoError(t, err)
@@ -195,7 +195,7 @@ func TestRelay_Execute(t *testing.T) {
 				config.Services[svc].Url = ts.URL
 			}
 
-			servicer := &servicer{config: &config}
+			servicer := &servicer{config: config}
 			_, err := servicer.executeRelay(testCase.relay)
 			require.ErrorIs(t, err, testCase.expectedErr)
 			// INCOMPLETE(@adshmh): verify HTTP request properties: payload/headers/user-agent/etc.
@@ -223,7 +223,7 @@ func TestRelay_Sign(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			config := testServicerConfig(withPrivateKey(testCase.privateKey))
-			mockBus := mockBus(t, &config, 0, &coreTypes.Session{}, 0)
+			mockBus := mockBus(t, config, 0, &coreTypes.Session{}, 0)
 
 			servicerMod, err := CreateServicer(mockBus)
 			if testCase.expectErr {
@@ -315,7 +315,7 @@ func withPrivateKey(key string) func(*configs.ServicerConfig) {
 	}
 }
 
-func testServicerConfig(editors ...configModifier) configs.ServicerConfig {
+func testServicerConfig(editors ...configModifier) *configs.ServicerConfig {
 	config := configs.ServicerConfig{
 		PrivateKey: testServicer1PrivateKey.String(),
 		Services: map[string]*configs.ServiceConfig{
@@ -328,7 +328,7 @@ func testServicerConfig(editors ...configModifier) configs.ServicerConfig {
 		editor(&config)
 	}
 
-	return config
+	return &config
 }
 
 type sessionModifier func(*coreTypes.Session)
