@@ -51,7 +51,7 @@ func newDebugUISubCommands() []*cobra.Command {
 			Use:               promptItem,
 			PersistentPreRunE: helpers.P2PDependenciesPreRunE,
 			Run: func(cmd *cobra.Command, _ []string) {
-				// TECHDEBT: this is a magic number, but an alternative would be to have the p2p module wait until connections are open and to flush the message correctly
+				// TECHDEBT(#874): this is a magic number, but an alternative would be to have the p2p module wait until connections are open and to flush the message correctly
 				time.Sleep(500 * time.Millisecond) // give p2p module time to start
 				handleSelect(cmd, cmd.Use)
 				time.Sleep(500 * time.Millisecond) // give p2p module time to broadcast
