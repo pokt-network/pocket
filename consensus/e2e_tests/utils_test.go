@@ -840,8 +840,6 @@ func advanceTime(t *testing.T, clck *clock.Mock, duration time.Duration) {
 	clck.Add(duration)
 	t.Logf("[⌚ CLOCK ⏩] advanced by %v", duration)
 	logTime(t, clck)
-	// Give goroutines a chance to run
-	clck.Add(0)
 }
 
 // sleep pauses the goroutine for the given duration on the mock clock and logs what just happened.

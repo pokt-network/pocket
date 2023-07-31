@@ -39,7 +39,7 @@ type Pacemaker interface {
 	PacemakerDebug
 
 	ShouldHandleMessage(message *typesCons.HotstuffMessage) (bool, error)
-	RegisterMinBlockTimeDelay()
+	StartMinBlockTimeDelay()
 	DelayBlockPreparation() bool
 
 	RestartTimer()
@@ -64,14 +64,15 @@ type pacemaker struct {
 	logPrefix string
 }
 
-// Structure to handle delaying block preparation (reaping the block mempool)
-// by adding a delay before the next prepare request
+// prepareStepDelayer delays block preparation (mempool reaping)
+// by adding a delay before the next prepare request to prevent block creation
 type prepareStepDelayer struct {
-	m              sync.Mutex         // Mutex locking access to this structure and prevent inconsistent state
-	ch             chan bool          // Whenever there is a block proposal request arriving before the timeout, this channel is used to signal to it to whether build the block or not (if better candidate request with higher QC)
-	cancelFunc     context.CancelFunc // This is used to cancel an ongoing timeout. It should not happen, but future code changes may no longer preserve this guarantee, so this feature maintain its own cancellation logic
-	blockProposed  bool
-	deadlinePassed bool
+	m                  sync.Mutex         // mutex locking access to this structure and prevent inconsistent state
+	ch                 chan bool          // whenever there is a block proposal request arriving before the timeout, this channel is used to signal to it to whether build the block or not (if better candidate request with higher QC)
+	cancelFunc         context.CancelFunc // cancels an ongoing timeout. It should not happen, but future code changes may no longer preserve this guarantee, so this feature maintain its own cancellation logic
+	shouldProposeBlock bool               // a flag to capture whether a block was proposed, so later calls will skip building the block
+	delayExhausted     bool               // the delay for this step/round has already passed, so should create the block ASAP
+	minBlockTime       time.Duration      // the minimum time to wait before trying to propose a block
 }
 
 func CreatePacemaker(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -100,11 +101,12 @@ func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 		quorumCertificate:         nil,
 	}
 	m.prepareStepDelayer = prepareStepDelayer{
-		m:              sync.Mutex{},
-		ch:             nil,
-		cancelFunc:     nil,
-		blockProposed:  false,
-		deadlinePassed: false,
+		m:                  sync.Mutex{},
+		ch:                 nil,
+		cancelFunc:         nil,
+		shouldProposeBlock: false,
+		delayExhausted:     false,
+		minBlockTime:       time.Duration(m.pacemakerCfg.MinBlockTimeMsec * uint64(time.Millisecond)),
 	}
 
 	return m, nil
@@ -192,7 +194,6 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 func (m *pacemaker) RestartTimer() {
 	// NOTE: Not deferring a cancel call because this function is asynchronous.
-	// DISCUSS: Should we have a lock to manipulate m.roundCancelFunc?
 	if m.roundCancelFunc != nil {
 		m.roundCancelFunc()
 	}
@@ -265,38 +266,41 @@ func (m *pacemaker) NewHeight() {
 		)
 }
 
-// This is called each time the system wants a delayed signal to build a block
-func (m *pacemaker) RegisterMinBlockTimeDelay() {
-	// Discard any previous timer
-	// DISCUSS: This should not happen, Identify cases where an active timer has to be discarded, remove cancellation logic if none
+// StartMinBlockTimeDelay should be called when a delay should be introduced into proposing a new block
+func (m *pacemaker) StartMinBlockTimeDelay() {
+	// Discard any previous timer if one exists
 	if m.prepareStepDelayer.cancelFunc != nil {
+		m.logger.Warn().Msg("RegisterMinBlockTimeDelay has an existing timer which should not happen. Releasing for now...")
 		m.prepareStepDelayer.cancelFunc()
 	}
 
-	m.prepareStepDelayer.blockProposed = false
-	m.prepareStepDelayer.deadlinePassed = false
+	m.prepareStepDelayer.shouldProposeBlock = false
+	m.prepareStepDelayer.delayExhausted = false
 
-	minBlockTime := time.Duration(m.pacemakerCfg.MinBlockTimeMsec * uint64(time.Millisecond))
 	ctx, cancel := context.WithCancel(context.TODO())
 	m.prepareStepDelayer.cancelFunc = cancel
 
+	// Start a timer to wait for the MinBlockTimeMsec delay
+	// If a channel is provided, signal when the timer expires to it
 	go func() {
 		select {
+		// only called if the delay timer is explicitly cancelled
 		case <-ctx.Done():
 			return
-		case <-m.GetBus().GetRuntimeMgr().GetClock().After(minBlockTime):
+		// called after the minimum block delay is exhausted meaning it is time to propose a new block
+		case <-m.GetBus().GetRuntimeMgr().GetClock().After(m.prepareStepDelayer.minBlockTime):
 			m.prepareStepDelayer.m.Lock()
 			defer m.prepareStepDelayer.m.Unlock()
 
-			// After the timeout, if there was any candidate request waiting for a signal, tell it to build the block
+			// After the timeout, if there was any `HotstuffLeaderMessageHandler.HandleNewRoundMessage()` call delayed to propose a block, unblock it by emitting true
 			if m.prepareStepDelayer.ch != nil {
 				m.prepareStepDelayer.ch <- true
 				close(m.prepareStepDelayer.ch)
-				m.prepareStepDelayer.blockProposed = true
+				m.prepareStepDelayer.shouldProposeBlock = true
 			}
 
 			// From now on, build the block ASAP
-			m.prepareStepDelayer.deadlinePassed = true
+			m.prepareStepDelayer.delayExhausted = true
 
 			// No need to cancel the context anymore
 			m.prepareStepDelayer.cancelFunc = nil
@@ -304,30 +308,31 @@ func (m *pacemaker) RegisterMinBlockTimeDelay() {
 	}()
 }
 
-// This is called when conditions are met by the leader to build a block but still needs to wait for the MinBlockTimeMsec delay before reaping the mempool
+// DelayBlockPreparation is called when conditions are met by the leader to build a block but still needs to wait for the MinBlockTimeMsec delay before reaping the mempool.
 // With MinBlockTimeMsec delay, multiple concurrent calls may happen
+// DelayBlockPreparation is a synchronous blocking function that waits for channel to emit whether to propose a block or not given multiple HotstuffLeaderMessageHandler.HandleNewRoundMessage calling this function concurrently.
 // It makes sure that:
 //   - Block proposal is made by only one of the possible `HotstuffLeaderMessageHandler.HandleNewRoundMessage()` concurrent (because delayed) calls
 //   - If the timer expires, the first call to this method will trigger the block proposal
 //   - If a late message is received AFTER the a block is marked as proposed by another call, the late message is discarded
-//   - Reads and affectations to pacemaker.DelayBlockPreparation state are protected by a mutex
+//   - Reads and assignments to pacemaker.prepareStepDelayer state are protected by a mutex
 func (m *pacemaker) DelayBlockPreparation() bool {
 	m.prepareStepDelayer.m.Lock()
 
-	if m.prepareStepDelayer.blockProposed {
+	if m.prepareStepDelayer.shouldProposeBlock {
 		m.prepareStepDelayer.m.Unlock()
 		return false
 	}
 
-	// If there already is a channel signaling block proposal, make sure it gives up
+	// If there already is a channel signaling block proposal, make sure it does not propose a block
 	if m.prepareStepDelayer.ch != nil {
 		m.prepareStepDelayer.ch <- false
 		close(m.prepareStepDelayer.ch)
 	}
 
 	// Deadline has passed, no need to have a channel, propose a block now
-	if m.prepareStepDelayer.deadlinePassed {
-		m.prepareStepDelayer.blockProposed = true
+	if m.prepareStepDelayer.delayExhausted {
+		m.prepareStepDelayer.shouldProposeBlock = true
 		m.prepareStepDelayer.m.Unlock()
 		return true
 	}

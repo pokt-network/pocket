@@ -62,9 +62,8 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// TODO: Add test to make sure same block is not applied twice if round is interrupted after being 'Applied'.
 	// TODO: Add more unit tests for these checks...
 	if m.shouldPrepareNewBlock(highPrepareQC) {
-		// Place this where we want to start the timer
-		// Placed here, timer starts when we receive enough NewRound messages
-		m.paceMaker.RegisterMinBlockTimeDelay()
+		// Leader should prepare a new block. Introducing a delay based on configurations.
+		m.paceMaker.StartMinBlockTimeDelay()
 
 		// This function delays block preparation and returns false if a concurrent preparation request with higher QC is available
 		if shouldPrepareBlock := m.paceMaker.DelayBlockPreparation(); !shouldPrepareBlock {
