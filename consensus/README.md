@@ -282,6 +282,51 @@ This process is driven by:
 * A consensus flow that aims to increment the height (thus block production) of the chain
   * See [Block Generation](#block-generation)
 
+### PaceMaker block proposal delaying
+
+The pace maker ensures minimum block time production with the aim to have constant block production pace.
+
+* Adding a delay instead of directly proposing a block makes the the process concurrent.
+  * It ensures that the block proposal is done only once per new round step
+* When the leader gathers enough `NewRound` messages from replicas to propose a block, a first call to build a block is made
+  * The proposal attempt may happen before `MinBlockTime` which the `PaceMaker` will delay.
+  * While delayed, more `NewRound` messages may come-in and the node will use the higher QC obtained to propose the block (discards the previous QC).
+  * If the timer expires before having any block proposal attempt, any call will trigger the block proposal without delay
+  * If a late message is received after a block is proposed by another call, the late message is discarded
+
+#### Concurrent requests
+```mermaid
+sequenceDiagram
+  participant ReapMempool
+  participant BlockPrepare
+  participant Delay
+
+  ReapMempool->>BlockPrepare:RequestPrepare (id=1)
+  BlockPrepare->>+Delay:Start delay
+  Note right of Delay: Wait for minBlockTime
+  ReapMempool->>BlockPrepare:RequestPrepare (id=2)
+  BlockPrepare--xReapMempool:doNotPrepare (id=1)
+  Delay->>-BlockPrepare:End delay
+  BlockPrepare->>ReapMempool:doPrepare (id=2)
+  ReapMempool->>BlockPrepare: Prepare block
+```
+
+#### Late requests
+
+```mermaid
+sequenceDiagram
+  participant ReapMempool
+  participant BlockPrepare
+  participant Delay
+
+  BlockPrepare->>+Delay:Start delay
+  Note right of Delay: Wait for minBlockTime
+  Delay->>-BlockPrepare:End delay
+  ReapMempool->>BlockPrepare:doPrepare (id=1)
+  BlockPrepare->>ReapMempool:RequestPrepare (id=1)
+  ReapMempool->>BlockPrepare: Prepare block
+```
+
 ### Example height,round,step increment
 
 | Height | Round | Step | Comment                                  |
