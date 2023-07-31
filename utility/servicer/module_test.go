@@ -29,7 +29,8 @@ const (
 
 var (
 	// Initialized in TestMain
-	testServicer1 *coreTypes.Actor
+	testServicer1           *coreTypes.Actor
+	testServicer1PrivateKey crypto.PrivateKey
 
 	// Initialized in TestMain
 	testApp1 *coreTypes.Actor
@@ -50,11 +51,16 @@ func testPublicKey() (publicKey, address string) {
 
 // TestMain initialized the test fixtures for all the unit tests in the servicer package
 func TestMain(m *testing.M) {
-	servicerPublicKey, servicerAddr := testPublicKey()
+	privateKey, err := crypto.GeneratePrivateKey()
+	if err != nil {
+		log.Fatalf("Error generating private key: %s", err)
+	}
+
+	testServicer1PrivateKey = privateKey
 	testServicer1 = &coreTypes.Actor{
 		ActorType:    coreTypes.ActorType_ACTOR_TYPE_SERVICER,
-		Address:      servicerAddr,
-		PublicKey:    servicerPublicKey,
+		Address:      privateKey.Address().String(),
+		PublicKey:    privateKey.PublicKey().String(),
 		Chains:       []string{"POKT-UnitTestNet"},
 		StakedAmount: "1000",
 	}
@@ -197,6 +203,49 @@ func TestRelay_Execute(t *testing.T) {
 	}
 }
 
+func TestRelay_Sign(t *testing.T) {
+	testCases := []struct {
+		name       string
+		privateKey string
+		expected   []byte
+		expectErr  bool
+	}{
+		{
+			name:      "Create fails if private key is missing from config",
+			expectErr: true,
+		},
+		{
+			name:       "Message is signed using correct private key",
+			privateKey: testServicer1PrivateKey.String(),
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			config := testServicerConfig(withPrivateKey(testCase.privateKey))
+			mockBus := mockBus(t, &config, 0, &coreTypes.Session{}, 0)
+
+			servicerMod, err := CreateServicer(mockBus)
+			if testCase.expectErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			servicer, ok := servicerMod.(*servicer)
+			require.True(t, ok)
+
+			message := []byte("message")
+			signature, err := servicer.sign(message)
+			require.NoError(t, err)
+
+			isSignatureValid := testServicer1PrivateKey.PublicKey().Verify(message, signature)
+			require.True(t, isSignatureValid)
+		})
+	}
+}
+
 type relayEditor func(*coreTypes.Relay)
 
 func testRelayServicer(publicKey string) relayEditor {
@@ -258,15 +307,28 @@ func testRelay(editors ...relayEditor) *coreTypes.Relay {
 	return relay
 }
 
-func testServicerConfig() configs.ServicerConfig {
-	return configs.ServicerConfig{
-		PublicKey: testServicer1.PublicKey,
-		Address:   testServicer1.Address,
+type configModifier func(*configs.ServicerConfig)
+
+func withPrivateKey(key string) func(*configs.ServicerConfig) {
+	return func(cfg *configs.ServicerConfig) {
+		cfg.PrivateKey = key
+	}
+}
+
+func testServicerConfig(editors ...configModifier) configs.ServicerConfig {
+	config := configs.ServicerConfig{
+		PrivateKey: testServicer1PrivateKey.String(),
 		Services: map[string]*configs.ServiceConfig{
 			"POKT-UnitTestNet": testServiceConfig1,
 			"ETH-Goerli":       testServiceConfig1,
 		},
 	}
+
+	for _, editor := range editors {
+		editor(&config)
+	}
+
+	return config
 }
 
 type sessionModifier func(*coreTypes.Session)

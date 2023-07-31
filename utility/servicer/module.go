@@ -17,7 +17,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"github.com/pokt-network/pocket/shared/utils"
@@ -60,6 +60,13 @@ type servicer struct {
 	// totalTokens is a mapping from application public keys to session metadata to keep track of session tokens
 	// OPTIMIZE: There is an opportunity to simplify the code through various means such as, but not limited to, avoiding extra math.big operations or excess GetParam calls
 	totalTokens map[string]*sessionTokens
+
+	// private key of the servicer, used to sign the served relays. It is parsed from the private key provided in the servicer's configuration.
+	privateKey cryptoPocket.Ed25519PrivateKey
+	// address of the servicer, calculated from the provided private key.
+	address string
+	// public key of the servicer, calculated from the provided private key.
+	publicKey string
 }
 
 var (
@@ -89,6 +96,15 @@ func (*servicer) Create(bus modules.Bus, options ...modules.ModuleOption) (modul
 
 	cfg := bus.GetRuntimeMgr().GetConfig()
 	s.config = cfg.Servicer
+
+	privateKey, err := cryptoPocket.NewPrivateKey(cfg.Servicer.PrivateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	s.privateKey = privateKey.(cryptoPocket.Ed25519PrivateKey)
+	s.address = s.privateKey.Address().String()
+	s.publicKey = s.privateKey.PublicKey().String()
 
 	return s, nil
 }
@@ -161,8 +177,12 @@ func (s *servicer) isRelayVolumeApplicable(session *coreTypes.Session, relay *co
 		return nil, nil, false, fmt.Errorf("Error marshalling relay and/or response: %w", err)
 	}
 
-	relayDigest := crypto.SHA3Hash(relayReqResBytes)
-	signedDigest := s.sign(relayDigest)
+	relayDigest := cryptoPocket.SHA3Hash(relayReqResBytes)
+	signedDigest, err := s.sign(relayDigest)
+	if err != nil {
+		return nil, relayReqResBytes, false, fmt.Errorf("Error checking volume applicability for relay in session %s: %w", session.Id, err)
+	}
+
 	response.ServicerSignature = hex.EncodeToString(signedDigest)
 	collision, err := s.isRelayVolumeApplicableOnChain(session, relayDigest)
 	if err != nil {
@@ -173,9 +193,13 @@ func (s *servicer) isRelayVolumeApplicable(session *coreTypes.Session, relay *co
 	return signedDigest, relayReqResBytes, collision, nil
 }
 
-// INCOMPLETE(#832): provide a private key to the servicer and use it to sign all relays
-func (s *servicer) sign(bz []byte) []byte {
-	return bz
+// sign uses the servicer's private key, provided through configuration, to sign all relay digests.
+func (s *servicer) sign(bz []byte) ([]byte, error) {
+	signature, err := s.privateKey.Sign(bz)
+	if err != nil {
+		return nil, fmt.Errorf("Error signing message: %w", err)
+	}
+	return signature, nil
 }
 
 // INCOMPLETE: implement this according to the comment below
@@ -218,7 +242,7 @@ func (s *servicer) validateRelayMeta(meta *coreTypes.RelayMeta, currentHeight in
 
 func (s *servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable, currentHeight int64) error {
 	if _, ok := s.config.Services[relayChain.Id]; !ok {
-		return fmt.Errorf("service %s not supported by servicer %s configuration", relayChain.Id, s.config.Address)
+		return fmt.Errorf("service %s not supported by servicer %s configuration", relayChain.Id, s.address)
 	}
 
 	// DISCUSS: either update NewReadContext to take a uint64, or the GetCurrentHeight to return an int64.
@@ -229,13 +253,13 @@ func (s *servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable,
 	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
 
 	// DISCUSS: should we update the GetServicer signature to take a string instead?
-	servicer, err := readCtx.GetServicer([]byte(s.config.Address), currentHeight)
+	servicer, err := readCtx.GetServicer([]byte(s.address), currentHeight)
 	if err != nil {
 		return fmt.Errorf("error reading servicer from persistence: %w", err)
 	}
 
 	if !slices.Contains(servicer.Chains, relayChain.Id) {
-		return fmt.Errorf("chain %s not supported by servicer %s configuration fetched from persistence", relayChain.Id, s.config.Address)
+		return fmt.Errorf("chain %s not supported by servicer %s configuration fetched from persistence", relayChain.Id, s.address)
 	}
 
 	return nil
@@ -322,8 +346,8 @@ func (s *servicer) setAppSessionTokens(session *coreTypes.Session, tokens *sessi
 
 // validateServicer makes sure the servicer is A) active in the current session, and B) has not served more than its allocated relays for the session
 func (s *servicer) validateServicer(meta *coreTypes.RelayMeta, session *coreTypes.Session) error {
-	if meta.ServicerPublicKey != s.config.PublicKey {
-		return fmt.Errorf("relay servicer key %s does not match this servicer instance %s", meta.ServicerPublicKey, s.config.PublicKey)
+	if meta.ServicerPublicKey != s.publicKey {
+		return fmt.Errorf("relay servicer key %s does not match this servicer instance %s", meta.ServicerPublicKey, s.publicKey)
 	}
 
 	var found bool
