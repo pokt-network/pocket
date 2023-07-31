@@ -2,12 +2,12 @@ package utils
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	libp2pProtocol "github.com/libp2p/go-libp2p/core/protocol"
-	"go.uber.org/multierr"
 
 	"github.com/pokt-network/pocket/logger"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -26,7 +26,7 @@ const (
 func PopulateLibp2pHost(host libp2pHost.Host, pstore typesP2P.Peerstore) (err error) {
 	for _, peer := range pstore.GetPeerList() {
 		if addErr := AddPeerToLibp2pHost(host, peer); addErr != nil {
-			err = multierr.Append(err, addErr)
+			err = errors.Join(err, addErr)
 		}
 	}
 	return err
@@ -101,7 +101,7 @@ func Libp2pSendToPeer(host libp2pHost.Host, protocolID libp2pProtocol.ID, data [
 	}
 
 	if n, err := stream.Write(data); err != nil {
-		return multierr.Append(
+		return errors.Join(
 			fmt.Errorf("writing to stream: %w", err),
 			stream.Reset(),
 		)

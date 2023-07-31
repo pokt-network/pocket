@@ -1,11 +1,11 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/protocol"
-	"go.uber.org/multierr"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -56,15 +56,15 @@ type RainTreeConfig struct {
 // IsValid implements the respective member of the `RouterConfig` interface.
 func (cfg *baseConfig) IsValid() (err error) {
 	if cfg.Addr == nil {
-		err = multierr.Append(err, fmt.Errorf("pokt address not configured"))
+		err = errors.Join(err, fmt.Errorf("pokt address not configured"))
 	}
 
 	if cfg.Host == nil {
-		err = multierr.Append(err, fmt.Errorf("host not configured"))
+		err = errors.Join(err, fmt.Errorf("host not configured"))
 	}
 
 	if cfg.Handler == nil {
-		err = multierr.Append(err, fmt.Errorf("handler not configured"))
+		err = errors.Join(err, fmt.Errorf("handler not configured"))
 	}
 	return err
 }
@@ -72,23 +72,23 @@ func (cfg *baseConfig) IsValid() (err error) {
 // IsValid implements the respective member of the `RouterConfig` interface.
 func (cfg *UnicastRouterConfig) IsValid() (err error) {
 	if cfg.Logger == nil {
-		err = multierr.Append(err, fmt.Errorf("logger not configured"))
+		err = errors.Join(err, fmt.Errorf("logger not configured"))
 	}
 
 	if cfg.Host == nil {
-		err = multierr.Append(err, fmt.Errorf("host not configured"))
+		err = errors.Join(err, fmt.Errorf("host not configured"))
 	}
 
 	if cfg.ProtocolID == "" {
-		err = multierr.Append(err, fmt.Errorf("protocol id not configured"))
+		err = errors.Join(err, fmt.Errorf("protocol id not configured"))
 	}
 
 	if cfg.MessageHandler == nil {
-		err = multierr.Append(err, fmt.Errorf("message handler not configured"))
+		err = errors.Join(err, fmt.Errorf("message handler not configured"))
 	}
 
 	if cfg.PeerHandler == nil {
-		err = multierr.Append(err, fmt.Errorf("peer handler not configured"))
+		err = errors.Join(err, fmt.Errorf("peer handler not configured"))
 	}
 	return err
 }

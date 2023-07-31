@@ -1,10 +1,11 @@
 package unit_of_work
 
 import (
+	"errors"
+
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
-	"go.uber.org/multierr"
 )
 
 const (
@@ -74,21 +75,21 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 	log.Debug().Msg("processing transactions from proposal block")
 	if err := uow.processProposalBlockTransactions(); err != nil {
 		rollErr := uow.revertToLastSavepoint()
-		return multierr.Combine(rollErr, err)
+		return errors.Join(rollErr, err)
 	}
 
 	// end block lifecycle phase calls endBlock and reverts to the last known savepoint if it encounters any errors
 	log.Debug().Msg("calling endBlock")
 	if err := uow.endBlock(uow.proposalProposerAddr); err != nil {
 		rollErr := uow.revertToLastSavepoint()
-		return multierr.Combine(rollErr, err)
+		return errors.Join(rollErr, err)
 	}
 
 	// return the app hash (consensus module will get the validator set directly)
 	stateHash, err := uow.persistenceRWContext.ComputeStateHash()
 	if err != nil {
 		rollErr := uow.persistenceRWContext.RollbackToSavePoint()
-		return coreTypes.ErrAppHash(multierr.Append(err, rollErr))
+		return coreTypes.ErrAppHash(errors.Join(err, rollErr))
 	}
 
 	// IMPROVE(#655): this acts as a feature flag to allow tests to ignore the check if needed, ideally the tests should have a way to determine
