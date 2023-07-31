@@ -208,33 +208,18 @@ func (uow *baseUtilityUnitOfWork) prevBlockByzantineValidators() ([][]byte, erro
 	return nil, nil
 }
 
-// TODO: This has not been tested or investigated in detail
-func (uow *baseUtilityUnitOfWork) revertLastSavePoint() coreTypes.Error {
-	// TODO(@deblasis): Implement this
-	// if len(u.savePointsSet) == 0 {
-	// 	return coreTypes.ErrEmptySavePoints()
-	// }
-	// var key []byte
-	// popIndex := len(u.savePointsList) - 1
-	// key, u.savePointsList = u.savePointsList[popIndex], u.savePointsList[:popIndex]
-	// delete(u.savePointsSet, hex.EncodeToString(key))
-	// if err := u.store.RollbackToSavePoint(key); err != nil {
-	// 	return coreTypes.ErrRollbackSavePoint(err)
-	// }
+func (uow *baseUtilityUnitOfWork) revertToLastSavepoint() coreTypes.Error {
+	if err := uow.persistenceRWContext.RollbackToSavePoint(); err != nil {
+		uow.logger.Err(err).Msgf("failed to rollback to savepoint at height %d", uow.height)
+		return coreTypes.ErrRollbackSavePoint(err)
+	}
 	return nil
 }
 
-//nolint:unused // TODO: This has not been tested or investigated in detail
-func (uow *baseUtilityUnitOfWork) newSavePoint(txHashBz []byte) coreTypes.Error {
-	// TODO(@deblasis): Implement this
-	// if err := u.store.NewSavePoint(txHashBz); err != nil {
-	// 	return coreTypes.ErrNewSavePoint(err)
-	// }
-	// txHash := hex.EncodeToString(txHashBz)
-	// if _, exists := u.savePointsSet[txHash]; exists {
-	// 	return coreTypes.ErrDuplicateSavePoint()
-	// }
-	// u.savePointsList = append(u.savePointsList, txHashBz)
-	// u.savePointsSet[txHash] = struct{}{}
+func (uow *baseUtilityUnitOfWork) newSavePoint() coreTypes.Error {
+	if err := uow.persistenceRWContext.SetSavePoint(); err != nil {
+		uow.logger.Err(err).Msgf("failed to create new savepoint at height %d", uow.height)
+		return coreTypes.ErrNewSavePoint(err)
+	}
 	return nil
 }
