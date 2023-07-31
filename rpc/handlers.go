@@ -105,11 +105,12 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 		Name: body.Meta.Geozone.Name,
 	}
 	relayMeta := &coreTypes.RelayMeta{
-		BlockHeight:       body.Meta.BlockHeight,
-		ServicerPublicKey: body.Meta.ServicerPubKey,
-		RelayChain:        chain,
-		GeoZone:           geozone,
-		Signature:         body.Meta.Signature,
+		BlockHeight:        body.Meta.BlockHeight,
+		ServicerPublicKey:  body.Meta.ServicerPubKey,
+		RelayChain:         chain,
+		GeoZone:            geozone,
+		Signature:          body.Meta.Signature,
+		ApplicationAddress: body.Meta.ApplicationAddress,
 	}
 
 	relayRequest := buildJsonRPCRelayPayload(&body)
@@ -220,17 +221,18 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 func buildJsonRPCRelayPayload(body *RelayRequest) *coreTypes.Relay {
 	payload := &coreTypes.Relay_JsonRpcPayload{
 		JsonRpcPayload: &coreTypes.JSONRPCPayload{
-			JsonRpc: body.Payload.Jsonrpc,
+			Jsonrpc: body.Payload.Jsonrpc,
 			Method:  body.Payload.Method,
 		},
 	}
 
 	if body.Payload.Id != nil {
-		payload.JsonRpcPayload.Id = []byte(*body.Payload.Id)
+		payload.JsonRpcPayload.Id = &coreTypes.JSONRPCId{Id: []byte(*body.Payload.Id)}
 	}
 
-	if body.Payload.Parameters != nil {
-		payload.JsonRpcPayload.Parameters = *body.Payload.Parameters
+	if body.Payload.Params != nil {
+		// DISCUSS: Need a decision and implementation on Params field and conversion from rpc to proto
+		payload.JsonRpcPayload.Params = *body.Payload.Params
 	}
 
 	if body.Payload.Headers != nil {

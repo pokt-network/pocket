@@ -4,10 +4,12 @@ package e2e
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	pocketLogger "github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/defaults"
@@ -32,8 +34,18 @@ const (
 	// validatorB maps to suffix ID 002 and receives in the Send test.
 	validatorB = "002"
 	chainId    = "0001"
+
+	// 001 servicer is in session 0 for applicatio 000
+	//	The list of servicers in the session is decided by the 'servicers' section of the genesis, from 'build/localnet/manifest/configs.yaml' file
+	servicerA = "001"
+	appA      = "000"
+	serviceA  = "0001"
+	timeoutService = "9999"
+
+	relaychainEth = "RelayChainETH" // used to refer to Ethereum chain when retrieving relaychain settings
 )
 
+// TODO(#874, olshansky): Populate the app & servicer keys with the full set
 type rootSuite struct {
 	gocuke.TestingT
 
@@ -46,6 +58,27 @@ type rootSuite struct {
 	// TECHDEBT: Rename `validator` to something more appropriate
 	validator *validatorPod
 	// validatorA maps to suffix ID 001 of the kube pod that we use as our control agent
+
+	// servicerKeys is hydrated by the clientset with credentials for all servicers.
+	// servicerKeys maps servicer IDs to their private key as a hex string.
+	servicerKeys map[string]string
+
+	// appKeys is hydrated by the clientset with credentials for all apps.
+	// appKeys maps app IDs to their private key as a hex string.
+	appKeys map[string]string
+
+	// relaychains holds settings for all relaychains used in the tests
+	//	the map key is a constant selected as the identifier for the relaychain, e.g. "RelayChainETH" represented as "0001" in other parts of the codebase for Ethereum
+	relaychains map[string]*relaychainSettings
+
+	// servicer holds the key for the servicer that should received the relay
+	servicerKey string
+}
+
+// relaychainSettings holds the settings for a specific relaychain
+type relaychainSettings struct {
+	account string
+	height  string
 }
 
 func (s *rootSuite) Before() {
@@ -57,15 +90,50 @@ func (s *rootSuite) Before() {
 		e2eLogger.Fatal().Err(err).Msg("failed to get validator key map")
 	}
 
+	skmap, err := pocketk8s.FetchServicerPrivateKeys(clientSet)
+	if err != nil {
+		e2eLogger.Fatal().Err(err).Msg("failed to get validator key map")
+	}
+
+	akmap, err := pocketk8s.FetchApplicationPrivateKeys(clientSet)
+	if err != nil {
+		e2eLogger.Fatal().Err(err).Msg("failed to get validator key map")
+	}
+
 	s.validator = new(validatorPod)
 	s.clientset = clientSet
 	s.validatorKeys = vkmap
-}
+	s.servicerKeys = skmap
+	s.appKeys = akmap
+	s.relaychains = map[string]*relaychainSettings{
+		relaychainEth: {},
+	}
+	}
 
 // TestFeatures runs the e2e tests specified in any .features files in this directory
 // * This test suite assumes that a LocalNet is running that can be accessed by `kubectl`
 func TestFeatures(t *testing.T) {
-	gocuke.NewRunner(t, &rootSuite{}).Path("*.feature").Run()
+	// setup a mock service node that causes a timeout by sleeping for the specified duration
+	// 	22222 is the port used for service ID "0004" in charts/pocket/pocket-servicer-overrides.yaml
+	//	100 is the delay in milliseconds, selected to be more than the timeout value for service "0004" in charts/pocket/pocket-servicer-overrides.yaml
+	//  	This setup is done here to ensure the http path is registered exactly once.
+	setupMockServiceNodeWithTimeOut(22222, 100)
+
+	runner := gocuke.NewRunner(t, &rootSuite{}).Path("*.feature")
+	runTests(runner)
+}
+
+// TestRelay builds a test runner which only includes relay tests
+func TestRelay(t *testing.T) {
+	runner := gocuke.NewRunner(t, &rootSuite{}).Path("*_relays.feature")
+	runTests(runner)
+}
+
+// runTests adds steps that need to be registered manually and runs the tests
+func runTests(runner *gocuke.Runner) {
+	// DISCUSS: is there a better way to make gocuke pickup the balance, i.e. a hexadecimal, as a string in function argument?
+	runner.Step(`^the\srelay\sresponse\scontains\s([[:alnum:]]+)$`, (*rootSuite).TheRelayResponseContains)
+	runner.Run()
 }
 
 // InitializeScenario registers step regexes to function handlers
@@ -157,6 +225,112 @@ func (s *rootSuite) getPrivateKey(validatorId string) cryptoPocket.PrivateKey {
 	return privateKey
 }
 
+// TheApplicationHasAValidEthereumRelaychainAccount fullfils the following condition from feature file:
+//
+//	"Given the application has a valid ethereum relaychain account"
+func (s *rootSuite) TheApplicationHasAValidEthereumRelaychainAccount() {
+	// Account: 0x8315177aB297bA92A06054cE80a67Ed4DBd7ed3a   (Arbitrum Bridge)
+	s.relaychains[relaychainEth].account = "0x8315177aB297bA92A06054cE80a67Ed4DBd7ed3a"
+}
+
+// TheApplicationHasAValidEthereumRelaychaindHeight fullfils the following condition from feature file:
+//
+//	"Given the application has a valid ethereum relaychain height"
+func (s *rootSuite) TheApplicationHasAValidEthereumRelaychainHeight() {
+	// Ethereum relaychain BlockNumber: 17605670 = 0x10CA426
+	s.relaychains[relaychainEth].height = "0x10CA426"
+}
+
+// TheApplicationHasAValidServicer fullfils the following condition from feature file:
+//
+//	"Given the application has a valid servicer"
+func (s *rootSuite) TheApplicationHasAValidServicer() {
+	s.servicerKey = servicerA
+}
+
+// An Application requests the account balance of a specific address at a specific height
+func (s *rootSuite) TheApplicationSendsAGetBalanceRelayAtASpecificHeightToAnEthereumServicer() {
+	// ADD_IN_THIS_PR: Add a servicer staked for the Ethereum RelayChain
+	params := fmt.Sprintf("%q: [%q, %q]", "params", s.relaychains[relaychainEth].account, s.relaychains[relaychainEth].height)
+	checkBalanceRelay := fmt.Sprintf("{%s, %s}", `"method": "eth_getBalance", "id": "1", "jsonrpc": "2.0"`, params)
+
+	servicerPrivateKey := s.getServicerPrivateKey(s.servicerKey)
+	appPrivateKey := s.getAppPrivateKey(appA)
+
+	s.sendTrustlessRelay(checkBalanceRelay, servicerPrivateKey.Address().String(), appPrivateKey.Address().String(), serviceA, true)
+}
+
+// An Application requests the account balance of a specific address at a specific height on "ServiceWithTimeout", i.e. timing out, service
+func (s *rootSuite) TheApplicationSendsAGetBalanceRelayAtASpecificHeightToTheServicewithtimeoutService() {
+	params := fmt.Sprintf("%q: [%q, %q]", "params", s.relaychains[relaychainEth].account, s.relaychains[relaychainEth].height)
+	checkBalanceRelay := fmt.Sprintf("{%s, %s}", `"method": "eth_getBalance", "id": "1", "jsonrpc": "2.0"`, params)
+
+	servicerPrivateKey := s.getServicerPrivateKey(s.servicerKey)
+	appPrivateKey := s.getAppPrivateKey(appA)
+
+	s.sendTrustlessRelay(checkBalanceRelay, servicerPrivateKey.Address().String(), appPrivateKey.Address().String(), timeoutService, false)
+}
+
+// Then the request times out without a response
+func (s *rootSuite) TheRequestTimesOutWithoutAResponse() {
+	require.Contains(s, s.validator.result.Stdout, "HTTP status code: 500")
+}
+
+func (s *rootSuite) TheRelayResponseContains(relayResponse string) {
+	require.Contains(s, s.validator.result.Stdout, relayResponse)
+}
+
+func (s *rootSuite) TheRelayResponseIsValidJsonRpc() {
+	require.Contains(s, s.validator.result.Stdout, `"jsonrpc":"2.0"`)
+}
+
+func (s *rootSuite) TheRelayResponseHasValidId() {
+	require.Contains(s, s.validator.result.Stdout, `"id":1`)
+}
+
+func (s *rootSuite) sendTrustlessRelay(relayPayload string, servicerAddr, appAddr, serviceId string, shouldSucceed bool) {
+	args := []string{
+		"Servicer",
+		"Relay",
+		appAddr,
+		servicerAddr,
+		// IMPROVE: add ETH_Goerli as a chain/service to genesis
+		serviceId,
+		relayPayload,
+	}
+
+	// TECHDEBT: run the command from a client, i.e. not a validator, pod.
+	res, err := s.validator.RunCommand(args...)
+
+	if shouldSucceed {
+		require.NoError(s, err)
+	}
+
+	s.validator.result = res
+}
+
+// getAppPrivateKey generates a new keypair from the application private hex key that we get from the clientset
+func (s *rootSuite) getAppPrivateKey(
+	appId string,
+) cryptoPocket.PrivateKey {
+	privHexString := s.appKeys[appId]
+	privateKey, err := cryptoPocket.NewPrivateKey(privHexString)
+	require.NoErrorf(s, err, "failed to extract privkey for app with id %s", appId)
+
+	return privateKey
+}
+
+// getServicerPrivateKey generates a new keypair from the servicer private hex key that we get from the clientset
+func (s *rootSuite) getServicerPrivateKey(
+	servicerId string,
+) cryptoPocket.PrivateKey {
+	privHexString := s.servicerKeys[servicerId]
+	privateKey, err := cryptoPocket.NewPrivateKey(privHexString)
+	require.NoErrorf(s, err, "failed to extract privkey for servicer with id %s", servicerId)
+
+	return privateKey
+}
+
 // getClientset uses the default path `$HOME/.kube/config` to build a kubeconfig
 // and then connects to that cluster and returns a *Clientset or an error
 func getClientset(t gocuke.TestingT) (*kubernetes.Clientset, error) {
@@ -189,4 +363,21 @@ func inClusterConfig(t gocuke.TestingT) *rest.Config {
 	require.NoError(t, err)
 
 	return config
+}
+
+// setupMockServiceNodeWithTimeout sets up an http server on localhost that causes a timeout by delaying the response
+//
+//	delay is the desired delay in milliseconds
+func setupMockServiceNodeWithTimeOut(port int, delay int64) {
+	http.HandleFunc("/timing_out_service", func(http.ResponseWriter, *http.Request) {
+		time.Sleep(time.Millisecond * time.Duration(delay))
+		return
+	})
+
+	go func() {
+		err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+		if err != nil {
+			e2eLogger.Fatal().Err(err).Msg("unexpected error in mock service")
+		}
+	}()
 }

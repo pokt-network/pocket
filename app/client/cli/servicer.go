@@ -104,7 +104,7 @@ Will prompt the user for the *application* account passphrase`,
 					return fmt.Errorf("error getting servicer for the relay: %w", err)
 				}
 
-				relay, err := buildRelay(relayPayload, pk, session, servicer)
+				relay, err := buildRelay(relayPayload, pk, session, servicer, applicationAddr)
 				if err != nil {
 					return fmt.Errorf("error building relay from payload: %w", err)
 				}
@@ -243,13 +243,13 @@ func sendTrustlessRelay(ctx context.Context, servicerUrl string, relay *rpc.Rela
 	return client.PostV1ClientRelayWithResponse(ctx, *relay)
 }
 
-func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Session, servicer *rpc.ProtocolActor) (*rpc.RelayRequest, error) {
+func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Session, servicer *rpc.ProtocolActor, appAddr string) (*rpc.RelayRequest, error) {
 	// TECHDEBT: This is mostly COPIED from pocket-go: we should refactor pocket-go code and import this functionality from there instead.
-	relayPayload := rpc.Payload{
-		// INCOMPLETE(#803): need to unmarshal into JSONRPC and other supported relay formats once proto-generated custom types are added.
-		Jsonrpc: "2.0",
-		Method:  payload,
-		// INCOMPLETE: set Headers for HTTP relays
+	var relayPayload rpc.Payload
+	// INCOMPLETE(#803): need to unmarshal into JSONRPC and other supported relay formats once proto-generated custom types are added.
+	// INCOMPLETE: set Headers for HTTP relays
+	if err := json.Unmarshal([]byte(payload), &relayPayload); err != nil {
+		return nil, fmt.Errorf("error unmarshalling relay payload %s: %w", payload, err)
 	}
 
 	relayMeta := rpc.RelayRequestMeta{
@@ -260,6 +260,7 @@ func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Se
 		},
 		ServicerPubKey: servicer.PublicKey,
 		// TODO(#697): Geozone
+		ApplicationAddress: appAddr,
 	}
 
 	relay := &rpc.RelayRequest{

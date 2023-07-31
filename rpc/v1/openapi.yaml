@@ -1710,16 +1710,17 @@ components:
         - jsonrpc
         - method
       properties:
+        # INCOMPLETE: need to support string, number, and NULL values, according to JSONRPC spec
         id:
           type: string
-          format: byte
         jsonrpc:
           type: string
         method:
           type: string
-        parameters:
-          type: string
-          format: byte
+        params:
+          type: array
+          items:
+            type: string
         headers:
           $ref: "#/components/schemas/Headers"
     Pool:
@@ -1773,6 +1774,7 @@ components:
         - geozone
         - token
         - signature
+        - application_address
       properties:
         block_height:
           type: integer
@@ -1786,6 +1788,8 @@ components:
         token:
           $ref: "#/components/schemas/AAT"
         signature:
+          type: string
+        application_address:
           type: string
     Signature:
       type: object

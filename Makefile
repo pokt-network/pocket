@@ -383,6 +383,11 @@ test_e2e: kubectl_check ## Run all E2E tests
 	echo "IMPROVE(#759): Make sure you ran 'make localnet_up' in case this fails with infrastructure related errors."
 	go test ${VERBOSE_TEST} -count=1 -tags=test,e2e ./e2e/tests/...
 
+.PHONY: test_e2e_relay
+test_e2e_relay: kubectl_check
+	echo "IMPROVE(#759): Make sure you ran 'make localnet_up' in case this fails with infrastructure related errors."
+	go test ${VERBOSE_TEST} -count=1 -tags=test,e2e -run TestRelay ./e2e/tests/...
+
 .PHONY: test_all_with_json_coverage
 test_all_with_json_coverage: generate_rpc_openapi ## Run all go unit tests, output results & coverage into json & coverage files
 	go test -p=1 -count=1 -tags=test -json ./... -covermode=count -coverprofile=coverage.out | tee test_results.json | jq
@@ -502,7 +507,8 @@ benchmark_p2p_peerstore: ## Run P2P peerstore benchmarks
 # BUG           - There is a known existing bug in this code
 # DISCUSS_IN_THIS_COMMIT - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the reviewer of a PR to start / reply to a discussion.
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
-TODO_KEYWORDS = -e "TODO" -e "DECIDE" -e "TECHDEBT" -e "IMPROVE" -e "OPTIMIZE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH" -e "BUG"
+# ADD_IN_THIS_PR         - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to mark functionality that should be added, possibly in a different PR, to allow this comment to be removed.
+TODO_KEYWORDS = -e "TODO" -e "DECIDE" -e "TECHDEBT" -e "IMPROVE" -e "OPTIMIZE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "ADD_IN_THIS_PR" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH" -e "BUG"
 
 # How do I use TODOs?
 # 1. <KEYWORD>: <Description of follow up work>;

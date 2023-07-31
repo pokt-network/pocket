@@ -1,0 +1,19 @@
+# - This is an override of the shared config: <https://github.com/pokt-network/pocket/blob/40f325305c1756bbfd069bf139fa67545419981c/charts/pocket/values.yaml#L116C12-L117>
+# - This is a reference of how we can utilize Helm to configure the service
+# - Configs can also be overrident without an explicit config file: https://github.com/pokt-network/pocket/blob/main/build/localnet/Tiltfile#L216
+# - Settings specific to a single instance of the servicer, e.g. public key and address, are a good fit for this file
+config:
+  servicer:
+    enabled: true
+    # The address and public_key fields are taken from the genesis section of the config file:
+    #   https://github.com/pokt-network/pocket/blob/40f325305c1756bbfd069bf139fa67545419981c/build/localnet/manifests/configs.yaml#L1699
+    address: "001022b138896c4c5466ac86b24a9bbe249905c2"
+    public_key: "56915c1270bc8d9280a633e0be51647f62388a851318381614877ef2ed84a495"
+    services:
+      "0001":
+        url: "https://eth-mainnet.gateway.pokt.network"
+      # 9999 is chosen as the ID for a service that always times out when responding to relays
+      "9999":
+        # Port 22222 is used by the mock service node to support timeout test scenarios
+        url: "http://localhost:22222/timing_out_service"
+        TimeoutMsec: 50
