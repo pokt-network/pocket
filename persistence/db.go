@@ -37,6 +37,7 @@ var protocolActorSchemas = []types.ProtocolActorSchema{
 	types.ValidatorActor,
 }
 
+// TECHDEBT(#595): Properly handle context threading and passing for the entire persistence module
 func (pg *PostgresContext) getCtxAndTx() (context.Context, pgx.Tx) {
 	return context.TODO(), pg.tx
 }

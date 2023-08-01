@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.60] - 2023-07-11
+
+- Adds savepoints and rollbacks implementation to TreeStore
+
 ## [0.0.0.60] - 2023-06-26
 
 - Add place-holder for local context and servicer token usage support methods

@@ -141,8 +141,8 @@ func newDebugSubCommands() []*cobra.Command {
 // newDebugUICommand returns the cobra CLI for the Debug UI interface.
 func newDebugUICommand() *cobra.Command {
 	return &cobra.Command{
+		Aliases:           []string{"dui", "debug"},
 		Use:               "DebugUI",
-		Aliases:           []string{"dui"},
 		Short:             "Debug utility with an interactive UI for development purposes",
 		Long:              "Opens a shell-driven selection UI to view and select from a list of debug actions for development purposes",
 		Args:              cobra.MaximumNArgs(0),
@@ -239,7 +239,7 @@ func handleSelect(cmd *cobra.Command, selection string) {
 		}
 		broadcastDebugMessage(cmd, m)
 	default:
-		logger.Global.Error().Msg("Selection not yet implemented...")
+		logger.Global.Error().Str("selection", selection).Msg("Selection not yet implemented...")
 	}
 }
 
