@@ -2,7 +2,6 @@ package trees
 
 import (
 	"encoding/hex"
-	"fmt"
 	"io"
 	"os"
 	"testing"
@@ -82,10 +81,6 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 	// insert additional test data into all of the trees
 	for _, treeName := range stateTreeNames {
 		require.NoError(t, ts.merkleTrees[treeName].tree.Update([]byte("fiz"), []byte("buz")))
-	}
-
-	for _, treeName := range stateTreeNames {
-		fmt.Printf("%s: %s\n", treeName, hex.EncodeToString(ts.merkleTrees[treeName].tree.Root()))
 	}
 
 	// rollback the changes made to the trees above BEFORE anything was committed
