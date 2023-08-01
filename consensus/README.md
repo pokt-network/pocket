@@ -12,6 +12,16 @@ This README serves as a guide to the implementation of the [1.0 Pocket's Consens
   - [Block Validation](#block-validation)
   - [Consensus Lifecycle](#consensus-lifecycle)
   - [State Sync](#state-sync)
+- [Synchronization between the consensus processes](#synchronization-between-the-consensus-processes)
+  - [StateSync Mode](#statesync-mode)
+    - [Download routine](#download-routine)
+  - [Apply routine](#apply-routine)
+- [Consensus Mode](#consensus-mode)
+  - [PaceMaker block proposal delaying](#pacemaker-block-proposal-delaying)
+    - [Concurrent requests](#concurrent-requests)
+    - [Late requests](#late-requests)
+  - [Example height,round,step increment](#example-heightroundstep-increment)
+    - [Example invalid increments](#example-invalid-increments)
 - [Implementation](#implementation)
   - [Code Organization](#code-organization)
 - [Testing](#testing)
@@ -142,42 +152,46 @@ graph TB
 
 ## Synchronization between the consensus processes
 
-The consensus module currently depends on the `PaceMaker`, `StateSync`, `LeaderElection`, `Networking`.
+The consensus module currently depends on the `PaceMaker`, `StateSync`, `LeaderElection` and `Networking`.
 It has a bootstrapping state where it:
   * Initializes connections to the network through a bootstrap node
-  * Gets the latest block then switches to one of the mutually exclusive modes: `sync` or `consensus`
   * Keeps an updated current height (the greatest block height seen on the network)
+  * Compares network and local current heights, before switching to one of two mutually exclusive modes: `sync` or `consensus`
 
 ```mermaid
 sequenceDiagram
-participant Consensus
-participant StateSync
-Note over Node: This embeds Networking, FSM
-participant Node
-participant Network
-Node->>Node:Start
-Node->>Network:Join
-loop
-  Node->>Network:RequestCurrentHeight
-  Network-->>Node: 
-  Node->>Node:SwitchMode
-end
-alt SyncMode
-  par
-    Node->>Consensus:Pause
-  and
-    Node->>StateSync:Start
-    Note over Node,StateSync: Details omitted for another diagram
-    StateSync-->>Node:SyncDone
+  title: Consensus: Internal orchestration
+
+  participant Consensus
+  participant StateSync
+  Note over Node: This embeds Networking, FSM
+  participant Node
+  participant Network
+
+  Node->>Node:Start
+  Node->>Network:Join
+  loop
+    Node->>Network:RequestCurrentHeight
+    Network-->>Node: 
+    Node->>Node:SwitchMode
   end
-else ConsensusMode
-  par
-    Node->>StateSync:Pause
-  and
-    Node->>Consensus:Start
-    Consensus-->>Node:OutOfSync
+
+  alt SyncMode
+    par
+      Node->>Consensus:Pause
+    and
+      Node->>StateSync:Start
+      Note over Node,StateSync: Details omitted for another diagram
+      StateSync-->>Node:SyncDone
+    end
+  else ConsensusMode
+    par
+      Node->>StateSync:Pause
+    and
+      Node->>Consensus:Start
+      Consensus-->>Node:OutOfSync
+    end
   end
-end
 ```
 
 ### StateSync Mode
@@ -195,30 +209,35 @@ The `download` and `apply` routines may run in parallel, but `apply` may be bloc
 
 ```mermaid
 sequenceDiagram
-participant Persistence
-Note over Node: (Download routine)
-participant Node
-participant Network
-par
-  loop
-  Note left of Network: Constantly asking for the highest<br /> known block from network
-  Node->>Network:UpdateNetWorkCurrentHeight
-  Network-->>Node: 
-  end
-and
-  Node->>Persistence:GetLastDownloadedBlock
-  Persistence-->>Node: 
-  loop LastDownloadedBlock < NetworkCurrentHeight
-    Node->>Network:GetBlock
-    Network-->>Node: 
-    Note left of Network: Currently the node asks all the network<br />for the block it wants to download
-    Node->>Persistence:Append
+  title: Consensus: Download blocks
+  participant Persistence
+  Note over Node: (Download routine)
+  participant Node
+  participant Network
+
+  par
+    loop
+      Note left of Network: Constantly asking for the highest<br /> known block from network
+      Node->>Network:UpdateNetworkCurrentHeight
+      Network-->>Node: 
+    end
+  and
+    Node->>Persistence:GetLastDownloadedBlock
     Persistence-->>Node: 
-    Note left of Node: append if new block
-    Node->>Node:Wait(until new block)
-    Note right of Node: If latest network block is reached<br />Wait until it increments to continue
+
+    loop LastDownloadedBlock < NetworkCurrentHeight
+      Node->>Network:GetBlock
+      Network-->>Node: 
+      Note left of Network: Currently the node asks all the network<br />for the block it wants to download
+
+      Node->>Persistence:Append
+      Persistence-->>Node: 
+      Note left of Node: append if new block
+
+      Node->>Node:Wait(until new block)
+      Note right of Node: If latest network block is reached<br />Wait for a new block to continue
+    end
   end
-end
 ```
 
 ### Apply routine
@@ -226,44 +245,54 @@ end
 _Note: We do not detail how individual transactions are applied or how state is derived from them. Just assume that the state (specifically validator set) may be mutated after each block application._
 
 * The `apply` routine remains alive as long as `sync` mode is on
-* It needs a starting state (genesis, or loaded local state) to start building blocks from
+* It needs a starting state (genesis, or loaded local state) to build blocks from
 * Each block is validated and applied before moving to the next one
-* The block application is a sequential process starting from genesis, applies blocks in order, up till network current height
+* The block application is a sequential process starting from genesis, applying blocks up till network current height
 * Since basic validation is done at download step and assume that the Pocket node trusts its persistence layer, it is safe to skip basic revalidation
-* The `sync` mechanism needs to maintain the chain of trust while applying blocks by performing the following:
+* The `apply` mechanism needs to maintain a chain of trust while applying blocks by performing the following:
   * Before applying a block `n`, verify that is is signed by a quorum of `n-1`'s validator set (genesis validator set for block `1`)
-  * By applying each block, the validator set is updated (validators joining or leaving), starting from genesis validator set for a new node
-* With this chain of trust, a synching node systematically detects crafted blocks
-  * No malicious or faulty node could inject an alternative block without making at least `2t+1` sign it
-  * The persistence layer is mainly a cache for the block application, so a node won't restart application from genesis each time it's booted
-* When the routine applies `NetworkCurrentHeight`, it signals this so the node could switch to `consensus` mode. Meanwhile, it waits to apply a new downloaded block
+  * By applying each block, the validator set is updated (validators joining or leaving), starting from genesis validator set for any new node
+* With this chain of trust, a synching node systematically detects invalid blocks
+  * No malicious or faulty node could inject an alternative block without making at least `2t+1` validators sign it
+  * The persistence layer is mainly a cache for the block application, so a node won't restart block application from genesis each time it's rebooted
+* When the routine applies `NetworkCurrentHeight`, it signals it so the node could switch to `consensus` mode. Meanwhile, it waits to apply a new downloaded block
 
 _Improvement: After applying a block, the server's signature (the one the block has been downloaded from) is replaced by the current node signature. Meaning that from now on, the current node endorse the block validity (when serving the block to other synchers). It could also serve as means to check the integrity of its own database._
 
 ```mermaid
 sequenceDiagram
-participant Persistence
-participant SyncRoutine
-participant BlockApplier
-participant State
-loop AppliedBlock < NetworkCurrentHeight
-  SyncRoutine->>Persistence:GetDownloadedBlock
-  Persistence->>SyncRoutine: 
-  Note right of Persistence: Or genesis if starting from scratch
-  SyncRoutine->>State:GetValidatorSet
-  State->>SyncRoutine: 
-  SyncRoutine->>SyncRoutine:Verify(block.qc, ValidatorSet)
-  SyncRoutine->>BlockApplier:ApplyBlock
-  BlockApplier->>SyncRoutine: 
-  Note left of BlockApplier: Tells if it's valid block what are the  <br />changes to be made to the state
-  SyncRoutine->>State:Update
-  Note left of State: ValidatorSet should be updated here
-  SyncRoutine->>Persistence:MarkBlockAsApplied
-  SyncRoutine->>SyncRoutine:Wait(until block downloaded)
-  Note left of BlockApplier: Wait for the next block to apply<br /> if it's not downloaded yet
-end
-SyncRoutine->>SyncRoutine:SignalSyncEnd
-Note right of SyncRoutine: StateSync has finished<br />Switch to consensus mode
+  title: Consensus: Apply blocks
+
+  participant Persistence
+  participant SyncRoutine
+  participant BlockApplier
+  participant State
+
+  loop AppliedBlock < NetworkCurrentHeight
+    SyncRoutine->>Persistence:GetDownloadedBlock
+    Persistence-->>SyncRoutine: 
+
+    Note right of Persistence: Or genesis if starting from scratch
+    SyncRoutine->>State:GetValidatorSet
+    State-->>SyncRoutine: 
+
+    SyncRoutine->>SyncRoutine:Verify(block.qc, ValidatorSet)
+
+    SyncRoutine->>BlockApplier:ApplyBlock
+    BlockApplier-->>SyncRoutine: 
+
+    Note left of BlockApplier: Tells if it's valid block and what are the  <br />changes to be made to the state
+    SyncRoutine->>State:Update
+
+    Note left of State: ValidatorSet should be updated here
+    SyncRoutine->>Persistence:MarkBlockAsApplied
+
+    SyncRoutine->>SyncRoutine:Wait(until block downloaded)
+    Note left of BlockApplier: Wait for the next block to apply<br /> if it's not downloaded yet
+
+    SyncRoutine->>SyncRoutine:If all blocks applied:<br />SignalSyncEnd
+    Note right of SyncRoutine: StateSync has finished<br />Switch to consensus mode
+  end
 ```
 
 ## Consensus Mode
@@ -273,10 +302,10 @@ In this mode, the current node is up to date w.r.t. the latest block applied by 
 This process is driven by:
 * A pace maker, that alerts the consensus flow about key timings in the block production process
   * `MinBlockTime`: The earliest time a leader node could reap the mempool and start proposing a new block
-  * `RoundTimeout`: How much time a round is allowed to take before calling for another
+  * `RoundTimeout`: How much time a round is allowed to take before calling for another one
   * Pacemaker uses a local clock and a node is only aware of the global pace through new round events
-* A random but deterministic process to elect the leader of each new round
-  * Given a unique random seed known to all validators and information about the current height and round being validated, any validator is able to know who is the leader of a round without the need to communicate with others
+* A random but deterministic process to elect the leader of each round
+  * Given a unique random seed known to all validators and information about the current (height, round) being validated, any validator is able to know who is the leader without needing to communicate with others
   * The leader election strategy aims to give validators a chance of leading the round proportional to their stake
   * Fallback to a round robin strategy if probabilistic election doesn't work
 * A consensus flow that aims to increment the height (thus block production) of the chain
@@ -284,19 +313,20 @@ This process is driven by:
 
 ### PaceMaker block proposal delaying
 
-The pace maker ensures minimum block time production with the aim to have constant block production pace.
-
+The pace maker ensures minimum block production time with the aim to have a constant production pace.
 * Adding a delay instead of directly proposing a block makes the the process concurrent.
-  * It ensures that the block proposal is done only once per new round step
-* When the leader gathers enough `NewRound` messages from replicas to propose a block, a first call to build a block is made
+  * It ensures that the block proposal is done only once after each `NewRound` step
+* When the leader gathers enough `NewRound` messages from replicas to propose a block, a first call to propose a block is made
   * The proposal attempt may happen before `MinBlockTime` which the `PaceMaker` will delay.
-  * While delayed, more `NewRound` messages may come-in and the node will use the higher QC obtained to propose the block (discards the previous QC).
-  * If the timer expires before having any block proposal attempt, any call will trigger the block proposal without delay
-  * If a late message is received after a block is proposed by another call, the late message is discarded
+  * While delayed, more `NewRound` messages may come-in and the node will use the higher QC obtained by these late messages to propose the block (discards the previous QC).
+  * If the timer expires before having any block proposal attempt, any call (with enough signatures) will trigger the block proposal without delay
+  * If a late message is received after a block has already been proposed by another call, the late message is discarded
 
 #### Concurrent requests
 ```mermaid
 sequenceDiagram
+  title Pacemaker early concurrent requests
+
   participant ReapMempool
   participant BlockPrepare
   participant Delay
@@ -315,6 +345,8 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
+  title: Pacemaker late request
+
   participant ReapMempool
   participant BlockPrepare
   participant Delay
@@ -331,31 +363,31 @@ sequenceDiagram
 
 | Height | Round | Step | Comment                                  |
 |--------|-------|------|------------------------------------------|
-| 1      | 1     | 0    | Initial round, initial block,            |
-| 1      | 1     | 1    | Enter Prepare step                       |
-| 1      | 1     | 2    | Enter Pre-Commit step                    |
-| 1      | 2     | 0    | Round interrupted, reset step            |
-| 1      | 2     | 1    | Enter Prepare step again                 |
-| 1      | 2     | 2    | Enter Pre-Commit step again              |
-| 1      | 2     | 3    | Enter Commit step for the first time     |
-| 2      | 1     | 0    | Incremented height, reset round and step |
+| 1      | 0     | 1    | Initial round, initial block,            |
+| 1      | 0     | 2    | Enter Prepare step                       |
+| 1      | 0     | 3    | Enter Pre-Commit step                    |
+| 1      | 1     | 1    | Round interrupted, reset step            |
+| 1      | 1     | 2    | Enter Prepare step again                 |
+| 1      | 1     | 3    | Enter Pre-Commit step again              |
+| 1      | 1     | 4    | Enter Commit step for the first time     |
+| 2      | 0     | 1    | Incremented height, reset round and step |
 
 #### Example invalid increments
 
 | Height | Round | Step | Comment                                                        |
 |--------|-------|------|----------------------------------------------------------------|
-| 1      | 1     | 2    | Enter Pre-Commit step                                          |
-| 1      | 2     | 2    | **Invalid**: If `Round` increments, `Step` has to reset to `0` |
+| 1      | 1     | 3    | Enter Pre-Commit step                                          |
+| 1      | 2     | 3    | **Invalid**: If `Round` increments, `Step` has to reset to `1` |
 
 | Height | Round | Step | Comment                                                            |
 |--------|-------|------|--------------------------------------------------------------------|
-| 1      | 1     | 2    | Enter Pre-Commit step                                              |
-| 2      | 0     | 0    | **Invalid**: `Height` only increments when previous Step is at `3` |
+| 1      | 1     | 3    | Enter Pre-Commit step                                              |
+| 2      | 0     | 4    | **Invalid**: `Height` only increments when previous Step is at `4` |
 
 | Height | Round | Step | Comment                                                                       |
 |--------|-------|------|-------------------------------------------------------------------------------|
-| 1      | 2     | 3    | Enter Commit step                                                             |
-| 2      | 2     | 3    | **Invalid**: When `Height` increments, `Round` to `1` and `Step` reset to `0` |
+| 1      | 2     | 4    | Enter Commit step                                                             |
+| 2      | 2     | 4    | **Invalid**: When `Height` increments, reset `Round` to `0` and `Step` to `1` |
 
 ## Implementation
 
