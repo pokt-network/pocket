@@ -2,6 +2,7 @@ package cli
 
 import (
 	"os"
+	"time"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -50,7 +51,10 @@ func newDebugUISubCommands() []*cobra.Command {
 			Use:               promptItem,
 			PersistentPreRunE: helpers.P2PDependenciesPreRunE,
 			Run: func(cmd *cobra.Command, _ []string) {
+				// TECHDEBT(#874): this is a magic number, but an alternative would be to have the p2p module wait until connections are open and to flush the message correctly
+				time.Sleep(500 * time.Millisecond) // give p2p module time to start
 				handleSelect(cmd, cmd.Use)
+				time.Sleep(500 * time.Millisecond) // give p2p module time to broadcast
 			},
 			ValidArgs: items,
 		}
@@ -61,7 +65,7 @@ func newDebugUISubCommands() []*cobra.Command {
 // newDebugUICommand returns the cobra CLI for the Debug UI interface.
 func newDebugUICommand() *cobra.Command {
 	return &cobra.Command{
-		Aliases:           []string{"dui"},
+		Aliases:           []string{"dui", "debug"},
 		Use:               "DebugUI",
 		Short:             "Debug selection ui for rapid development",
 		Args:              cobra.MaximumNArgs(0),
@@ -154,7 +158,7 @@ func handleSelect(cmd *cobra.Command, selection string) {
 		}
 		broadcastDebugMessage(cmd, m)
 	default:
-		logger.Global.Error().Msg("Selection not yet implemented...")
+		logger.Global.Error().Str("selection", selection).Msg("Selection not yet implemented...")
 	}
 }
 
