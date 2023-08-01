@@ -123,7 +123,7 @@ func (s *rootSuite) TheNetworkHasActorsOfType(num int64, actor string) {
 		actor,
 	}
 
-	// Depending ont he type of `actor` we're querying, we'll have a different expected responses
+	// Depending on the type of `actor` we're querying, we'll have a different set of expected responses
 	// so not all of these fields will be populated, but at least one will be.
 	type expectedResponse struct {
 		NumValidators *int64 `json:"total_validators"`
