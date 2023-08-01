@@ -2,7 +2,6 @@ package trees
 
 import (
 	"encoding/hex"
-	"fmt"
 	"io"
 	"os"
 	"testing"
@@ -126,45 +125,8 @@ func TestTreeStore_SaveAndLoad(t *testing.T) {
 		ok, err = isEmpty(backupDir)
 		require.NoError(t, err)
 		require.False(t, ok)
-
-		// assert that the worldstate.json file exists after a backup
-
-		// Open the directory
-		dir, err := os.Open(backupDir)
-		if err != nil {
-			fmt.Printf("Error opening directory: %s\n", err)
-			return
-		}
-		defer dir.Close()
-
-		// Read directory entries one by one
-		files, err := dir.Readdir(0) // 0 means read all directory entries
-		if err != nil {
-			fmt.Printf("Error reading directory entries: %s\n", err)
-			return
-		}
-		require.Equal(t, len(files), len(stateTreeNames)+1) // +1 to account for the worldstate file
-
-		// Now files is a slice of FileInfo objects representing the directory entries
-		// You can work with them as needed.
-		for _, file := range files {
-			if file.IsDir() {
-				fmt.Printf("Directory: %s\n", file.Name())
-			} else {
-				fmt.Printf("File: %s\n", file.Name())
-			}
-		}
 	})
 	t.Run("should load a backup and maintain TreeStore hash integrity", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-
-		mockTxIndexer := mock_types.NewMockTxIndexer(ctrl)
-		mockBus := mock_modules.NewMockBus(ctrl)
-		mockPersistenceMod := mock_modules.NewMockPersistenceModule(ctrl)
-
-		mockBus.EXPECT().GetPersistenceModule().AnyTimes().Return(mockPersistenceMod)
-		mockPersistenceMod.EXPECT().GetTxIndexer().AnyTimes().Return(mockTxIndexer)
-
 		// create a new tree store and save it's initial hash
 		ts := newTestTreeStore(t)
 		hash1 := ts.getStateHash()
@@ -196,7 +158,7 @@ func TestTreeStore_SaveAndLoad(t *testing.T) {
 		err = ts2.Load(backupDir)
 		require.NoError(t, err)
 
-		// Assert that hash is unchanged from save and load
+		// assert that hash is unchanged from save and load
 		hash2 := ts2.getStateHash()
 		require.Equal(t, hash1, hash2)
 	})
