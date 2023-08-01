@@ -192,6 +192,9 @@ This is a general set of technical links and recommended reading our team has fo
   - Some problems identified by the Aztec team on using sparse Merkle trees for nullifier and their solution
 - [Why you should probably never sort your Merkle tree's leaves](https://alinush.github.io/2023/02/05/Why-you-should-probably-never-sort-your-Merkle-trees-leaves.html)
   - Vulnerabilities and performance issues that come with sorting Merkle tree leaves
+- Discussions
+  - [Cosmos complete list of all Tree/State Related Discussions](https://github.com/cosmos/cosmos-sdk/issues/9816)
+  - [Near discussion of more efficient state representation](https://github.com/near/nearcore/discussions/4815)
 
 ### Persistence
 
