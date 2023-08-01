@@ -4,6 +4,7 @@ package background
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
-	"go.uber.org/multierr"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/pokt-network/pocket/logger"
@@ -129,7 +129,7 @@ func (rtr *backgroundRouter) Close() error {
 		topicCloseErr = err
 	}
 
-	return multierr.Append(
+	return errors.Join(
 		topicCloseErr,
 		rtr.kadDHT.Close(),
 	)

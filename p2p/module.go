@@ -8,7 +8,6 @@ import (
 	"github.com/libp2p/go-libp2p"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	"github.com/multiformats/go-multiaddr"
-	"go.uber.org/multierr"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -182,12 +181,12 @@ func (m *p2pModule) Stop() error {
 		stakedActorRouterCloseErr = m.stakedActorRouter.Close()
 	}
 
-	routerCloseErrs := multierr.Append(
+	routerCloseErrs := errors.Join(
 		m.unstakedActorRouter.Close(),
 		stakedActorRouterCloseErr,
 	)
 
-	err := multierr.Append(
+	err := errors.Join(
 		routerCloseErrs,
 		m.host.Close(),
 	)
@@ -231,7 +230,7 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 
 	unstakedBroadcastErr := m.unstakedActorRouter.Broadcast(poktEnvelopeBz)
 
-	return multierr.Append(stakedBroadcastErr, unstakedBroadcastErr)
+	return errors.Join(stakedBroadcastErr, unstakedBroadcastErr)
 }
 
 func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {

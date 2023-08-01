@@ -2,6 +2,7 @@ package shared
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/pokt-network/pocket/consensus"
@@ -17,7 +18,6 @@ import (
 	"github.com/pokt-network/pocket/state_machine"
 	"github.com/pokt-network/pocket/telemetry"
 	"github.com/pokt-network/pocket/utility"
-	"go.uber.org/multierr"
 )
 
 const (
@@ -189,13 +189,12 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
 		err_ibc := node.GetBus().GetIBCModule().HandleEvent(message.Content)
-		// TODO: Remove this lib once we move to Go 1.2
-		return multierr.Combine(err_p2p, err_ibc, err_consensus)
+		return errors.Join(err_p2p, err_ibc, err_consensus)
 
 	case messaging.StateMachineTransitionEventType:
 		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
-		return multierr.Combine(err_consensus, err_p2p) // TECHDEBT: Remove this lib once we move to Go 1.2
+		return errors.Join(err_consensus, err_p2p)
 
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
