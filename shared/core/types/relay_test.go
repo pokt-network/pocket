@@ -103,8 +103,13 @@ func TestRelay_ValidateREST(t *testing.T) {
 		},
 		{
 			name:     "invalid REST payload: is not JSON-formatted",
-			payload:  &RESTPayload{Contents: "foo"},
+			payload:  &RESTPayload{Contents: "foo", RequestType: RESTRequestType_RESTRequestTypeGET},
 			expected: errInvalidRESTPayload,
+		},
+		{
+			name:     "invalid REST payload: invalid request type",
+			payload:  &RESTPayload{Contents: `{"field1": "value1"}`, RequestType: RESTRequestType(99999)},
+			expected: errInvalidRESTMethod,
 		},
 	}
 

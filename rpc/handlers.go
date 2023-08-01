@@ -112,7 +112,15 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 		Signature:         body.Meta.Signature,
 	}
 
-	relayRequest := buildJsonRPCRelayPayload(&body)
+	var relayRequest *coreTypes.Relay
+	switch p := body.Payload.(type) {
+	case JSONRPCPayload:
+		relayRequest = buildJsonRPCRelayPayload(&p)
+	case RESTPayload:
+		relayRequest = buildRestRelayPayload(&p)
+	default:
+		return ctx.String(http.StatusBadRequest, "unsupported relay type")
+	}
 	relayRequest.Meta = relayMeta
 
 	relayResponse, err := utility.HandleRelay(relayRequest)
@@ -217,25 +225,25 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 }
 
 // TECHDEBT: handle other relay payload types, e.g. JSON, GRPC, etc.
-func buildJsonRPCRelayPayload(body *RelayRequest) *coreTypes.Relay {
+func buildJsonRPCRelayPayload(src *JSONRPCPayload) *coreTypes.Relay {
 	payload := &coreTypes.Relay_JsonRpcPayload{
 		JsonRpcPayload: &coreTypes.JSONRPCPayload{
-			JsonRpc: body.Payload.Jsonrpc,
-			Method:  body.Payload.Method,
+			JsonRpc: src.Jsonrpc,
+			Method:  src.Method,
 		},
 	}
 
-	if body.Payload.Id != nil {
-		payload.JsonRpcPayload.Id = []byte(*body.Payload.Id)
+	if src.Id != nil {
+		payload.JsonRpcPayload.Id = src.Id.Id
 	}
 
-	if body.Payload.Parameters != nil {
-		payload.JsonRpcPayload.Parameters = *body.Payload.Parameters
+	if src.Parameters != nil {
+		payload.JsonRpcPayload.Parameters = *src.Parameters
 	}
 
-	if body.Payload.Headers != nil {
+	if src.Headers != nil {
 		headers := make(map[string]string)
-		for _, header := range *body.Payload.Headers {
+		for _, header := range *src.Headers {
 			headers[header.Name] = header.Value
 		}
 		payload.JsonRpcPayload.Headers = headers
@@ -243,5 +251,16 @@ func buildJsonRPCRelayPayload(body *RelayRequest) *coreTypes.Relay {
 
 	return &coreTypes.Relay{
 		RelayPayload: payload,
+	}
+}
+
+// DISCUSS: Path and Method requirements of relays in REST format.
+func buildRestRelayPayload(src *RESTPayload) *coreTypes.Relay {
+	return &coreTypes.Relay{
+		RelayPayload: &coreTypes.Relay_RestPayload{
+			RestPayload: &coreTypes.RESTPayload{
+				Contents: *src,
+			},
+		},
 	}
 }

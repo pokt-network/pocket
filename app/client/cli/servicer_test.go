@@ -71,6 +71,49 @@ func TestGetSessionFromCache(t *testing.T) {
 	}
 }
 
+func TestUnmarshalRelay(t *testing.T) {
+	restPayload := rpc.RESTPayload(`{"field1":"value1"}`)
+
+	testCases := []struct {
+		name      string
+		payload   string
+		expected  *rpc.RelayRequest
+		expectErr bool
+	}{
+		{
+			name:    "JSONRPC payload",
+			payload: `{"jsonrpc": "2.0", "id": "1", "method": "eth_blockNumber"}`,
+			expected: &rpc.RelayRequest{
+				Payload: &rpc.JSONRPCPayload{
+					Jsonrpc: "2.0",
+					Method:  "eth_blockNumber",
+					Id:      &rpc.JsonRpcId{Id: []byte("1")},
+				},
+			},
+		},
+		{
+			name:    "REST payload",
+			payload: `{"field1":"value1"}`,
+			expected: &rpc.RelayRequest{
+				Payload: &restPayload,
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// got, err := buildRelay(tc.payload, appPrivateKey, &rpc.Session{}, &rpc.ProtocolActor{})
+			got, err := unmarshalRelayPayload(tc.payload)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.EqualValues(t, *tc.expected, *got)
+		})
+	}
+}
+
 func testSession(appAddr string, height int64) *rpc.Session {
 	const numSessionBlocks = 4
 

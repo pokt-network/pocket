@@ -1,6 +1,9 @@
 package rpc
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -19,6 +22,8 @@ type rpcServer struct {
 var (
 	_ ServerInterface          = &rpcServer{}
 	_ modules.IntegrableModule = &rpcServer{}
+
+	errInvalidJsonRpc = errors.New("JSONRPC validation failed")
 )
 
 func NewRPCServer(bus modules.Bus) *rpcServer {
@@ -66,4 +71,37 @@ func (s *rpcServer) StartRPC(port string, timeout uint64, logger *modules.Logger
 	if err := e.Start(":" + port); err != http.ErrServerClosed {
 		s.logger.Fatal().Err(err).Msg("RPC server failed to start")
 	}
+}
+
+// Validate returns an error if the payload struct is not valid JSONRPC
+func (p *JSONRPCPayload) Validate() error {
+	if p.Method == "" {
+		return fmt.Errorf("%w: missing method field", errInvalidJsonRpc)
+	}
+
+	if p.Jsonrpc != "2.0" {
+		return fmt.Errorf("%w: invalid JSONRPC field value: %q", errInvalidJsonRpc, p.Jsonrpc)
+	}
+
+	return nil
+}
+
+// UnmarshalJSON is the custom unmarshaller for JsonRpcId type. It is needed because JSONRPC spec allows the "id" field to be nil, an integer, or a string.
+//
+//	See the following link for more details:
+//	https://www.jsonrpc.org/specification#request_object
+func (i *JsonRpcId) UnmarshalJSON(data []byte) error {
+	var v int64
+	if err := json.Unmarshal(data, &v); err == nil {
+		i.Id = []byte(fmt.Sprintf("%d", v))
+		return nil
+	}
+
+	var s string
+	if err := json.Unmarshal(data, &s); err == nil {
+		i.Id = []byte(s)
+		return nil
+	}
+
+	return fmt.Errorf("invalid JSONRPC ID value: %v", data)
 }

@@ -243,16 +243,35 @@ func sendTrustlessRelay(ctx context.Context, servicerUrl string, relay *rpc.Rela
 	return client.PostV1ClientRelayWithResponse(ctx, *relay)
 }
 
-func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Session, servicer *rpc.ProtocolActor) (*rpc.RelayRequest, error) {
+// IMPROVE(#958) configure acceptable payload type for each service
+// unmarshalPayload attempts to deserialize the provided relay payload into one of the supported types.
+//
+//	It returns an error if none of the supported types is a valid match for the provided payload.
+func unmarshalRelayPayload(payload string) (*rpc.RelayRequest, error) {
 	// TECHDEBT: This is mostly COPIED from pocket-go: we should refactor pocket-go code and import this functionality from there instead.
-	relayPayload := rpc.Payload{
-		// INCOMPLETE(#803): need to unmarshal into JSONRPC and other supported relay formats once proto-generated custom types are added.
-		Jsonrpc: "2.0",
-		Method:  payload,
-		// INCOMPLETE: set Headers for HTTP relays
+	var jsonRpcPayload rpc.JSONRPCPayload
+	// INCOMPLETE: set Headers for HTTP relays
+	if err := json.Unmarshal([]byte(payload), &jsonRpcPayload); err == nil && jsonRpcPayload.Validate() == nil {
+		return &rpc.RelayRequest{Payload: &jsonRpcPayload}, nil
 	}
 
-	relayMeta := rpc.RelayRequestMeta{
+	// JSONRPC deserialization failed, assume the relay to be in REST format, i.e. any valid JSON is accepted.
+	var restPayload json.RawMessage
+	if err := json.Unmarshal([]byte(payload), &restPayload); err == nil {
+		bz := []byte(restPayload)
+		return &rpc.RelayRequest{Payload: &bz}, nil
+	}
+
+	return nil, fmt.Errorf("error unmarshalling relay payload %s", payload)
+}
+
+func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Session, servicer *rpc.ProtocolActor) (*rpc.RelayRequest, error) {
+	relay, err := unmarshalRelayPayload(payload)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling relay payload %s", payload)
+	}
+
+	relay.Meta = rpc.RelayRequestMeta{
 		BlockHeight: session.SessionHeight,
 		// TODO: Make Chain Identifier type consistent in Session and Meta use Identifiable for Chain in Session (or string for Chain in Relay Meta)
 		Chain: rpc.Identifiable{
@@ -262,10 +281,6 @@ func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Se
 		// TODO(#697): Geozone
 	}
 
-	relay := &rpc.RelayRequest{
-		Payload: relayPayload,
-		Meta:    relayMeta,
-	}
 	// TECHDEBT: Evaluate which fields we should and shouldn't marshall when signing the payload
 	reqBytes, err := json.Marshal(relay)
 	if err != nil {
