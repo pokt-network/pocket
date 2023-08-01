@@ -38,7 +38,7 @@ help:
 docker_check:
 	{ \
 	if ( ! ( command -v docker >/dev/null && (docker compose version >/dev/null || command -v docker-compose >/dev/null) )); then \
-		echo "Seems like you don't have Docker or docker-compose installed. Make sure you review docs/development/README.md before continuing"; \
+		echo "Seems like you don't have Docker or docker-compose installed. Make sure you review build/localnet/README.md and docs/development/README.md  before continuing"; \
 		exit 1; \
 	fi; \
 	}
@@ -47,10 +47,20 @@ docker_check:
 kubectl_check:
 	{ \
 	if ( ! ( command -v kubectl >/dev/null )); then \
-		echo "Seems like you don't have Kubectl installed. Make sure you review docs/development/README.md before continuing"; \
+		echo "Seems like you don't have Kubectl installed. Make sure you review build/localnet/README.md and docs/development/README.md before continuing"; \
 		exit 1; \
 	fi; \
 	}
+
+# Internal helper target - check if rsync is installed.
+rsync_check:
+	{ \
+	if ( ! ( command -v kubectl >/dev/null )); then \
+		echo "Seems like you don't have rsync installed. Make sure you review build/localnet/README.md and docs/development/README.md before continuing"; \
+		exit 1; \
+	fi; \
+	}
+
 
 .PHONY: trigger_ci
 trigger_ci: ## Trigger the CI pipeline by submitting an empty commit; See https://github.com/pokt-network/pocket/issues/900 for details
@@ -134,7 +144,7 @@ go_fmt: ## Format all the .go files in the project in place.
 	gofmt -w -s .
 
 .PHONY: install_cli_deps
-install_cli_deps: ## Installs `helm`, `tilt` and the underlying `ci_deps`
+install_cli_deps: rsync_check kubectl_check docker_check ## Installs `helm`, `tilt` and the underlying `ci_deps`
 	make install_ci_deps
 	curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
 	curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
