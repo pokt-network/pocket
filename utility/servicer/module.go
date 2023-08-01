@@ -35,10 +35,6 @@ var (
 	_ modules.ServicerModule = &servicer{}
 )
 
-const (
-	ServicerModuleName = "servicer"
-)
-
 // sessionTokens is used to cache the starting number of tokens available
 // during a specific session: it is used as the value for a map with keys being applications' public keys
 // TODO: What if we have a servicer managing more than one session from the same app at once? We may/may not need to resolve this in the future.
@@ -121,7 +117,7 @@ func (s *servicer) Stop() error {
 }
 
 func (s *servicer) GetModuleName() string {
-	return ServicerModuleName
+	return modules.ServicerModuleName
 }
 
 // HandleRelay processes a relay after performing validation.

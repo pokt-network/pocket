@@ -98,11 +98,15 @@ func TestUnmarshalRelay(t *testing.T) {
 				Payload: &restPayload,
 			},
 		},
+		{
+			name:      "Payload with invalid format is rejected",
+			payload:   "foo",
+			expectErr: true,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// got, err := buildRelay(tc.payload, appPrivateKey, &rpc.Session{}, &rpc.ProtocolActor{})
 			got, err := unmarshalRelayPayload(tc.payload)
 			if tc.expectErr {
 				require.Error(t, err)
