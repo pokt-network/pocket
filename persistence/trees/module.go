@@ -21,10 +21,6 @@ func (*treeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (m
 		option(m)
 	}
 
-	if err := m.Start(); err != nil {
-		return nil, fmt.Errorf("failed to start %s: %w", modules.TreeStoreSubmoduleName, err)
-	}
-
 	bus.RegisterModule(m)
 
 	return m, nil

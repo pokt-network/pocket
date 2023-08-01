@@ -37,6 +37,7 @@ func TestTreeStore_Create(t *testing.T) {
 
 	treemod, err := trees.Create(mockBus, trees.WithTreeStoreDirectory(":memory:"))
 	assert.NoError(t, err)
+	require.NoError(t, treemod.Start())
 
 	// Create should setup a value for each tree
 	for _, v := range stateTreeNames {
@@ -46,7 +47,7 @@ func TestTreeStore_Create(t *testing.T) {
 	}
 
 	got := treemod.GetBus()
-	assert.Equal(t, got, mockBus)
+	require.Equal(t, got, mockBus)
 
 	// root hash should be empty for empty tree
 	root, ns := treemod.GetTree(trees.TransactionsTreeName)
@@ -68,7 +69,8 @@ func TestTreeStore_StartAndStop(t *testing.T) {
 		mockBus,
 		trees.WithTreeStoreDirectory(":memory:"),
 		trees.WithLogger(&zerolog.Logger{}))
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	require.NoError(t, treemod.Start())
 
 	// Should stop without error
 	require.NoError(t, treemod.Stop())
