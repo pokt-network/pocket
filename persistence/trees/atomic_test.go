@@ -160,7 +160,7 @@ func TestTreeStore_SaveAndLoad(t *testing.T) {
 
 		// assert that hash is unchanged from save and load
 		hash2 := ts2.getStateHash()
-		require.Equal(t, hash1, hash2)
+		require.Equal(t, hash1, hash2, "failed to maintain hash integrity")
 	})
 }
 

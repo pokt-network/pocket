@@ -359,6 +359,8 @@ func (t *treeStore) Load(dir string) error {
 		return err
 	}
 
+	t.logger.Info().Msgf("🌏 worldstate detected, beginning import at %s", dir)
+
 	// create a new root tree and node store
 	nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.treeStoreDir, RootTreeName))
 	if err != nil {
@@ -382,6 +384,7 @@ func (t *treeStore) Load(dir string) error {
 			tree:      smt.ImportSparseMerkleTree(nodeStore, smtTreeHasher, treeRootHash),
 			nodeStore: nodeStore,
 		}
+		t.logger.Info().Msgf("🌳 %s initialized at %s", treeName, hex.EncodeToString(w.MerkleRoots[treeName]))
 	}
 
 	return nil
@@ -452,6 +455,8 @@ func (t *treeStore) Backup(backupDir string) error {
 	if err != nil {
 		return err
 	}
+
+	t.logger.Info().Msgf("💾 backup created at %s", backupDir)
 
 	return nil
 }
