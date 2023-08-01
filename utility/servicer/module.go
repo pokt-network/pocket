@@ -458,11 +458,23 @@ func (s *servicer) executeJsonRPCRelay(meta *coreTypes.RelayMeta, payload *coreT
 
 // executeRESTRelay performs the relay for REST payloads, sending them to the chain's/service's URL.
 // INCOMPLETE(#860): RESTful service relays: basic checks and execution through HTTP calls.
-func (s *servicer) executeRESTRelay(meta *coreTypes.RelayMeta, _ *coreTypes.RESTPayload) (*coreTypes.RelayResponse, error) {
-	if _, ok := s.config.Services[meta.RelayChain.Id]; !ok {
+func (s *servicer) executeRESTRelay(meta *coreTypes.RelayMeta, payload *coreTypes.RESTPayload) (*coreTypes.RelayResponse, error) {
+	// DISCUSS: do we need to support Path and Method fields for REST relays now?
+	if meta == nil || meta.RelayChain == nil || meta.RelayChain.Id == "" {
+		return nil, fmt.Errorf("Relay for application %s does not specify relay chain", meta.ApplicationAddress)
+	}
+
+	serviceConfig, ok := s.config.Services[meta.RelayChain.Id]
+	if !ok {
 		return nil, fmt.Errorf("Chain %s not found in servicer configuration: %w", meta.RelayChain.Id, errValidateRelayMeta)
 	}
-	return nil, nil
+
+	relayBytes, err := codec.GetCodec().Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("Error marshalling payload %s: %w", payload.String(), err)
+	}
+
+	return s.executeHTTPRelay(serviceConfig, relayBytes, nil)
 }
 
 // executeHTTPRequest performs the HTTP request that sends the relay to the chain's/service's URL.
