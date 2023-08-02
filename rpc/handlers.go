@@ -3,6 +3,7 @@ package rpc
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -10,6 +11,8 @@ import (
 	"github.com/pokt-network/pocket/app"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
+
+var errInvalidJsonRpc = errors.New("JSONRPC validation failed")
 
 // CONSIDER: Remove all the V1 prefixes from the RPC module
 

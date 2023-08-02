@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"errors"
 	"net/http"
 	"time"
 
@@ -20,8 +19,6 @@ type rpcServer struct {
 var (
 	_ ServerInterface          = &rpcServer{}
 	_ modules.IntegrableModule = &rpcServer{}
-
-	errInvalidJsonRpc = errors.New("JSONRPC validation failed")
 )
 
 func NewRPCServer(bus modules.Bus) *rpcServer {
