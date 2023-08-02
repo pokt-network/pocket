@@ -62,11 +62,6 @@ type FishermanModule interface {
 	Module
 }
 
-type ServicerModule interface {
-	Module
-	HandleRelay(*coreTypes.Relay) (*coreTypes.RelayResponse, error)
-}
-
 type ValidatorModule interface {
 	Module
 }
