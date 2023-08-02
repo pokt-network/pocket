@@ -19,19 +19,19 @@ import (
 type testRelayHandler func(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error)
 
 func TestRPCServer_PostV1Client(t *testing.T) {
-	testCases := []struct{
-		name string
-		relay RelayRequest
-		handler testRelayHandler
+	testCases := []struct {
+		name             string
+		relay            RelayRequest
+		handler          testRelayHandler
 		expectedResponse string
 	}{
 		{
 			name: "JSONRPC payload is processed correctly",
 			relay: RelayRequest{
-				Payload: JSONRPCPayload {
+				Payload: JSONRPCPayload{
 					Jsonrpc: "2.0",
-					Method: "eth_blockNumber",
-					Id: &JsonRpcId{Id: []byte("1")},
+					Method:  "eth_blockNumber",
+					Id:      &JsonRpcId{Id: []byte("1")},
 				},
 			},
 			handler: func(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
@@ -60,7 +60,7 @@ func TestRPCServer_PostV1Client(t *testing.T) {
 			relay: RelayRequest{
 				Payload: "foo",
 			},
-			handler: func(_ *coreTypes.Relay) (*coreTypes.RelayResponse, error) { return nil, nil },
+			handler:          func(_ *coreTypes.Relay) (*coreTypes.RelayResponse, error) { return nil, nil },
 			expectedResponse: "bad request",
 		},
 	}

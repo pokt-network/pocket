@@ -276,18 +276,18 @@ func (r *RelayRequest) UnmarshalJSON(data []byte) error {
 		r.Meta = jsonRpcRelay.Meta
 		r.Payload = jsonRpcRelay.Payload
 		return nil
-	} 
+	}
 
 	type relayWithRestPayload struct {
 		Meta    RelayRequestMeta `json:"meta"`
-		Payload RESTPayload `json:"payload"`
+		Payload RESTPayload      `json:"payload"`
 	}
 	var restRelay relayWithRestPayload
 	if err := json.Unmarshal(data, &restRelay); err == nil {
 		r.Meta = restRelay.Meta
 		r.Payload = restRelay.Payload
 		return nil
-	} 
+	}
 
 	return fmt.Errorf("invalid relay: %s", string(data))
 }
