@@ -71,13 +71,13 @@ func TestFeatures(t *testing.T) {
 
 // InitializeScenario registers step regexes to function handlers
 
-func (s *rootSuite) TheUserHasAValidator() {
+func (s *rootSuite) TheUserHasANode() {
 	res, err := s.node.RunCommand("help")
 	require.NoErrorf(s, err, res.Stderr)
 	s.node.result = res
 }
 
-func (s *rootSuite) TheValidatorShouldHaveExitedWithoutError() {
+func (s *rootSuite) TheNodeShouldHaveExitedWithoutError() {
 	require.NoError(s, s.node.result.Err)
 }
 

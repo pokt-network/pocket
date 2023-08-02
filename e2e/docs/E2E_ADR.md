@@ -79,7 +79,7 @@ Below is an example of testing the `help` command of the Pocket binary.
 Feature: Root Namespace
 
   Scenario: User Needs Help
-    Given the user has a validator
+    Given the user has a node
     When the user runs the command "help"
     Then the user should be able to see standard output containing "Available Commands"
     And the pocket client should have exited without error
