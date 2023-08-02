@@ -99,14 +99,14 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		return nil, err
 	}
 
-	treemod, err := trees.Create(
+	treeMod, err := trees.Create(
 		bus,
 		trees.WithTreeStoreDirectory(persistenceCfg.TreesStoreDir),
 		trees.WithLogger(m.logger))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create %s: %w", modules.TreeStoreSubmoduleName, err)
 	}
-	if err := treemod.Start(); err != nil {
+	if err := treeMod.Start(); err != nil {
 		return nil, fmt.Errorf("failed to start %s: %w", modules.TreeStoreSubmoduleName, err)
 	}
 

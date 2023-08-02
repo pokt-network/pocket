@@ -22,6 +22,8 @@ const (
 	h1 = "7d5712ea1507915c40e295845fa58773baa405b24b87e9d99761125d826ff915"
 )
 
+var testKey = []byte("fiz")
+
 func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -80,7 +82,7 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 
 	// insert additional test data into all of the trees
 	for _, treeName := range stateTreeNames {
-		require.NoError(t, ts.merkleTrees[treeName].tree.Update([]byte("fiz"), []byte("buz")))
+		require.NoError(t, ts.merkleTrees[treeName].tree.Update(testKey, []byte("buz")))
 	}
 
 	// rollback the changes made to the trees above BEFORE anything was committed
@@ -91,10 +93,12 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 	hash3 := ts.getStateHash()
 	require.Equal(t, hash3, hash2)
 	require.Equal(t, hash3, h1)
-	require.NoError(t, ts.Rollback())
+
+	err = ts.Rollback()
+	require.NoError(t, err)
 
 	// confirm it's not in the tree
-	v, err := ts.merkleTrees[TransactionsTreeName].tree.Get([]byte("fiz"))
+	v, err := ts.merkleTrees[TransactionsTreeName].tree.Get(testKey)
 	require.NoError(t, err)
 	require.Nil(t, v)
 }

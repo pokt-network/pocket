@@ -340,7 +340,8 @@ func TestKVStore_Backup(t *testing.T) {
 
 		tmpdir := t.TempDir()
 		path := filepath.Join(tmpdir, "TestKVStore_Backup_InMemory.bak")
-		require.NoError(t, store.Backup(path))
+		err := store.Backup(path)
+		require.NoError(t, err)
 
 		empty, err := isEmpty(t, tmpdir)
 		require.NoError(t, err)
@@ -364,7 +365,8 @@ func TestKVStore_Backup(t *testing.T) {
 
 		backupDir := t.TempDir()
 		path := filepath.Join(backupDir, "TestKVStore_Backup_OnDisk_Destination.bak")
-		require.NoError(t, store.Backup(path))
+		err = store.Backup(path)
+		require.NoError(t, err)
 
 		empty, err := isEmpty(t, backupDir)
 		require.NoError(t, err)

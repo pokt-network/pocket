@@ -121,20 +121,11 @@ type worldState struct {
 // This enables the caller to import the SMT without changing the one stored unless they call
 // `Commit()` to write to the nodestore.
 func (t *treeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
-	if name == RootTreeName {
-		if t.rootTree != nil {
-			if t.rootTree.tree != nil {
-				return t.rootTree.tree.Root(), t.rootTree.nodeStore
-			}
-			return nil, nil
-		}
-		return nil, nil
+	if name == RootTreeName && t.rootTree.tree != nil {
+		return t.rootTree.tree.Root(), t.rootTree.nodeStore
 	}
-	if tree, ok := t.merkleTrees[name]; ok {
-		if tree != nil {
-			return tree.tree.Root(), tree.nodeStore
-		}
-		return nil, nil
+	if tree, ok := t.merkleTrees[name]; ok && tree != nil {
+		return tree.tree.Root(), tree.nodeStore
 	}
 	return nil, nil
 }
@@ -338,12 +329,13 @@ func (t *treeStore) Rollback() error {
 	return ErrFailedRollback
 }
 
-// Load sets the TreeStore merkle and root trees to the values provided in the worldstate
+// Load sets the TreeStore trees to the values provided in the worldstate
 func (t *treeStore) Load(w *worldState) error {
 	t.merkleTrees = make(map[string]*stateTree)
 
 	// import root tree
-	nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.treeStoreDir, RootTreeName))
+	rootTreePath := fmt.Sprintf("%s/%s_nodes", t.treeStoreDir, RootTreeName)
+	nodeStore, err := kvstore.NewKVStore(rootTreePath)
 	if err != nil {
 		return err
 	}
@@ -355,7 +347,8 @@ func (t *treeStore) Load(w *worldState) error {
 
 	// import merkle trees
 	for treeName, treeRootHash := range w.merkleRoots {
-		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", w.treeStoreDir, treeName))
+		treePath := fmt.Sprintf("%s/%s_nodes", w.treeStoreDir, treeName)
+		nodeStore, err := kvstore.NewKVStore(treePath)
 		if err != nil {
 			return err
 		}
