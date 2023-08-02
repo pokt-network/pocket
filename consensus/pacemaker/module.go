@@ -39,7 +39,9 @@ type Pacemaker interface {
 	PacemakerDebug
 
 	ShouldHandleMessage(message *typesCons.HotstuffMessage) (bool, error)
+	// StartMinBlockTimeDelay configures `prepareStepDelayer` in preparation for delaying block proposal
 	StartMinBlockTimeDelay()
+	// WARNING: DelayBlockPreparation is a synchronous blocking call that acquires a mutex and prevents block propagation until its complete.
 	DelayBlockPreparation() bool
 
 	RestartTimer()
@@ -296,6 +298,7 @@ func (m *pacemaker) StartMinBlockTimeDelay() {
 			if m.prepareStepDelayer.ch != nil {
 				m.prepareStepDelayer.ch <- true
 				close(m.prepareStepDelayer.ch)
+				m.prepareStepDelayer.ch = nil
 				m.prepareStepDelayer.shouldProposeBlock = true
 			}
 
@@ -328,6 +331,7 @@ func (m *pacemaker) DelayBlockPreparation() bool {
 	if m.prepareStepDelayer.ch != nil {
 		m.prepareStepDelayer.ch <- false
 		close(m.prepareStepDelayer.ch)
+		m.prepareStepDelayer.ch = nil
 	}
 
 	// Deadline has passed, no need to have a channel, propose a block now
@@ -343,6 +347,8 @@ func (m *pacemaker) DelayBlockPreparation() bool {
 	// We cannot defer the unlock here because the channel read is blocking
 	m.prepareStepDelayer.m.Unlock()
 
+	// We are blocking this function so we cannot defer the unlock.
+	// We need to unlock before reading from the channel but right after last write to `pacemaker.prepareStepDelayer`
 	return <-ch
 }
 
