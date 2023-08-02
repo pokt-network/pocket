@@ -1,5 +1,7 @@
 Feature: Debug Namespace
 
+    # IMPROVE(#959): Remove time-based waits from tests
+
     # Since the configuration for consensus is optimistically responsive, we need to be in manual
     # Pacemaker mode and call TriggerView to further the blockchain.
     # 1 second was chosen arbitrarily for the time for block propagation.
