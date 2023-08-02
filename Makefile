@@ -143,8 +143,10 @@ go_imports: ## Group imports using rinchsan/gosimports
 go_fmt: ## Format all the .go files in the project in place.
 	gofmt -w -s .
 
+# TODO(kdas): add `rsync_check` as a validation in `install_cli_deps`; https://github.com/pokt-network/pocket/assets/1892194/a7a24a11-f54d-46e2-a73e-9e8ea7d06726
+
 .PHONY: install_cli_deps
-install_cli_deps: rsync_check kubectl_check docker_check ## Installs `helm`, `tilt` and the underlying `ci_deps`
+install_cli_deps: kubectl_check docker_check ## Installs `helm`, `tilt` and the underlying `ci_deps`
 	make install_ci_deps
 	curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
 	curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
