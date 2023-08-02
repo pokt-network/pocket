@@ -65,12 +65,12 @@ func (n *nodePod) RunCommandOnHost(rpcUrl string, args ...string) (*commandResul
 	cmd := exec.Command("kubectl", args...)
 	r := &commandResult{}
 	out, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
 	r.Stdout = string(out)
 	n.result = r
 	// IMPROVE: make targetPodName configurable
 	n.targetPodName = targetDevClientPod
-	if err != nil {
-		return r, err
-	}
 	return r, nil
 }

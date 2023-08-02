@@ -197,7 +197,6 @@ for x in range(localnet_config["validators"]["count"]):
     actor_number = actor_number + 1
     formatted_number = formatted_actor_number(actor_number)
 
-<<<<<<< HEAD
     k8s_yaml(
         helm(
             chart_dir,
@@ -211,6 +210,8 @@ for x in range(localnet_config["validators"]["count"]):
                 "genesis.externalConfigMap.name=v1-localnet-genesis",
                 "genesis.externalConfigMap.key=genesis.json",
                 "postgresql.primary.persistence.enabled=false",
+                "podAnnotations.prometheus\\.io/scrape=true",
+                "podAnnotations.prometheus\\.io/port=9000",
                 "nodeType=validator",
             ],
             values=[chart_dir + "/pocket-validator-overrides.yaml"]
@@ -218,25 +219,6 @@ for x in range(localnet_config["validators"]["count"]):
             else [],
         )
     )
-=======
-    k8s_yaml(helm(chart_dir,
-        name="validator-%s-pocket" % formatted_number,
-        set=[
-            "global.postgresql.auth.postgresPassword=LocalNetPassword",
-            "image.repository=pocket-image",
-            "privateKeySecretKeyRef.name=validators-private-keys",
-            "privateKeySecretKeyRef.key=%s" % formatted_number,
-            "genesis.preProvisionedGenesis.enabled=false",
-            "genesis.externalConfigMap.name=v1-localnet-genesis",
-            "genesis.externalConfigMap.key=genesis.json",
-            "postgresql.primary.persistence.enabled=false",
-            "podAnnotations.prometheus\\.io/scrape=true",
-            "podAnnotations.prometheus\\.io/port=9000",
-            "nodeType=validator",
-        ],
-        values=[chart_dir + "/pocket-validator-overrides.yaml"] if os.path.exists(chart_dir + "/pocket-validator-overrides.yaml") else [],))
->>>>>>> main
-
     k8s_resource("validator-%s-pocket" % formatted_number, labels=["pocket-validators"])
 
 # Provisions servicer nodes
@@ -245,7 +227,6 @@ for x in range(localnet_config["servicers"]["count"]):
     actor_number = actor_number + 1
     formatted_number = formatted_actor_number(actor_number)
 
-<<<<<<< HEAD
     k8s_yaml(
         helm(
             chart_dir,
@@ -259,6 +240,8 @@ for x in range(localnet_config["servicers"]["count"]):
                 "genesis.externalConfigMap.name=v1-localnet-genesis",
                 "genesis.externalConfigMap.key=genesis.json",
                 "postgresql.primary.persistence.enabled=false",
+                "podAnnotations.prometheus\\.io/scrape=true",
+                "podAnnotations.prometheus\\.io/port=9000",
                 "config.servicer.enabled=true",
                 "nodeType=servicer",
             ],
@@ -267,26 +250,6 @@ for x in range(localnet_config["servicers"]["count"]):
             else [],
         )
     )
-=======
-    k8s_yaml(helm(chart_dir,
-        name="servicer-%s-pocket" % formatted_number,
-        set=[
-            "global.postgresql.auth.postgresPassword=LocalNetPassword",
-            "image.repository=pocket-image",
-            "privateKeySecretKeyRef.name=servicers-private-keys",
-            "privateKeySecretKeyRef.key=%s" % formatted_number,
-            "genesis.preProvisionedGenesis.enabled=false",
-            "genesis.externalConfigMap.name=v1-localnet-genesis",
-            "genesis.externalConfigMap.key=genesis.json",
-            "postgresql.primary.persistence.enabled=false",
-            "podAnnotations.prometheus\\.io/scrape=true",
-            "podAnnotations.prometheus\\.io/port=9000",
-            "config.servicer.enabled=true",
-            "nodeType=servicer",
-        ],
-        values=[chart_dir + "/pocket-servicer-overrides.yaml"] if os.path.exists(chart_dir + "/pocket-servicer-overrides.yaml") else [],))
->>>>>>> main
-
     k8s_resource("servicer-%s-pocket" % formatted_number, labels=["pocket-servicers"])
 
 # Provisions fishermen nodes
@@ -295,7 +258,6 @@ for x in range(localnet_config["fishermen"]["count"]):
     actor_number = actor_number + 1
     formatted_number = formatted_actor_number(actor_number)
 
-<<<<<<< HEAD
     k8s_yaml(
         helm(
             chart_dir,
@@ -309,6 +271,8 @@ for x in range(localnet_config["fishermen"]["count"]):
                 "genesis.externalConfigMap.name=v1-localnet-genesis",
                 "genesis.externalConfigMap.key=genesis.json",
                 "postgresql.primary.persistence.enabled=false",
+                "podAnnotations.prometheus\\.io/scrape=true",
+                "podAnnotations.prometheus\\.io/port=9000",
                 "config.fisherman.enabled=true",
                 "nodeType=fisherman",
             ],
@@ -317,25 +281,6 @@ for x in range(localnet_config["fishermen"]["count"]):
             else [],
         )
     )
-=======
-    k8s_yaml(helm(chart_dir,
-        name="fisherman-%s-pocket" % formatted_number,
-        set=[
-            "global.postgresql.auth.postgresPassword=LocalNetPassword",
-            "image.repository=pocket-image",
-            "privateKeySecretKeyRef.name=fishermen-private-keys",
-            "privateKeySecretKeyRef.key=%s" % formatted_number,
-            "genesis.preProvisionedGenesis.enabled=false",
-            "genesis.externalConfigMap.name=v1-localnet-genesis",
-            "genesis.externalConfigMap.key=genesis.json",
-            "postgresql.primary.persistence.enabled=false",
-            "podAnnotations.prometheus\\.io/scrape=true",
-            "podAnnotations.prometheus\\.io/port=9000",
-            "config.fisherman.enabled=true",
-            "nodeType=fisherman",
-        ],
-        values=[chart_dir + "/pocket-fisherman-overrides.yaml"] if os.path.exists(chart_dir + "/pocket-fisherman-overrides.yaml") else [],))
->>>>>>> main
 
     k8s_resource("fisherman-%s-pocket" % formatted_number, labels=["pocket-fishermen"])
 
@@ -357,8 +302,8 @@ for x in range(localnet_config["full_nodes"]["count"]):
                 "genesis.externalConfigMap.name=v1-localnet-genesis",
                 "genesis.externalConfigMap.key=genesis.json",
                 "postgresql.primary.persistence.enabled=false",
-            "podAnnotations.prometheus\\.io/scrape=true",
-            "podAnnotations.prometheus\\.io/port=9000",
+                "podAnnotations.prometheus\\.io/scrape=true",
+                "podAnnotations.prometheus\\.io/port=9000",
                 "nodeType=full",
             ],
             values=[chart_dir + "/pocket-full-node-overrides.yaml"]

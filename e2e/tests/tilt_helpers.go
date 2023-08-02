@@ -14,9 +14,9 @@ func (s *rootSuite) syncLocalNetConfigFromHostToLocalFS() {
 		e2eLogger.Debug().Msgf("syncLocalNetConfigFromHostToLocalFS: 'tilt' is not installed, skipping...")
 		return
 	}
-	sedCmd := exec.Command("tilt", "trigger", "syncback_localnet_config")
-	if err := sedCmd.Run(); err != nil {
-		e2eLogger.Err(err).Msgf("syncLocalNetConfigFromHostToLocalFS: failed to run command: '%s'", sedCmd.String())
+	tiltLocalnetConfigSyncbackTrigger := exec.Command("tilt", "trigger", "syncback_localnet_config")
+	if err := tiltLocalnetConfigSyncbackTrigger.Run(); err != nil {
+		e2eLogger.Err(err).Msgf("syncLocalNetConfigFromHostToLocalFS: failed to run command: '%s'", tiltLocalnetConfigSyncbackTrigger.String())
 		log.Fatal(err)
 	}
 }
