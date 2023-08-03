@@ -15,11 +15,11 @@ func (m *consensusModule) HandleDebugMessage(debugMessage *messaging.DebugMessag
 	m.m.Lock()
 	defer m.m.Unlock()
 
+	m.logger.Debug().Msgf("Consensus module handling debug message: %s", debugMessage.Action)
+
 	switch debugMessage.Action {
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
-		if err := m.resetToGenesis(debugMessage); err != nil {
-			return err
-		}
+		return m.resetToGenesis(debugMessage)
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
 		m.printNodeState(debugMessage)
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:

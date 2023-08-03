@@ -38,7 +38,7 @@ help:
 docker_check:
 	{ \
 	if ( ! ( command -v docker >/dev/null && (docker compose version >/dev/null || command -v docker-compose >/dev/null) )); then \
-		echo "Seems like you don't have Docker or docker-compose installed. Make sure you review docs/development/README.md before continuing"; \
+		echo "Seems like you don't have Docker or docker-compose installed. Make sure you review build/localnet/README.md and docs/development/README.md  before continuing"; \
 		exit 1; \
 	fi; \
 	}
@@ -47,10 +47,20 @@ docker_check:
 kubectl_check:
 	{ \
 	if ( ! ( command -v kubectl >/dev/null )); then \
-		echo "Seems like you don't have Kubectl installed. Make sure you review docs/development/README.md before continuing"; \
+		echo "Seems like you don't have Kubectl installed. Make sure you review build/localnet/README.md and docs/development/README.md before continuing"; \
 		exit 1; \
 	fi; \
 	}
+
+# Internal helper target - check if rsync is installed.
+rsync_check:
+	{ \
+	if ( ! ( command -v kubectl >/dev/null )); then \
+		echo "Seems like you don't have rsync installed. Make sure you review build/localnet/README.md and docs/development/README.md before continuing"; \
+		exit 1; \
+	fi; \
+	}
+
 
 .PHONY: trigger_ci
 trigger_ci: ## Trigger the CI pipeline by submitting an empty commit; See https://github.com/pokt-network/pocket/issues/900 for details
@@ -133,6 +143,9 @@ go_imports: ## Group imports using rinchsan/gosimports
 go_fmt: ## Format all the .go files in the project in place.
 	gofmt -w -s .
 
+# TODO(#964): add `rsync_check`, `kubectl_check`, `docker_check` as a validation in `install_cli_deps`; https://github.com/pokt-network/pocket/assets/1892194/a7a24a11-f54d-46e2-a73e-9e8ea7d06726
+# 	.PHONY: install_cli_deps
+# 	install_cli_deps: rsync_check kubectl_check docker_check ## Installs `helm`, `tilt` and the underlying `ci_deps`
 .PHONY: install_cli_deps
 install_cli_deps: ## Installs `helm`, `tilt` and the underlying `ci_deps`
 	make install_ci_deps
@@ -163,33 +176,27 @@ develop_test: docker_check ## Run all of the make commands necessary to develop 
 		make develop_start && \
 		make test_all
 
-.PHONY: client_start
-client_start: docker_check ## Run a client daemon which is only used for debugging purposes
+.PHONY: lightweight_localnet_client
+lightweight_localnet_client: docker_check ## Run a client daemon which is only used for debugging purposes
+# Add `--build` to rebuild the client
 	${docker-compose} up -d client
 
-.PHONY: rebuild_client_start
-rebuild_client_start: docker_check ## Rebuild and run a client daemon which is only used for debugging purposes
-	${docker-compose} up -d --build client
-
-.PHONY: client_connect
-client_connect: docker_check ## Connect to the running client debugging daemon
+.PHONY: lightweight_localnet_client_debug
+lightweight_localnet_client_debug: docker_check ## Connect to the running client debugging daemon
 	docker exec -it client /bin/bash -c "go run -tags=debug app/client/*.go DebugUI"
 
-.PHONY: build_and_watch
-build_and_watch: ## Continous build Pocket's main entrypoint as files change
-	/bin/sh ${PWD}/build/scripts/watch_build.sh
+# IMPROVE: Avoid building the binary on every shell execution and sync it from local instead
+.PHONY: lightweight_localnet_shell
+lightweight_localnet_shell: docker_check ## Connect to the running client debugging daemon
+	docker exec -it client /bin/bash -c "go build -tags=debug -o p1 ./app/client/*.go && chmod +x p1 && mv p1 /usr/bin && echo \"Finished building a new p1 binary\" && /bin/bash"
 
-# TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
-.PHONY: compose_and_watch
-compose_and_watch: docker_check db_start monitoring_start ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
+.PHONY: lightweight_localnet
+lightweight_localnet: docker_check db_start monitoring_start ## Run a lightweight localnet composed of 4 validators w/ hot reload & debugging
+# Add `--build` to rebuild the client
 	${docker-compose} up --force-recreate validator1 validator2 validator3 validator4 servicer1 fisherman1
 
-.PHONY: rebuild_and_compose_and_watch
-rebuild_and_compose_and_watch: docker_check db_start monitoring_start ## Rebuilds the container from scratch and launches compose_and_watch
-	${docker-compose} up --build --force-recreate validator1 validator2 validator3 validator4 servicer1 fisherman1
-
 .PHONY: db_start
-db_start: docker_check ## Start a detached local postgres and admin instance; compose_and_watch is responsible for instantiating the actual schemas
+db_start: docker_check ## Start a detached local postgres and admin instance; lightweight_localnet is responsible for instantiating the actual schemas
 	${docker-compose} up --no-recreate -d db pgadmin
 
 .PHONY: db_cli
@@ -245,7 +252,7 @@ docker_wipe_nodes: docker_check prompt_user db_drop ## [WARNING] Remove all the 
 	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker rm {}
 
 .PHONY: monitoring_start
-monitoring_start: docker_check ## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
+monitoring_start: docker_check ## Start grafana, metrics and logging system (this is auto-triggered by lightweight_localnet)
 	${docker-compose} up --no-recreate -d grafana loki vm
 
 .PHONY: docker_loki_install

@@ -99,7 +99,7 @@ A subset of these are explained below.
 
 Any targets or helpers to configure and launch the database instances do not populate the actual database.
 
-A LocalNet (see `make compose_and_watch`) must have been executed in order to trigger creation of schemas and hydration of the relevant tables.
+A LocalNet (see `make lightweight_localnet`) must have been executed in order to trigger creation of schemas and hydration of the relevant tables.
 
 #### CLI Access - db_cli_node
 

@@ -43,13 +43,13 @@ make protogen_local # generate the protobuf files
 make generate_rpc_openapi # generate the OpenAPI spec
 make docker_wipe_nodes # clear all the 4 validator nodes
 make db_drop # clear the existing database
-make compose_and_watch # Start 4 validator node LocalNet
+make lightweight_localnet # Start 4 validator node LocalNet
 ```
 
 ## Shell #2: Setup Consensus debugger
 
 ```bash
-make client_start && make client_connect # start the consensus debugger
+make lightweight_localnet_client && make lightweight_localnet_client_debug # start the consensus debugger
 ```
 
 Use `TriggerNextView` and `PrintNodeState` to increment and inspect each node's `height/round/step`.

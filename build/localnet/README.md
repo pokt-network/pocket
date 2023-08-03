@@ -2,7 +2,7 @@
 
 This guide shows how to deploy a LocalNet using [pocket-operator](https://github.com/pokt-network/pocket-operator).
 
-- [TLDR](#tldr)
+- [TL;DR](#tldr)
 - [Dependencies](#dependencies)
   - [Choosing Kubernetes Distribution](#choosing-kubernetes-distribution)
     - [How to create Kind Kubernetes cluster](#how-to-create-kind-kubernetes-cluster)
@@ -16,6 +16,8 @@ This guide shows how to deploy a LocalNet using [pocket-operator](https://github
   - [Interacting w/ LocalNet](#interacting-w-localnet)
     - [Make Targets](#make-targets)
   - [Addresses and keys on LocalNet](#addresses-and-keys-on-localnet)
+    - [Applications staked on LocalNet](#applications-staked-on-localnet)
+    - [Servicers staked on LocalNet](#servicers-staked-on-localnet)
 - [How to change configuration files](#how-to-change-configuration-files)
   - [Overriding default values for localnet with Tilt](#overriding-default-values-for-localnet-with-tilt)
 - [How does it work?](#how-does-it-work)
@@ -26,7 +28,7 @@ This guide shows how to deploy a LocalNet using [pocket-operator](https://github
   - [Full Cleanup](#full-cleanup)
 - [Code Structure](#code-structure)
 
-## TLDR
+## TL;DR
 
 If you feel adventurous, and you know what you're doing, here is a rapid guide to start LocalNet:
 
@@ -46,6 +48,7 @@ All necessary dependencies, except Docker and Kubernetes cluster, are installed 
 3. `Kubernetes cluster`: refer to [Choosing Kubernetes Distribution](#choosing-kubernetes-distribution) section for more details.
 4. `kubectl`: CLI is required and should be configured to access the cluster. This should happen automatically if using Docker Desktop, Rancher Desktop, k3s, k3d, minikube, etc.
 5. [helm](https://helm.sh/docs/intro/install): required to template the YAML manifests for the dependencies (e.g., Postgres, Grafana). Installation instructions available.
+6. [rsync](https://www.hostinger.com/tutorials/how-to-use-rsync): required to for some extensions used with `Tilt`; https://github.com/tilt-dev/tilt-extensions/tree/master/syncback#usage
 
 ### Choosing Kubernetes Distribution
 
@@ -149,8 +152,8 @@ For example:
 - `0010297b55fc9278e4be4f1bcfe52bf9bd0443f8` is a servicer #001.
 - `314019dbb7faf8390c1f0cf4976ef1215c90b7e4` is an application #314.
 
-
 #### Applications staked on LocalNet
+
 Applications with the following addresses are staked on LocalNet, through the [applications field of the genesis.json in the LocalNet configuration](https://github.com/pokt-network/pocket/blob/main/build/localnet/manifests/configs.yaml#L4088)
 
 - `00001fff518b1cdddd74c197d76ba5b5dedc0301`
@@ -159,6 +162,7 @@ Applications with the following addresses are staked on LocalNet, through the [a
 These addresses can be used for e.g. testing the CLI.
 
 #### Servicers staked on LocalNet
+
 Servicers with the following addresses are staked on LocalNet, through the [servicers field of the genesis.json in the LocalNet configuration](https://github.com/pokt-network/pocket/blob/main/build/localnet/manifests/configs.yaml#L4120)
 
 - `00002b8cea1bcc3dadc72ebecf95564ceb9c2e2a`

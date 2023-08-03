@@ -125,7 +125,7 @@ UtilityModule
 - Opened followup issue #163
 - Added config and genesis generator to build package
 - Deprecated old build files
-- Use new config and genesis files for make compose_and_watch
-- Use new config and genesis files for make client_start && make client_connect
+- Use new config and genesis files for make lightweight_localnet
+- Use new config and genesis files for make lightweight_localnet_client && make lightweight_localnet_client_debug
 
 <!-- GITHUB_WIKI: changelog/shared_modules -->
