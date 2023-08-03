@@ -2,6 +2,8 @@ Feature: State Sync Namespace
 
   # IMPROVE(#959): Remove time-based waits from tests
 
+
+  @skip_in_ci
   Scenario: New FullNode does not sync to Blockchain at height 2
         Given the network is at genesis
         And the network has "4" actors of type "Validator"

@@ -66,7 +66,8 @@ func (s *rootSuite) Before() {
 // TestFeatures runs the e2e tests specified in any .features files in this directory
 // * This test suite assumes that a LocalNet is running that can be accessed by `kubectl`
 func TestFeatures(t *testing.T) {
-	gocuke.NewRunner(t, &rootSuite{}).Path("*.feature").Run()
+	e2eTestTags := os.Getenv("POCKET_E2E_TEST_TAGS")
+	gocuke.NewRunner(t, &rootSuite{}).Path("*.feature").Tags(e2eTestTags).Run()
 }
 
 // InitializeScenario registers step regexes to function handlers

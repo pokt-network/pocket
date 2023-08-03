@@ -150,6 +150,7 @@ jobs:
     needs: build-images
     if: contains(github.event.pull_request.labels.*.name, 'e2e-devnet-test')
     env:
+      POCKET_E2E_TEST_TAGS: "~@skip_in_ci"
       ARGO_HTTP1: true
       ARGO_SECURE: true
       ARGO_SERVER: ${{ vars.ARGO_SERVER }}
