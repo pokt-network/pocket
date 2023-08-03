@@ -25,7 +25,7 @@ func TestSession_GetSession_SingleWatcherSingleServicerBaseCase(t *testing.T) {
 	numWatchers := 1
 	numServicers := 1
 	// needs to be manually updated if business logic changes
-	expectedSessionId := "b1e9791358aae070ac7f86fdb74e5a9d26fff025fb737a2114ccf9ad95b624bd"
+	expectedSessionId := "d95b27b31dd4758f1ac40f98f9eb4b75bcd15648059bc4c41259603548559ed5"
 
 	runtimeCfg, utilityMod, _ := prepareEnvironment(t, 5, numServicers, 1, numWatchers)
 

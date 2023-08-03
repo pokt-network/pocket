@@ -15,9 +15,9 @@ import (
 
 const (
 	// the root hash of a tree store where each tree is empty but present and initialized
-	h0 = "302f2956c084cc3e0e760cf1b8c2da5de79c45fa542f68a660a5fc494b486972"
+	h0 = "11dc4c7c1697ab33acc396f9566e753919548f1c0517ab3d7199a79a673366b7"
 	// the root hash of a tree store where each tree has has key foo value bar added to it
-	h1 = "7d5712ea1507915c40e295845fa58773baa405b24b87e9d99761125d826ff915"
+	h1 = "584f62448c67ab0262a10c7332f0c1ec855835c0c87acf828718e9a138e3fbac"
 )
 
 func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {

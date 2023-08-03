@@ -46,7 +46,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "4669736865726d616e5374616b65506f6f6c0000",
+			Address: "576174636865725374616b65506f6f6c00000000",
 			Amount:  "100000000000000",
 		},
 	},
