@@ -150,7 +150,6 @@ jobs:
     needs: build-images
     if: contains(github.event.pull_request.labels.*.name, 'e2e-devnet-test')
     env:
-      POCKET_E2E_TEST_TAGS: "~@skip_in_ci"
       ARGO_HTTP1: true
       ARGO_SECURE: true
       ARGO_SERVER: ${{ vars.ARGO_SERVER }}
@@ -198,4 +197,4 @@ jobs:
 
       - id: "run-e2e-tests"
         run: |
-          ./argo-linux-amd64 submit --wait --log --namespace devnet-issue-${{ github.event.pull_request.number }} --from 'wftmpl/dev-e2e-tests' --parameter gitsha="${{ github.event.pull_request.head.sha }}"
+          ./argo-linux-amd64 submit --wait --log --namespace devnet-issue-${{ github.event.pull_request.number }} --from 'wftmpl/dev-e2e-tests' --paramter tags="~@skip_in_ci" --parameter gitsha="${{ github.event.pull_request.head.sha }}"
