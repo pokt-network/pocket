@@ -1,7 +1,8 @@
 # State Sync Protocol Design <!-- omit in toc -->
 
-⚠️ IMPORTANT NOTES TO THE (last updated on 06/08/2023):
+⚠️ IMPORTANT NOTES TO THE (last updated on 08/03/2023):
 
+- TECHDEBT(#821): Once the FSM is remove, state sync will look completely different
 - State Sync implementation is a WIP and has taken several different shapes.
 - This document is out of date and needs to be updated to reflect the latest implementation. This will be done once a functional implementation is in place.
 - This document makes some assumption of P2P implementation details, so please see [p2p](../../p2p/README.md) for the latest source of truth.

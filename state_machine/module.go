@@ -1,5 +1,7 @@
 package state_machine
 
+// TECHDEBT(#821): Remove the dependency of state sync on FSM, as well as the FSM in general.
+
 import (
 	"context"
 

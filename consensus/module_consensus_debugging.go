@@ -1,7 +1,7 @@
 package consensus
 
 // All the code below is used for debugging & testing purposes only and should not be used in prod.
-// TODO: Add debug/test tags to avoid accidental production usage.
+// TECHDEBT: Add debug/test tags to avoid accidental production usage.
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"

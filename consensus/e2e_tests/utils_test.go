@@ -77,6 +77,7 @@ func generateNodeRuntimeMgrs(t *testing.T, validatorCount int, clockMgr clock.Cl
 	return runtimeMgrs
 }
 
+// TECHDEBT: Try to avoid exposing `modules.EventsChannel` outside the `shared` package and adding the appropriate mocks to the bus.
 func createTestConsensusPocketNodes(
 	t *testing.T,
 	buses []modules.Bus,
