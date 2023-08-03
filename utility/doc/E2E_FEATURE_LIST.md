@@ -14,13 +14,13 @@
   - [2. Servicer Relay Rewards - Non-Custodial 🟡](#2-servicer-relay-rewards---non-custodial-)
   - [3. Servicer Relay Rewards - Rev-Share 🔵](#3-servicer-relay-rewards---rev-share-)
   - [4. Validator - Block Rewards 🟡](#4-validator---block-rewards-)
-  - [5. Fisherman - QoS Submission Rewards ⭐](#5-fisherman---qos-submission-rewards-)
+  - [5. Watcher - QoS Submission Rewards ⭐](#5-watcher---qos-submission-rewards-)
 - [D. E2E Burns \& Slashes](#d-e2e-burns--slashes)
   - [1. Validator - Double-Sign Burn 🔴](#1-validator---double-sign-burn-)
   - [2. Application - Application Quota Stake Burn 🟢🔴](#2-application---application-quota-stake-burn-)
   - [3. Servicer - Inaccurate Challenged Response 🔵](#3-servicer---inaccurate-challenged-response-)
-  - [4. Fisherman - Missing Test Score Burn ⭐](#4-fisherman---missing-test-score-burn-)
-  - [5. Fisherman - Incomplete Test Score Burn ⭐](#5-fisherman---incomplete-test-score-burn-)
+  - [4. Watcher - Missing Test Score Burn ⭐](#4-watcher---missing-test-score-burn-)
+  - [5. Watcher - Incomplete Test Score Burn ⭐](#5-watcher---incomplete-test-score-burn-)
 - [E. E2E PoS Functionality](#e-e2e-pos-functionality)
   - [1. Actor Staking 🟡](#1-actor-staking-)
   - [2. Actor Unstaking 🟡](#2-actor-unstaking-)
@@ -85,7 +85,7 @@
 
 ### 4. Validator - Block Rewards 🟡
 
-### 5. Fisherman - QoS Submission Rewards ⭐
+### 5. Watcher - QoS Submission Rewards ⭐
 
 ## D. E2E Burns & Slashes
 
@@ -95,9 +95,9 @@
 
 ### 3. Servicer - Inaccurate Challenged Response 🔵
 
-### 4. Fisherman - Missing Test Score Burn ⭐
+### 4. Watcher - Missing Test Score Burn ⭐
 
-### 5. Fisherman - Incomplete Test Score Burn ⭐
+### 5. Watcher - Incomplete Test Score Burn ⭐
 
 ## E. E2E PoS Functionality
 

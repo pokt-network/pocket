@@ -1,20 +1,20 @@
-## client Query Fisherman
+## client Query Watcher
 
-Get the fisherman data of an address
+Get the watcher data of an address
 
 ### Synopsis
 
-Queries the node RPC to obtain the fisherman data of the speicifed address at the given (or latest if unspecified) height
+Queries the node RPC to obtain the watcher data of the speicifed address at the given (or latest if unspecified) height
 
 ```
-client Query Fisherman <address> [--height] [flags]
+client Query Watcher <address> [--height] [flags]
 ```
 
 ### Options
 
 ```
       --height int   block height to query, (default = 0, latest)
-  -h, --help         help for Fisherman
+  -h, --help         help for Watcher
 ```
 
 ### Options inherited from parent commands

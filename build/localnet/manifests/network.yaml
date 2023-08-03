@@ -38,13 +38,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: pocket-fishermen
+  name: pocket-watchers
   annotations:
     prometheus.io/scrape: "false"
     prometheus.io/port: "9000"
 spec:
   selector:
-    pokt.network/purpose: fisherman
+    pokt.network/purpose: watcher
   ports:
     - port: 50832
       targetPort: 50832

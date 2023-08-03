@@ -17,23 +17,23 @@ import (
 
 // TECHDEBT(#697): Geozones are not current implemented, used or tested
 
-func TestSession_GetSession_SingleFishermanSingleServicerBaseCase(t *testing.T) {
+func TestSession_GetSession_SingleWatcherSingleServicerBaseCase(t *testing.T) {
 	// Test parameters
 	height := int64(1)
 	relayChain := test_artifacts.DefaultChains[0]
 	geoZone := "unused_geo"
-	numFishermen := 1
+	numWatchers := 1
 	numServicers := 1
 	// needs to be manually updated if business logic changes
 	expectedSessionId := "b1e9791358aae070ac7f86fdb74e5a9d26fff025fb737a2114ccf9ad95b624bd"
 
-	runtimeCfg, utilityMod, _ := prepareEnvironment(t, 5, numServicers, 1, numFishermen)
+	runtimeCfg, utilityMod, _ := prepareEnvironment(t, 5, numServicers, 1, numWatchers)
 
 	// Sanity check genesis
 	require.Len(t, runtimeCfg.GetGenesis().Applications, 1)
 	app := runtimeCfg.GetGenesis().Applications[0]
-	require.Len(t, runtimeCfg.GetGenesis().Fishermen, 1)
-	fisher := runtimeCfg.GetGenesis().Fishermen[0]
+	require.Len(t, runtimeCfg.GetGenesis().Watchers, 1)
+	watcher := runtimeCfg.GetGenesis().Watchers[0]
 	require.Len(t, runtimeCfg.GetGenesis().Servicers, 1)
 	servicer := runtimeCfg.GetGenesis().Servicers[0]
 
@@ -49,8 +49,8 @@ func TestSession_GetSession_SingleFishermanSingleServicerBaseCase(t *testing.T) 
 	require.Equal(t, app.Address, session.Application.Address)
 	require.Len(t, session.Servicers, numServicers)
 	require.Equal(t, servicer.Address, session.Servicers[0].Address)
-	require.Len(t, session.Fishermen, numFishermen)
-	require.Equal(t, fisher.Address, session.Fishermen[0].Address)
+	require.Len(t, session.Watchers, numWatchers)
+	require.Equal(t, watcher.Address, session.Watchers[0].Address)
 }
 
 func TestSession_GetSession_ApplicationInvalid(t *testing.T) {
@@ -124,54 +124,54 @@ func TestSession_GetSession_InvalidFutureSession(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestSession_GetSession_ServicersAndFishermenCounts_TotalAvailability(t *testing.T) {
-	// Prepare an environment with a lot of servicers and fishermen
+func TestSession_GetSession_ServicersAndWatchersCounts_TotalAvailability(t *testing.T) {
+	// Prepare an environment with a lot of servicers and watchers
 	numStakedServicers := 100
-	numStakedFishermen := 100
-	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, numStakedServicers, 1, numStakedFishermen)
+	numStakedWatchers := 100
+	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, numStakedServicers, 1, numStakedWatchers)
 
 	// Vary the number of actors per session using gov params and check that the session is populated with the correct number of actorss
 	tests := []struct {
 		name                   string
 		numServicersPerSession int64
-		numFishermanPerSession int64
+		numWatcherPerSession   int64
 		wantServicerCount      int
-		wantFishermanCount     int
+		wantWatcherCount       int
 	}{
 		{
 			name:                   "more actors per session than available in network",
 			numServicersPerSession: int64(numStakedServicers) * 10,
-			numFishermanPerSession: int64(numStakedFishermen) * 10,
+			numWatcherPerSession:   int64(numStakedWatchers) * 10,
 			wantServicerCount:      numStakedServicers,
-			wantFishermanCount:     numStakedFishermen,
+			wantWatcherCount:       numStakedWatchers,
 		},
 		{
 			name:                   "less actors per session than available in network",
 			numServicersPerSession: int64(numStakedServicers) / 2,
-			numFishermanPerSession: int64(numStakedFishermen) / 2,
+			numWatcherPerSession:   int64(numStakedWatchers) / 2,
 			wantServicerCount:      numStakedServicers / 2,
-			wantFishermanCount:     numStakedFishermen / 2,
+			wantWatcherCount:       numStakedWatchers / 2,
 		},
 		{
 			name:                   "same number of actors per session as available in network",
 			numServicersPerSession: int64(numStakedServicers),
-			numFishermanPerSession: int64(numStakedFishermen),
+			numWatcherPerSession:   int64(numStakedWatchers),
 			wantServicerCount:      numStakedServicers,
-			wantFishermanCount:     numStakedFishermen,
+			wantWatcherCount:       numStakedWatchers,
 		},
 		{
-			name:                   "more than enough servicers but not enough fishermen",
+			name:                   "more than enough servicers but not enough watchers",
 			numServicersPerSession: int64(numStakedServicers) / 2,
-			numFishermanPerSession: int64(numStakedFishermen) * 10,
+			numWatcherPerSession:   int64(numStakedWatchers) * 10,
 			wantServicerCount:      numStakedServicers / 2,
-			wantFishermanCount:     numStakedFishermen,
+			wantWatcherCount:       numStakedWatchers,
 		},
 		{
-			name:                   "more than enough fishermen but not enough servicers",
+			name:                   "more than enough watchers but not enough servicers",
 			numServicersPerSession: int64(numStakedServicers) * 10,
-			numFishermanPerSession: int64(numStakedFishermen) / 2,
+			numWatcherPerSession:   int64(numStakedWatchers) / 2,
 			wantServicerCount:      numStakedServicers,
-			wantFishermanCount:     numStakedFishermen / 2,
+			wantWatcherCount:       numStakedWatchers / 2,
 		},
 	}
 
@@ -192,14 +192,14 @@ func TestSession_GetSession_ServicersAndFishermenCounts_TotalAvailability(t *tes
 			})
 			require.NoError(t, err)
 
-			// Update the number of servicers and fishermen per session gov params
+			// Update the number of servicers and watchers per session gov params
 			writeCtx, err := persistenceMod.NewRWContext(updateParamsHeight)
 			require.NoError(t, err)
 			defer writeCtx.Release()
 
 			err = writeCtx.SetParam(types.ServicersPerSessionParamName, tt.numServicersPerSession)
 			require.NoError(t, err)
-			err = writeCtx.SetParam(types.FishermanPerSessionParamName, tt.numFishermanPerSession)
+			err = writeCtx.SetParam(types.WatcherPerSessionParamName, tt.numWatcherPerSession)
 			require.NoError(t, err)
 			err = writeCtx.Commit([]byte("empty_proposed_addr"), []byte("empty_quorum_cert"))
 			require.NoError(t, err)
@@ -208,58 +208,58 @@ func TestSession_GetSession_ServicersAndFishermenCounts_TotalAvailability(t *tes
 			session, err := utilityMod.GetSession(app.Address, querySessionHeight, relayChain, geoZone)
 			require.NoError(t, err)
 			require.Equal(t, tt.wantServicerCount, len(session.Servicers))
-			require.Equal(t, tt.wantFishermanCount, len(session.Fishermen))
+			require.Equal(t, tt.wantWatcherCount, len(session.Watchers))
 		})
 	}
 }
 
-func TestSession_GetSession_ServicersAndFishermenCounts_ChainAvailability(t *testing.T) {
+func TestSession_GetSession_ServicersAndWatchersCounts_ChainAvailability(t *testing.T) {
 	// Constant parameters for testing
 	numServicersPerSession := 10
-	numFishermenPerSession := 2
+	numWatchersPerSession := 2
 
-	// Make sure there are MORE THAN ENOUGH servicers and fishermen in the network for each session for chain 1
+	// Make sure there are MORE THAN ENOUGH servicers and watchers in the network for each session for chain 1
 	servicersChain1, servicerKeysChain1 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicersPerSession*2, []string{"chn1"})
-	fishermenChain1, fishermenKeysChain1 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFishermenPerSession*2, []string{"chn1"})
+	watchersChain1, watchersKeysChain1 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_WATCHER, numWatchersPerSession*2, []string{"chn1"})
 
-	// Make sure there are NOT ENOUGH servicers and fishermen in the network for each session for chain 2
+	// Make sure there are NOT ENOUGH servicers and watchers in the network for each session for chain 2
 	servicersChain2, servicerKeysChain2 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicersPerSession/2, []string{"chn2"})
-	fishermenChain2, fishermenKeysChain2 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFishermenPerSession/2, []string{"chn2"})
+	watchersChain2, watchersKeysChain2 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_WATCHER, numWatchersPerSession/2, []string{"chn2"})
 
 	application, applicationKey := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, 1, []string{"chn1", "chn2", "chn3"})
 
 	//nolint:gocritic // intentionally not appending result to a new slice
-	actors := append(application, append(servicersChain1, append(servicersChain2, append(fishermenChain1, fishermenChain2...)...)...)...)
+	actors := append(application, append(servicersChain1, append(servicersChain2, append(watchersChain1, watchersChain2...)...)...)...)
 	//nolint:gocritic // intentionally not appending result to a new slice
-	keys := append(applicationKey, append(servicerKeysChain1, append(servicerKeysChain2, append(fishermenKeysChain1, fishermenKeysChain2...)...)...)...)
+	keys := append(applicationKey, append(servicerKeysChain1, append(servicerKeysChain2, append(watchersKeysChain1, watchersKeysChain2...)...)...)...)
 
 	// Prepare the environment
 	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, 0, 0, 0, test_artifacts.WithActors(actors, keys))
 
-	// Vary the chain and check the number of fishermen and servicers returned for each one
+	// Vary the chain and check the number of watchers and servicers returned for each one
 	tests := []struct {
-		name               string
-		chain              string
-		wantServicerCount  int
-		wantFishermanCount int
+		name              string
+		chain             string
+		wantServicerCount int
+		wantWatcherCount  int
 	}{
 		{
-			name:               "chn1 has enough servicers and fishermen",
-			chain:              "chn1",
-			wantServicerCount:  numServicersPerSession,
-			wantFishermanCount: numFishermenPerSession,
+			name:              "chn1 has enough servicers and watchers",
+			chain:             "chn1",
+			wantServicerCount: numServicersPerSession,
+			wantWatcherCount:  numWatchersPerSession,
 		},
 		{
-			name:               "chn2 does not have enough servicers and fishermen",
-			chain:              "chn2",
-			wantServicerCount:  numServicersPerSession / 2,
-			wantFishermanCount: numFishermenPerSession / 2,
+			name:              "chn2 does not have enough servicers and watchers",
+			chain:             "chn2",
+			wantServicerCount: numServicersPerSession / 2,
+			wantWatcherCount:  numWatchersPerSession / 2,
 		},
 		{
-			name:               "chn3 has no servicers and fishermen",
-			chain:              "chn3",
-			wantServicerCount:  0,
-			wantFishermanCount: 0,
+			name:              "chn3 has no servicers and watchers",
+			chain:             "chn3",
+			wantServicerCount: 0,
+			wantWatcherCount:  0,
 		},
 	}
 
@@ -270,12 +270,12 @@ func TestSession_GetSession_ServicersAndFishermenCounts_ChainAvailability(t *tes
 	})
 	require.NoError(t, err)
 
-	// Update the number of servicers and fishermen per session gov params
+	// Update the number of servicers and watchers per session gov params
 	writeCtx, err := persistenceMod.NewRWContext(1)
 	require.NoError(t, err)
 	err = writeCtx.SetParam(types.ServicersPerSessionParamName, numServicersPerSession)
 	require.NoError(t, err)
-	err = writeCtx.SetParam(types.FishermanPerSessionParamName, numFishermenPerSession)
+	err = writeCtx.SetParam(types.WatcherPerSessionParamName, numWatchersPerSession)
 	require.NoError(t, err)
 	err = writeCtx.Commit([]byte("empty_proposed_addr"), []byte("empty_quorum_cert"))
 	require.NoError(t, err)
@@ -290,7 +290,7 @@ func TestSession_GetSession_ServicersAndFishermenCounts_ChainAvailability(t *tes
 			session, err := utilityMod.GetSession(app.Address, 2, tt.chain, geoZone)
 			require.NoError(t, err)
 			require.Len(t, session.Servicers, tt.wantServicerCount)
-			require.Len(t, session.Fishermen, tt.wantFishermanCount)
+			require.Len(t, session.Watchers, tt.wantWatcherCount)
 		})
 	}
 }
@@ -369,12 +369,12 @@ func TestSession_GetSession_SessionHeightAndNumber_StaticBlocksPerSession(t *tes
 	}
 }
 
-func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
-	// Prepare an environment with a lot of servicers and fishermen
+func TestSession_GetSession_ServicersAndWatcherEntropy(t *testing.T) {
+	// Prepare an environment with a lot of servicers and watchers
 	numServicers := 1000
-	numFishermen := 1000 // make them equal for simplicity
+	numWatchers := 1000 // make them equal for simplicity
 	numServicersPerSession := 10
-	numFishermenPerSession := 10 // make them equal for simplicity
+	numWatchersPerSession := 10 // make them equal for simplicity
 	numApplications := 3
 	numBlocksPerSession := 2 // expect a different every other height
 
@@ -386,14 +386,14 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 	probabilityOfOverlap := (numChoices - numChoicesRemaining) / numChoices
 
 	// Prepare the environment
-	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, numServicers, numApplications, numFishermen)
+	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, numServicers, numApplications, numWatchers)
 
-	// Set the number of servicers and fishermen per session gov params
+	// Set the number of servicers and watchers per session gov params
 	writeCtx, err := persistenceMod.NewRWContext(1)
 	require.NoError(t, err)
 	err = writeCtx.SetParam(types.ServicersPerSessionParamName, numServicersPerSession)
 	require.NoError(t, err)
-	err = writeCtx.SetParam(types.FishermanPerSessionParamName, numFishermenPerSession)
+	err = writeCtx.SetParam(types.WatcherPerSessionParamName, numWatchersPerSession)
 	require.NoError(t, err)
 	err = writeCtx.SetParam(types.BlocksPerSessionParamName, numBlocksPerSession)
 	require.NoError(t, err)
@@ -401,7 +401,7 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 	require.NoError(t, err)
 	writeCtx.Release()
 
-	// Keep the relay chain and geoZone static, but vary the app and height to verify that the servicers and fishermen vary
+	// Keep the relay chain and geoZone static, but vary the app and height to verify that the servicers and watchers vary
 	relayChain := test_artifacts.DefaultChains[0]
 	geoZone := "unused_geo"
 
@@ -413,9 +413,9 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 
 	// Keep track of the actors from the session at the previous height to verify a delta
 	var app1PrevServicers, app2PrevServicers, app3PrevServicers []*coreTypes.Actor
-	var app1PrevFishermen, app2PrevFishermen, app3PrevFishermen []*coreTypes.Actor
+	var app1PrevWatchers, app2PrevWatchers, app3PrevWatchers []*coreTypes.Actor
 
-	// The number of blocks to increase until we expect a different set of servicers and fishermen; see numBlocksPerSession
+	// The number of blocks to increase until we expect a different set of servicers and watchers; see numBlocksPerSession
 	numBlocksUntilChange := 0
 
 	// Commit new blocks for all the heights that failed above
@@ -432,18 +432,18 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 		require.Equal(t, len(session1.Servicers), len(session2.Servicers))
 		require.Equal(t, len(session1.Servicers), len(session3.Servicers))
 
-		// All the sessions have the same number of fishermen
-		require.Len(t, session1.Fishermen, numFishermenPerSession)
-		require.Equal(t, len(session1.Fishermen), len(session2.Fishermen))
-		require.Equal(t, len(session1.Fishermen), len(session3.Fishermen))
+		// All the sessions have the same number of watchers
+		require.Len(t, session1.Watchers, numWatchersPerSession)
+		require.Equal(t, len(session1.Watchers), len(session2.Watchers))
+		require.Equal(t, len(session1.Watchers), len(session3.Watchers))
 
 		// Assert different services between apps
 		assertActorsDifference(t, session1.Servicers, session2.Servicers, probabilityOfOverlap)
 		assertActorsDifference(t, session1.Servicers, session3.Servicers, probabilityOfOverlap)
 
-		// Assert different fishermen between apps
-		assertActorsDifference(t, session1.Fishermen, session2.Fishermen, probabilityOfOverlap)
-		assertActorsDifference(t, session1.Fishermen, session3.Fishermen, probabilityOfOverlap)
+		// Assert different watchers between apps
+		assertActorsDifference(t, session1.Watchers, session2.Watchers, probabilityOfOverlap)
+		assertActorsDifference(t, session1.Watchers, session3.Watchers, probabilityOfOverlap)
 
 		if numBlocksUntilChange == 0 {
 			// Assert different servicers between heights for the same app
@@ -451,20 +451,20 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 			assertActorsDifference(t, app2PrevServicers, session2.Servicers, probabilityOfOverlap)
 			assertActorsDifference(t, app3PrevServicers, session3.Servicers, probabilityOfOverlap)
 
-			// Assert different fishermen between heights for the same app
-			assertActorsDifference(t, app1PrevFishermen, session1.Fishermen, probabilityOfOverlap)
-			assertActorsDifference(t, app2PrevFishermen, session2.Fishermen, probabilityOfOverlap)
-			assertActorsDifference(t, app3PrevFishermen, session3.Fishermen, probabilityOfOverlap)
+			// Assert different watchers between heights for the same app
+			assertActorsDifference(t, app1PrevWatchers, session1.Watchers, probabilityOfOverlap)
+			assertActorsDifference(t, app2PrevWatchers, session2.Watchers, probabilityOfOverlap)
+			assertActorsDifference(t, app3PrevWatchers, session3.Watchers, probabilityOfOverlap)
 
-			// Store the new servicers and fishermen for the next height
+			// Store the new servicers and watchers for the next height
 			app1PrevServicers = session1.Servicers
 			app2PrevServicers = session2.Servicers
 			app3PrevServicers = session3.Servicers
-			app1PrevFishermen = session1.Fishermen
-			app2PrevFishermen = session2.Fishermen
-			app3PrevFishermen = session3.Fishermen
+			app1PrevWatchers = session1.Watchers
+			app2PrevWatchers = session2.Watchers
+			app3PrevWatchers = session3.Watchers
 
-			// Reset the number of blocks until we expect a different set of servicers and fishermen
+			// Reset the number of blocks until we expect a different set of servicers and watchers
 			numBlocksUntilChange = numBlocksPerSession - 1
 		} else {
 			// Assert the same servicers between heights for the same app
@@ -472,10 +472,10 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 			require.ElementsMatch(t, app2PrevServicers, session2.Servicers)
 			require.ElementsMatch(t, app3PrevServicers, session3.Servicers)
 
-			// Assert the same fishermen between heights for the same app
-			require.ElementsMatch(t, app1PrevFishermen, session1.Fishermen)
-			require.ElementsMatch(t, app2PrevFishermen, session2.Fishermen)
-			require.ElementsMatch(t, app3PrevFishermen, session3.Fishermen)
+			// Assert the same watchers between heights for the same app
+			require.ElementsMatch(t, app1PrevWatchers, session1.Watchers)
+			require.ElementsMatch(t, app2PrevWatchers, session2.Watchers)
+			require.ElementsMatch(t, app3PrevWatchers, session3.Watchers)
 
 			numBlocksUntilChange--
 		}
@@ -493,7 +493,7 @@ func TestSession_GetSession_ApplicationUnbonds(t *testing.T) {
 	// TODO: What if an Application unbonds (unstaking period elapses) mid session?
 }
 
-func TestSession_GetSession_ServicersAndFishermenCounts_GeoZoneAvailability(t *testing.T) {
+func TestSession_GetSession_ServicersAndWatchersCounts_GeoZoneAvailability(t *testing.T) {
 	// TECHDEBT(#697): Once GeoZones are implemented, the tests need to be added as well
 	// Cases: Invalid, unused, non-existent, empty, insufficiently complete, etc...
 }

@@ -73,8 +73,8 @@ func (m *utilityModule) GetSession(appAddr string, height int64, relayChain, geo
 		return nil, fmt.Errorf("failed to hydrate session servicers: %w", err)
 	}
 
-	if err := sessionHydrator.hydrateSessionFishermen(); err != nil {
-		return nil, fmt.Errorf("failed to hydrate session fishermen: %w", err)
+	if err := sessionHydrator.hydrateSessionWatchers(); err != nil {
+		return nil, fmt.Errorf("failed to hydrate session watchers: %w", err)
 	}
 
 	return sessionHydrator.session, nil
@@ -199,37 +199,37 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 	return nil
 }
 
-// hydrateSessionFishermen finds the fishermen that are staked at the session height and populates the session with them
-func (s *sessionHydrator) hydrateSessionFishermen() error {
-	// number of fishermen per session at this height
-	numFishermen, err := s.readCtx.GetIntParam(types.FishermanPerSessionParamName, s.session.SessionHeight)
+// hydrateSessionWatchers finds the watchers that are staked at the session height and populates the session with them
+func (s *sessionHydrator) hydrateSessionWatchers() error {
+	// number of watchers per session at this height
+	numWatchers, err := s.readCtx.GetIntParam(types.WatcherPerSessionParamName, s.session.SessionHeight)
 	if err != nil {
 		return err
 	}
 
-	// returns all the staked fishermen at this session height
-	fishermen, err := s.readCtx.GetAllFishermen(s.session.SessionHeight)
+	// returns all the staked watchers at this session height
+	watchers, err := s.readCtx.GetAllWatchers(s.session.SessionHeight)
 	if err != nil {
 		return err
 	}
 
 	// OPTIMIZE: Consider updating the persistence module so a single SQL query can retrieve all of the actors at once.
-	candidateFishermen := make([]*coreTypes.Actor, 0)
-	for _, fisher := range fishermen {
-		// Sanity check the fisher is not paused, jailed or unstaking
-		if fisher.PausedHeight != -1 || fisher.UnstakingHeight != -1 {
-			return fmt.Errorf("hydrateSessionFishermen should not have encountered a paused or unstaking fisherman: %s", fisher.Address)
+	candidateWatchers := make([]*coreTypes.Actor, 0)
+	for _, watcher := range watchers {
+		// Sanity check the watcher is not paused, jailed or unstaking
+		if watcher.PausedHeight != -1 || watcher.UnstakingHeight != -1 {
+			return fmt.Errorf("hydrateSessionWatchers should not have encountered a paused or unstaking watcher: %s", watcher.Address)
 		}
 
 		// TODO(#697): Filter by geo-zone
 
 		// OPTIMIZE: If this was a map[string]struct{}, we could have avoided the loop
-		if slices.Contains(fisher.Chains, s.session.RelayChain) {
-			candidateFishermen = append(candidateFishermen, fisher)
+		if slices.Contains(watcher.Chains, s.session.RelayChain) {
+			candidateWatchers = append(candidateWatchers, watcher)
 		}
 	}
 
-	s.session.Fishermen = pseudoRandomSelection(candidateFishermen, numFishermen, s.sessionIdBz)
+	s.session.Watchers = pseudoRandomSelection(candidateWatchers, numWatchers, s.sessionIdBz)
 	return nil
 }
 

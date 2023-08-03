@@ -12,7 +12,7 @@ func init() {
 		Pools_POOLS_APP_STAKE:       "AppStakePool",
 		Pools_POOLS_VALIDATOR_STAKE: "ValidatorStakePool",
 		Pools_POOLS_SERVICER_STAKE:  "ServicerStakePool",
-		Pools_POOLS_FISHERMAN_STAKE: "FishermanStakePool",
+		Pools_POOLS_WATCHER_STAKE:   "WatcherStakePool",
 	}
 
 	// poolAddresses is a map of pools to their addresses. This is to avoid using the hack of using the pool name as the address
@@ -23,7 +23,7 @@ func init() {
 		Pools_POOLS_APP_STAKE:       []byte("4170705374616b65506f6f6c0000000000000000"),
 		Pools_POOLS_VALIDATOR_STAKE: []byte("56616c696461746f725374616b65506f6f6c0000"),
 		Pools_POOLS_SERVICER_STAKE:  []byte("53657276696365725374616b65506f6f6c000000"),
-		Pools_POOLS_FISHERMAN_STAKE: []byte("4669736865726d616e5374616b65506f6f6c0000"),
+		Pools_POOLS_WATCHER_STAKE:   []byte("4669736865726d616e5374616b65506f6f6c0000"),
 	}
 
 	poolAddressToFriendlyName = map[string]string{
@@ -33,7 +33,7 @@ func init() {
 		"4170705374616b65506f6f6c0000000000000000": "AppStakePool",
 		"56616c696461746f725374616b65506f6f6c0000": "ValidatorStakePool",
 		"53657276696365725374616b65506f6f6c000000": "ServicerStakePool",
-		"4669736865726d616e5374616b65506f6f6c0000": "FishermanStakePool",
+		"4669736865726d616e5374616b65506f6f6c0000": "WatcherStakePool",
 	}
 }
 

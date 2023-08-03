@@ -48,8 +48,8 @@ type UtilityModule interface {
 	// GetActorModules returns the utility module's actor modules
 	GetActorModules() map[string]Module
 
-	// GetFishermanModule returns the utility module's fisherman module if enabled
-	GetFishermanModule() (FishermanModule, error)
+	// GetWatcherModule returns the utility module's watcher module if enabled
+	GetWatcherModule() (WatcherModule, error)
 
 	// GetServicerModule returns the utility module's servicer module if enabled
 	GetServicerModule() (ServicerModule, error)
@@ -58,7 +58,7 @@ type UtilityModule interface {
 	GetValidatorModule() (ValidatorModule, error)
 }
 
-type FishermanModule interface {
+type WatcherModule interface {
 	Module
 }
 

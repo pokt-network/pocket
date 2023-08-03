@@ -18,7 +18,7 @@ Command tree available [here](./commands/client.md)
 ```bash
 ├── cli
 │   ├── account.go           # Account subcommand
-│   ├── actor.go             # Actor (Application, Node, Fisherman, Validator) subcommands
+│   ├── actor.go             # Actor (Application, Node, Watcher, Validator) subcommands
 │   ├── cmd.go               # main (root) command called by the entrypoint
 │   ├── debug.go             # Debug subcommand
 │   ├── doc

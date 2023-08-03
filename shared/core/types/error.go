@@ -151,7 +151,7 @@ const (
 	CodeTransactionAlreadyCommittedError  Code = 95
 	CodeTransactionNotCommittedError      Code = 135
 	CodeInitGenesisParamsError            Code = 96
-	CodeGetAllFishermenError              Code = 97
+	CodeGetAllWatchersError               Code = 97
 	CodeGetAllServicersError              Code = 98
 	CodeGetAllAppsError                   Code = 99
 	CodeNewPersistenceContextError        Code = 100
@@ -322,7 +322,7 @@ const (
 	ProtoNewAnyError                  = "an error occurred creating the protobuf any"
 	UpdateParamError                  = "an error occurred updating the parameter"
 	InitGenesisParamError             = "an error occurred initializing the params in genesis"
-	GetAllFishermenError              = "an error occurred getting all of the fishermen¬"
+	GetAllWatchersError               = "an error occurred getting all of the watchers¬"
 	GetAllAppsError                   = "an error occurred getting all of the apps"
 	GetAllServicersError              = "an error occurred getting all of the servicers"
 	GetAllPoolsError                  = "an error occurred getting all of the pools"
@@ -762,8 +762,8 @@ func ErrGetAllValidators(err error) Error {
 	return NewError(CodeGetAllValidatorsError, fmt.Sprintf("%s: %s", GetAllValidatorsError, err.Error()))
 }
 
-func ErrGetAllFishermen(err error) Error {
-	return NewError(CodeGetAllFishermenError, fmt.Sprintf("%s: %s", GetAllFishermenError, err.Error()))
+func ErrGetAllWatchers(err error) Error {
+	return NewError(CodeGetAllWatchersError, fmt.Sprintf("%s: %s", GetAllWatchersError, err.Error()))
 }
 
 func ErrGetAllApps(err error) Error {

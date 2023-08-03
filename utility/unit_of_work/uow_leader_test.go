@@ -110,11 +110,11 @@ func newDefaultMockRWContext(t *testing.T, ctrl *gomock.Controller) *mockModules
 	mockrwcontext.EXPECT().GetAppsReadyToUnstake(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	mockrwcontext.EXPECT().GetServicersReadyToUnstake(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	mockrwcontext.EXPECT().GetValidatorsReadyToUnstake(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
-	mockrwcontext.EXPECT().GetFishermenReadyToUnstake(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	mockrwcontext.EXPECT().GetWatchersReadyToUnstake(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	mockrwcontext.EXPECT().SetServicerStatusAndUnstakingHeightIfPausedBefore(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	mockrwcontext.EXPECT().SetAppStatusAndUnstakingHeightIfPausedBefore(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	mockrwcontext.EXPECT().SetValidatorsStatusAndUnstakingHeightIfPausedBefore(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	mockrwcontext.EXPECT().SetFishermanStatusAndUnstakingHeightIfPausedBefore(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	mockrwcontext.EXPECT().SetWatcherStatusAndUnstakingHeightIfPausedBefore(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	return mockrwcontext
 }

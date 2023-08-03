@@ -1,20 +1,20 @@
-## client Query Fishermen
+## client Query Watchers
 
-Get all the data of all fishermen
+Get all the data of all watchers
 
 ### Synopsis
 
-Queries the node RPC to obtain the paginated data for all fishermen at the given (or latest if unspecified) height
+Queries the node RPC to obtain the paginated data for all watchers at the given (or latest if unspecified) height
 
 ```
-client Query Fishermen [--height] [--page] [--per_page] [flags]
+client Query Watchers [--height] [--page] [--per_page] [flags]
 ```
 
 ### Options
 
 ```
       --height int     block height to query, (default = 0, latest)
-  -h, --help           help for Fishermen
+  -h, --help           help for Watchers
       --page int       page number to return of paginated query (default 1) (default 1)
       --per_page int   number of results to show per page in a paginated query (default 1000, max=1000) (default 1000)
 ```

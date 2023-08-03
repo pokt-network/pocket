@@ -77,10 +77,10 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 			Pool:     coreTypes.Pools_POOLS_SERVICER_STAKE,
 		},
 		{
-			Name:     "fisherman",
-			Getter:   state.GetFishermen,
-			InsertFn: rwCtx.InsertFisherman,
-			Pool:     coreTypes.Pools_POOLS_FISHERMAN_STAKE,
+			Name:     "watcher",
+			Getter:   state.GetWatchers,
+			InsertFn: rwCtx.InsertWatcher,
+			Pool:     coreTypes.Pools_POOLS_WATCHER_STAKE,
 		},
 		{
 			Name:   "validator",

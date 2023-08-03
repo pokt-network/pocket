@@ -22,11 +22,11 @@ See [session.go](../session.go) and [session_test.go](../session_test.go) for th
 1. Create a session object from the seed data
 2. Create a key concatenating and hashing the seed data
    - `sessionId = Hash(sessionHeight + blockHash + geoZone + relayChain + appPublicKey)`
-3. Get an ordered list of the public keys of servicers and fishermen who are:
+3. Get an ordered list of the public keys of servicers and watchers who are:
    - actively staked
    - staked within geo-zone
    - staked for relay-chain
-4. Use a pseudo-random selection algorithm to retrieve the fishermen and servicers for for the sessionId
+4. Use a pseudo-random selection algorithm to retrieve the watchers and servicers for for the sessionId
 
 ```mermaid
 sequenceDiagram
@@ -36,17 +36,17 @@ sequenceDiagram
     participant S AS Session Hydrator
     participant WS AS WorldState
 
-    Q->>WS: Who are the servicers and fisherman ([app], [relayChain], [geoZone])
+    Q->>WS: Who are the servicers and watcher ([app], [relayChain], [geoZone])
     WS->>S: seedData = (height, blockHash, [geoZone], [relayChain], [app])
 
     S->>S: sessionId = hash(concat(seedData))
     WS->>S: servicerList = Ordered list of public keys of applicable servicers
 
     S->>S: sessionServicers = pseudorandomSelect(sessionKey, servicerList, max)
-    WS->>S: fishList = Ordered list of public keys of applicable fishermen
+    WS->>S: watchList = Ordered list of public keys of applicable watchers
 
-    S->>S: sessionFishermen = pseudorandomSelect(sessionKey, fishList, max)
-    S->>Q: SessionServicers, sessionFishermen
+    S->>S: sessionWatchers = pseudorandomSelect(sessionKey, fList, max)
+    S->>Q: SessionServicers, sessionWatchers
 ```
 
 <!-- GITHUB_WIKI: utility/session_protocol -->

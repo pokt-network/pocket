@@ -445,7 +445,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 			return testutil.Concatenate[*coreTypes.Actor](
 				genesisState.Validators,
 				genesisState.Servicers,
-				genesisState.Fishermen,
+				genesisState.Watchers,
 				genesisState.Applications,
 			), nil
 		}).

@@ -51,12 +51,12 @@ func prepareEnvironment(
 	numValidators, // nolint:unparam // we are not currently modifying parameter but want to keep it modifiable in the future
 	numServicers,
 	numApplications,
-	numFisherman int,
+	numWatcher int,
 	genesisOpts ...test_artifacts.GenesisOption,
 ) (*runtime.Manager, modules.UtilityModule, modules.PersistenceModule) {
 	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
 
-	runtimeCfg := newTestRuntimeConfig(numValidators, numServicers, numApplications, numFisherman, genesisOpts...)
+	runtimeCfg := newTestRuntimeConfig(numValidators, numServicers, numApplications, numWatcher, genesisOpts...)
 	bus, err := runtime.CreateBus(runtimeCfg)
 	require.NoError(t, err)
 
@@ -91,7 +91,7 @@ func newTestRuntimeConfig(
 	numValidators,
 	numServicers,
 	numApplications,
-	numFisherman int,
+	numWatcher int,
 	genesisOpts ...test_artifacts.GenesisOption,
 ) *runtime.Manager {
 	cfg, err := configs.CreateTempConfig(&configs.Config{
@@ -119,7 +119,7 @@ func newTestRuntimeConfig(
 		numValidators,
 		numServicers,
 		numApplications,
-		numFisherman,
+		numWatcher,
 		genesisOpts...,
 	)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)

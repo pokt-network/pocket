@@ -14,7 +14,7 @@ The current implementation does add the fundamental Pocket Network 1.0 actors:
 
 - Accounts
 - Validators
-- Fishermen
+- Watchers
 - Applications
 - Servicers
 
@@ -48,11 +48,11 @@ Added governance params:
 - ServicerMaxPauseBlocksParamName
 - ServicersPerSessionParamName
 
-- FishermanMinimumStakeParamName
-- FishermanMaxChainsParamName
-- FishermanUnstakingBlocksParamName
-- FishermanMinimumPauseBlocksParamName
-- FishermanMaxPauseBlocksParamName
+- WatcherMinimumStakeParamName
+- WatcherMaxChainsParamName
+- WatcherUnstakingBlocksParamName
+- WatcherMinimumPauseBlocksParamName
+- WatcherMaxPauseBlocksParamName
 
 - ValidatorMinimumStakeParamName
 - ValidatorUnstakingBlocksParamName
@@ -67,12 +67,12 @@ Added governance params:
 
 - MessageDoubleSignFee
 - MessageSendFee
-- MessageStakeFishermanFee
-- MessageEditStakeFishermanFee
-- MessageUnstakeFishermanFee
-- MessagePauseFishermanFee
-- MessageUnpauseFishermanFee
-- MessageFishermanPauseServicerFee
+- MessageStakeWatcherFee
+- MessageEditStakeWatcherFee
+- MessageUnstakeWatcherFee
+- MessagePauseWatcherFee
+- MessageUnpauseWatcherFee
+- MessageWatcherPauseServicerFee
 - MessageTestScoreFee
 - MessageProveTestScoreFee
 - MessageStakeAppFee
@@ -107,11 +107,11 @@ Added governance params:
 - ServicerMinimumPauseBlocksOwner
 - ServicerMaxPausedBlocksOwner
 - ServicersPerSessionOwner
-- FishermanMinimumStakeOwner
-- FishermanMaxChainsOwner
-- FishermanUnstakingBlocksOwner
-- FishermanMinimumPauseBlocksOwner
-- FishermanMaxPausedBlocksOwner
+- WatcherMinimumStakeOwner
+- WatcherMaxChainsOwner
+- WatcherUnstakingBlocksOwner
+- WatcherMinimumPauseBlocksOwner
+- WatcherMaxPausedBlocksOwner
 - ValidatorMinimumStakeOwner
 - ValidatorUnstakingBlocksOwner
 - ValidatorMinimumPauseBlocksOwner
@@ -123,12 +123,12 @@ Added governance params:
 - DoubleSignBurnPercentageOwner
 - MessageDoubleSignFeeOwner
 - MessageSendFeeOwner
-- MessageStakeFishermanFeeOwner
-- MessageEditStakeFishermanFeeOwner
-- MessageUnstakeFishermanFeeOwner
-- MessagePauseFishermanFeeOwner
-- MessageUnpauseFishermanFeeOwner
-- MessageFishermanPauseServicerFeeOwner
+- MessageStakeWatcherFeeOwner
+- MessageEditStakeWatcherFeeOwner
+- MessageUnstakeWatcherFeeOwner
+- MessagePauseWatcherFeeOwner
+- MessageUnpauseWatcherFeeOwner
+- MessageWatcherPauseServicerFeeOwner
 - MessageTestScoreFeeOwner
 - MessageProveTestScoreFeeOwner
 - MessageStakeAppFeeOwner
@@ -188,7 +188,7 @@ TODO(olshansky): This is outdated
 ```bash
 utility
 ├── account.go     # utility context for accounts & pools
-├── actor.go       # utility context for apps, fish, nodes, and validators
+├── actor.go       # utility context for apps, watchers, nodes, and validators
 ├── block.go       # utility context for blocks
 ├── gov.go         # utility context for dao & parameters
 ├── module.go      # module implementation and interfaces

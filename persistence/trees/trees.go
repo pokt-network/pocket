@@ -39,7 +39,7 @@ const (
 	RootTreeName         = "root"
 	AppTreeName          = "app"
 	ValTreeName          = "val"
-	FishTreeName         = "fish"
+	WatcherTreeName      = "watcher"
 	ServicerTreeName     = "servicer"
 	AccountTreeName      = "account"
 	PoolTreeName         = "pool"
@@ -52,20 +52,20 @@ const (
 var actorTypeToMerkleTreeName = map[coreTypes.ActorType]string{
 	coreTypes.ActorType_ACTOR_TYPE_APP:      AppTreeName,
 	coreTypes.ActorType_ACTOR_TYPE_VAL:      ValTreeName,
-	coreTypes.ActorType_ACTOR_TYPE_FISH:     FishTreeName,
+	coreTypes.ActorType_ACTOR_TYPE_WATCHER:  WatcherTreeName,
 	coreTypes.ActorType_ACTOR_TYPE_SERVICER: ServicerTreeName,
 }
 
 var merkleTreeNameToActorTypeName = map[string]coreTypes.ActorType{
 	AppTreeName:      coreTypes.ActorType_ACTOR_TYPE_APP,
 	ValTreeName:      coreTypes.ActorType_ACTOR_TYPE_VAL,
-	FishTreeName:     coreTypes.ActorType_ACTOR_TYPE_FISH,
+	WatcherTreeName:  coreTypes.ActorType_ACTOR_TYPE_WATCHER,
 	ServicerTreeName: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
 }
 
 var stateTreeNames = []string{
 	// Actor Trees
-	AppTreeName, ValTreeName, FishTreeName, ServicerTreeName,
+	AppTreeName, ValTreeName, WatcherTreeName, ServicerTreeName,
 	// Account Trees
 	AccountTreeName, PoolTreeName,
 	// Data Trees
@@ -192,7 +192,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 	for treeName := range t.merkleTrees {
 		switch treeName {
 		// Actor Merkle Trees
-		case AppTreeName, ValTreeName, FishTreeName, ServicerTreeName:
+		case AppTreeName, ValTreeName, WatcherTreeName, ServicerTreeName:
 			actorType, ok := merkleTreeNameToActorTypeName[treeName]
 			if !ok {
 				return "", fmt.Errorf("no actor type found for merkle tree: %s", treeName)

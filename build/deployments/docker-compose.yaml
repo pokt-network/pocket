@@ -172,18 +172,18 @@ services:
       # Uncomment to enable DLV debugging
       # - DEBUG_PORT=7085
 
-  fisherman1:
+  watcher1:
     logging: *loki-logging
-    container_name: fisherman1
-    image: pocket/fisherman:latest
+    container_name: watcher1
+    image: pocket/watcher:latest
     command: >
       sh -c '
-      if [ "$FISHERMAN1_FISHERMAN_ENABLED" = "true" ]; then
+      if [ "$WATCHER1_WATCHER_ENABLED" = "true" ]; then
         build/scripts/watch.sh \
-          build/config/config.fisherman1.json \
+          build/config/config.watcher1.json \
           build/config/genesis.json;
       else
-        echo "😴 Going to sleep. Fisherman is not enabled.";
+        echo "😴 Going to sleep. Watcher is not enabled.";
       fi'
     build:
       context: ../..
@@ -194,9 +194,9 @@ services:
       - "9000"
       - "50832"
     ports:
-      - "${FISHERMAN1_DEBUG_PORT:-0.0.0.0:7086}:7086"
-      - "${FISHERMAN1_P2P_PORT:-0.0.0.0:42075}:42069"
-      - "${FISHERMAN1_RPC_PORT:-0.0.0.0:50837}:50832"
+      - "${WATCHER1_DEBUG_PORT:-0.0.0.0:7086}:7086"
+      - "${WATCHER1_P2P_PORT:-0.0.0.0:42075}:42069"
+      - "${WATCHER1_RPC_PORT:-0.0.0.0:50837}:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     # Needed for DLV debugging

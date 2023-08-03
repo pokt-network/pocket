@@ -43,7 +43,7 @@ privateKeySecretKeyRef:
 | config.consensus.pacemaker_config.manual | bool | `true` |  |
 | config.consensus.pacemaker_config.timeout_msec | int | `10000` |  |
 | config.consensus.private_key | string | `""` |  |
-| config.fisherman.enabled | bool | `false` |  |
+| config.watcher.enabled | bool | `false` |  |
 | config.ibc.enabled | bool | `true` |  |
 | config.ibc.host.private_key | string | `""` |  |
 | config.ibc.stores_dir | string | `"/pocket/data/ibc"` |  |
@@ -105,7 +105,7 @@ privateKeySecretKeyRef:
 | ingress.tls | list | `[]` |  |
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
-| nodeType | string | `"full"` | type of the blockchain node to run. Can be either `full`, `validator`, `servicer`, `fishermen` |
+| nodeType | string | `"full"` | type of the blockchain node to run. Can be either `full`, `validator`, `servicer`, `watchers` |
 | persistence.accessModes | list | `["ReadWriteOnce"]` | persistent Volume Access Modes |
 | persistence.annotations | object | `{}` | annotations of the persistent volume claim |
 | persistence.dataSource | object | `{}` | custom data source of the persistent volume claim |

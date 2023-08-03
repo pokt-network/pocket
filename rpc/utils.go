@@ -320,16 +320,16 @@ func (s *rpcServer) calculateMessageFeeForActor(actorType coreTypes.ActorType, m
 		case "MessageUnpause":
 			return readCtx.GetStringParam(utilTypes.MessageUnpauseAppFee, height)
 		}
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
 		switch messageType {
 		case "MessageStake":
-			return readCtx.GetStringParam(utilTypes.MessageStakeFishermanFee, height)
+			return readCtx.GetStringParam(utilTypes.MessageStakeWatcherFee, height)
 		case "MessageEditStake":
-			return readCtx.GetStringParam(utilTypes.MessageEditStakeFishermanFee, height)
+			return readCtx.GetStringParam(utilTypes.MessageEditStakeWatcherFee, height)
 		case "MessageUnstake":
-			return readCtx.GetStringParam(utilTypes.MessageUnstakeFishermanFee, height)
+			return readCtx.GetStringParam(utilTypes.MessageUnstakeWatcherFee, height)
 		case "MessageUnpause":
-			return readCtx.GetStringParam(utilTypes.MessageUnpauseFishermanFee, height)
+			return readCtx.GetStringParam(utilTypes.MessageUnpauseWatcherFee, height)
 		}
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		switch messageType {
@@ -445,8 +445,8 @@ func protocolActorToRPCActorTypeEnum(protocolActorType coreTypes.ActorType) Acto
 	switch protocolActorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		return Application
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		return Fisherman
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		return Watcher
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		return Servicer
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -461,8 +461,8 @@ func getProtocolActorGetter(persistenceContext modules.PersistenceReadContext, p
 	switch *params.ActorType {
 	case Application:
 		protocolActorGetter = persistenceContext.GetAllApps
-	case Fisherman:
-		protocolActorGetter = persistenceContext.GetAllFishermen
+	case Watcher:
+		protocolActorGetter = persistenceContext.GetAllWatchers
 	case Servicer:
 		protocolActorGetter = persistenceContext.GetAllServicers
 	case Validator:

@@ -23,7 +23,7 @@ The output files are written to `./build/config/`.
 From the project's root:
 
 ```bash
-go run ./build/config/main.go --numFishermen=1
+go run ./build/config/main.go --numWatchers=1
 ```
 
 ### Using Make Target
@@ -37,7 +37,7 @@ make numValidators=5 numServicers=1 gen_genesis_and_config
 - `numValidators` is an int flag that sets the number of validators that will be in the network; this affects the contents of the genesis file as well as the number of config files
 - `numServicers` is an int flag that set the number of servicers that will be in the network's genesis file
 - `numApplications` is an int flag that set the number of applications that will be in the network's genesis file
-- `numFishermen` is an int flag that set the number of fishermen that will be in the network's genesis file
+- `numWatchers` is an int flag that set the number of watchers that will be in the network's genesis file
 - `genPrefix` is a string flag that adds a prefix to the generated files; is an empty string by default
 
 ## **WIP NOTE**

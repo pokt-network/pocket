@@ -13,7 +13,7 @@ import (
 
 func TestGetAllStakedActors(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
-	expectedActorCount := genesisStateNumValidators + genesisStateNumServicers + genesisStateNumApplications + genesisStateNumFishermen
+	expectedActorCount := genesisStateNumValidators + genesisStateNumServicers + genesisStateNumApplications + genesisStateNumWatchers
 
 	actors, err := db.GetAllStakedActors(0)
 	require.NoError(t, err)
@@ -22,7 +22,7 @@ func TestGetAllStakedActors(t *testing.T) {
 	actualValidators := 0
 	actualServicers := 0
 	actualApplications := 0
-	actualFishermen := 0
+	actualWatchers := 0
 	for _, actor := range actors {
 		switch actor.ActorType {
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -31,14 +31,14 @@ func TestGetAllStakedActors(t *testing.T) {
 			actualServicers++
 		case coreTypes.ActorType_ACTOR_TYPE_APP:
 			actualApplications++
-		case coreTypes.ActorType_ACTOR_TYPE_FISH:
-			actualFishermen++
+		case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+			actualWatchers++
 		}
 	}
 	require.Equal(t, genesisStateNumValidators, actualValidators)
 	require.Equal(t, genesisStateNumServicers, actualServicers)
 	require.Equal(t, genesisStateNumApplications, actualApplications)
-	require.Equal(t, genesisStateNumFishermen, actualFishermen)
+	require.Equal(t, genesisStateNumWatchers, actualWatchers)
 }
 
 func TestPostgresContext_GetValidatorSet(t *testing.T) {

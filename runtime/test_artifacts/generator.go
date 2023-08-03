@@ -22,7 +22,7 @@ func NewGenesisState(
 	numValidators,
 	numServicers,
 	numApplications,
-	numFisherman int,
+	numWatcher int,
 	genesisOpts ...GenesisOption,
 ) (
 	genesisState *genesis.GenesisState,
@@ -31,9 +31,9 @@ func NewGenesisState(
 	applications, appPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, numApplications, DefaultChains)
 	validators, validatorPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_VAL, numValidators, nil)
 	servicers, servicerPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicers, DefaultChains)
-	fishermen, fishPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFisherman, DefaultChains)
+	watchers, watcherPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_WATCHER, numWatcher, DefaultChains)
 
-	allActorsKeys := append(append(append(validatorPrivateKeys, servicerPrivateKeys...), fishPrivateKeys...), appPrivateKeys...)
+	allActorsKeys := append(append(append(validatorPrivateKeys, servicerPrivateKeys...), watcherPrivateKeys...), appPrivateKeys...)
 	allActorAccounts := newAccountsWithKeys(allActorsKeys)
 
 	genesisState = &genesis.GenesisState{
@@ -45,7 +45,7 @@ func NewGenesisState(
 		Applications:  applications,
 		Validators:    validators,
 		Servicers:     servicers,
-		Fishermen:     fishermen,
+		Watchers:      watchers,
 		Params:        DefaultParams(),
 	}
 
@@ -69,8 +69,8 @@ func WithActors(actors []*coreTypes.Actor, actorKeys []string) func(*genesis.Gen
 				genesis.Validators = append(genesis.Validators, actor)
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 				genesis.Servicers = append(genesis.Servicers, actor)
-			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				genesis.Fishermen = append(genesis.Fishermen, actor)
+			case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+				genesis.Watchers = append(genesis.Watchers, actor)
 			default:
 				panic(fmt.Sprintf("invalid actor type: %s", actor.ActorType))
 			}

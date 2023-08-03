@@ -68,7 +68,7 @@ type PersistenceRWContext interface {
 }
 
 // REFACTOR: Simplify the interface
-// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
+// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(WATCHER, ...)`
 // - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_, ...)`
 // - Reference: https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces
 
@@ -125,13 +125,13 @@ type PersistenceWriteContext interface {
 	SetServicerStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
 	SetServicerPauseHeight(address []byte, height int64) error
 
-	// Fisherman Operations
-	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
-	UpdateFisherman(address []byte, serviceURL string, amount string, chains []string) error
-	SetFishermanStakeAmount(address []byte, stakeAmount string) error
-	SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
-	SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
-	SetFishermanPauseHeight(address []byte, height int64) error
+	// Watcher Operations
+	InsertWatcher(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	UpdateWatcher(address []byte, serviceURL string, amount string, chains []string) error
+	SetWatcherStakeAmount(address []byte, stakeAmount string) error
+	SetWatcherUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
+	SetWatcherStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
+	SetWatcherPauseHeight(address []byte, height int64) error
 
 	// Validator Operations
 	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error
@@ -217,15 +217,15 @@ type PersistenceReadContext interface {
 	GetServicerOutputAddress(operator []byte, height int64) (output []byte, err error)
 	GetServicerCount(chain string, height int64) (int, error)
 
-	// Fisherman Queries
-	GetFisherman(address []byte, height int64) (*coreTypes.Actor, error)
-	GetAllFishermen(height int64) ([]*coreTypes.Actor, error)
-	GetFishermanExists(address []byte, height int64) (exists bool, err error)
-	GetFishermanStakeAmount(height int64, address []byte) (string, error)
-	GetFishermenReadyToUnstake(height int64, status int32) (fishermen []*moduleTypes.UnstakingActor, err error)
-	GetFishermanStatus(address []byte, height int64) (status int32, err error)
-	GetFishermanPauseHeightIfExists(address []byte, height int64) (int64, error)
-	GetFishermanOutputAddress(operator []byte, height int64) (output []byte, err error)
+	// Watcher Queries
+	GetWatcher(address []byte, height int64) (*coreTypes.Actor, error)
+	GetAllWatchers(height int64) ([]*coreTypes.Actor, error)
+	GetWatcherExists(address []byte, height int64) (exists bool, err error)
+	GetWatcherStakeAmount(height int64, address []byte) (string, error)
+	GetWatchersReadyToUnstake(height int64, status int32) (watchers []*moduleTypes.UnstakingActor, err error)
+	GetWatcherStatus(address []byte, height int64) (status int32, err error)
+	GetWatcherPauseHeightIfExists(address []byte, height int64) (int64, error)
+	GetWatcherOutputAddress(operator []byte, height int64) (output []byte, err error)
 
 	// Validator Queries
 	GetValidator(address []byte, height int64) (*coreTypes.Actor, error)

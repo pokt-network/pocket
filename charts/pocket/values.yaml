@@ -61,7 +61,7 @@ persistence:
   # -- custom data source of the persistent volume claim
   dataSource: {}
 
-# -- type of the blockchain node to run. Can be either `full`, `validator`, `servicer`, `fishermen`
+# -- type of the blockchain node to run. Can be either `full`, `validator`, `servicer`, `watchers`
 nodeType: "full"
 
 privateKeySecretKeyRef:
@@ -117,7 +117,7 @@ config:
     enabled: true
   servicer:
     enabled: false
-  fisherman:
+  watcher:
     enabled: false
   ibc:
     enabled: true

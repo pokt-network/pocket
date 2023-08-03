@@ -19,7 +19,7 @@ import (
 const (
 	privateKeysSecretResourceNameValidators   = "validators-private-keys"
 	privateKeysSecretResourceNameServicers    = "servicers-private-keys"
-	privateKeysSecretResourceNameFishermen    = "fishermen-private-keys"
+	privateKeysSecretResourceNameWatchers     = "watchers-private-keys"
 	privateKeysSecretResourceNameApplications = "applications-private-keys"
 	kubernetesServiceAccountNamespaceFile     = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
 	defaultNamespace                          = "default"
@@ -50,10 +50,10 @@ func FetchServicerPrivateKeys(clientset *kubernetes.Clientset) (map[string]strin
 	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameServicers)
 }
 
-// FetchFishermanPrivateKeys returns a map corresponding to the data section of
-// the fisherman private keys Kubernetes secret.
-func FetchFishermanPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
-	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameFishermen)
+// FetchWatcherPrivateKeys returns a map corresponding to the data section of
+// the watcher private keys Kubernetes secret.
+func FetchWatcherPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
+	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameWatchers)
 }
 
 // FetchApplicationPrivateKeys returns a map corresponding to the data section of

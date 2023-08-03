@@ -329,7 +329,7 @@ func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisS
 		return testutil.Concatenate[*coreTypes.Actor](
 			genesisState.GetValidators(),
 			genesisState.GetServicers(),
-			genesisState.GetFishermen(),
+			genesisState.GetWatchers(),
 			genesisState.GetApplications(),
 		), nil
 	}).AnyTimes()

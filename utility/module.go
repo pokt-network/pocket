@@ -8,10 +8,10 @@ import (
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
-	"github.com/pokt-network/pocket/utility/fisherman"
 	"github.com/pokt-network/pocket/utility/servicer"
 	"github.com/pokt-network/pocket/utility/types"
 	"github.com/pokt-network/pocket/utility/validator"
+	"github.com/pokt-network/pocket/utility/watcher"
 )
 
 const (
@@ -67,7 +67,7 @@ func (*utilityModule) Create(bus modules.Bus, options ...modules.ModuleOption) (
 
 // enableActorModules enables the actor-specific modules and adds them to the utility module's actorModules to be started later.
 func (u *utilityModule) enableActorModules(cfg *configs.Config) error {
-	fishermanCfg := cfg.Fisherman
+	watcherCfg := cfg.Watcher
 	servicerCfg := cfg.Servicer
 	validatorCfg := cfg.Validator
 
@@ -80,10 +80,10 @@ func (u *utilityModule) enableActorModules(cfg *configs.Config) error {
 		u.actorModules[s.GetModuleName()] = s
 	}
 
-	if fishermanCfg.Enabled {
-		f, err := fisherman.CreateFisherman(u.GetBus())
+	if watcherCfg.Enabled {
+		f, err := watcher.CreateWatcher(u.GetBus())
 		if err != nil {
-			u.logger.Error().Err(err).Msg("failed to create fisherman module")
+			u.logger.Error().Err(err).Msg("failed to create watcher module")
 			return err
 		}
 		u.actorModules[f.GetModuleName()] = f
@@ -151,14 +151,14 @@ func (u *utilityModule) GetServicerModule() (modules.ServicerModule, error) {
 	return nil, errors.New("failed to cast servicer module")
 }
 
-func (u *utilityModule) GetFishermanModule() (modules.FishermanModule, error) {
-	if u.actorModules[fisherman.FishermanModuleName] == nil {
-		return nil, errors.New("fisherman module not enabled")
+func (u *utilityModule) GetWatcherModule() (modules.WatcherModule, error) {
+	if u.actorModules[watcher.WatcherModuleName] == nil {
+		return nil, errors.New("watcher module not enabled")
 	}
-	if m, ok := u.actorModules[fisherman.FishermanModuleName].(modules.FishermanModule); ok {
+	if m, ok := u.actorModules[watcher.WatcherModuleName].(modules.WatcherModule); ok {
 		return m, nil
 	}
-	return nil, errors.New("failed to cast fisherman module")
+	return nil, errors.New("failed to cast watcher module")
 }
 
 func (u *utilityModule) GetValidatorModule() (modules.ValidatorModule, error) {

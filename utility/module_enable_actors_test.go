@@ -36,11 +36,11 @@ func TestEnableActorModules(t *testing.T) {
 			expectedNames: []string{"servicer"},
 		},
 		{
-			name: "fisherman only",
+			name: "watcher only",
 			config: &configs.Config{
-				Fisherman: &configs.FishermanConfig{Enabled: true},
+				Watcher: &configs.WatcherConfig{Enabled: true},
 			},
-			expectedNames: []string{"fisherman"},
+			expectedNames: []string{"watcher"},
 		},
 		{
 			name: "validator only",
@@ -64,7 +64,7 @@ func TestEnableActorModules(t *testing.T) {
 			name: "multiple actors not allowed",
 			config: &configs.Config{
 				Validator: &configs.ValidatorConfig{Enabled: true},
-				Fisherman: &configs.FishermanConfig{Enabled: true},
+				Watcher:   &configs.WatcherConfig{Enabled: true},
 			},
 			expectedError: ErrInvalidActorsEnabled,
 		},

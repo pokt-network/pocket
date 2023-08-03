@@ -36,12 +36,12 @@ func TestInsertParams(t *testing.T) {
 				"('servicer_minimum_pause_blocks', -1, 'SMALLINT', 4)," +
 				"('servicer_max_pause_blocks', -1, 'BIGINT', 672)," +
 				"('servicers_per_session', -1, 'SMALLINT', 24)," +
-				"('fisherman_minimum_stake', -1, 'STRING', '15000000000')," +
-				"('fisherman_max_chains', -1, 'SMALLINT', 15)," +
-				"('fisherman_unstaking_blocks', -1, 'BIGINT', 2016)," +
-				"('fisherman_minimum_pause_blocks', -1, 'SMALLINT', 4)," +
-				"('fisherman_max_pause_blocks', -1, 'SMALLINT', 672)," +
-				"('fisherman_per_session', -1, 'SMALLINT', 1)," +
+				"('watcher_minimum_stake', -1, 'STRING', '15000000000')," +
+				"('watcher_max_chains', -1, 'SMALLINT', 15)," +
+				"('watcher_unstaking_blocks', -1, 'BIGINT', 2016)," +
+				"('watcher_minimum_pause_blocks', -1, 'SMALLINT', 4)," +
+				"('watcher_max_pause_blocks', -1, 'SMALLINT', 672)," +
+				"('watcher_per_session', -1, 'SMALLINT', 1)," +
 				"('validator_minimum_stake', -1, 'STRING', '15000000000')," +
 				"('validator_unstaking_blocks', -1, 'BIGINT', 2016)," +
 				"('validator_minimum_pause_blocks', -1, 'SMALLINT', 4)," +
@@ -53,12 +53,12 @@ func TestInsertParams(t *testing.T) {
 				"('double_sign_burn_percentage', -1, 'SMALLINT', 5)," +
 				"('message_double_sign_fee', -1, 'STRING', '10000')," +
 				"('message_send_fee', -1, 'STRING', '10000')," +
-				"('message_stake_fisherman_fee', -1, 'STRING', '10000')," +
-				"('message_edit_stake_fisherman_fee', -1, 'STRING', '10000')," +
-				"('message_unstake_fisherman_fee', -1, 'STRING', '10000')," +
-				"('message_pause_fisherman_fee', -1, 'STRING', '10000')," +
-				"('message_unpause_fisherman_fee', -1, 'STRING', '10000')," +
-				"('message_fisherman_pause_servicer_fee', -1, 'STRING', '10000')," +
+				"('message_stake_watcher_fee', -1, 'STRING', '10000')," +
+				"('message_edit_stake_watcher_fee', -1, 'STRING', '10000')," +
+				"('message_unstake_watcher_fee', -1, 'STRING', '10000')," +
+				"('message_pause_watcher_fee', -1, 'STRING', '10000')," +
+				"('message_unpause_watcher_fee', -1, 'STRING', '10000')," +
+				"('message_watcher_pause_servicer_fee', -1, 'STRING', '10000')," +
 				"('message_test_score_fee', -1, 'STRING', '10000')," +
 				"('message_prove_test_score_fee', -1, 'STRING', '10000')," +
 				"('message_stake_app_fee', -1, 'STRING', '10000')," +
@@ -91,12 +91,12 @@ func TestInsertParams(t *testing.T) {
 				"('servicer_minimum_pause_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('servicer_max_paused_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('servicers_per_session_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('fisherman_minimum_stake_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('fisherman_max_chains_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('fisherman_unstaking_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('fisherman_minimum_pause_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('fisherman_max_paused_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('fisherman_per_session_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('watcher_minimum_stake_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('watcher_max_chains_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('watcher_unstaking_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('watcher_minimum_pause_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('watcher_max_paused_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('watcher_per_session_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('validator_minimum_stake_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('validator_unstaking_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('validator_minimum_pause_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
@@ -108,12 +108,12 @@ func TestInsertParams(t *testing.T) {
 				"('double_sign_burn_percentage_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('message_double_sign_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('message_send_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('message_stake_fisherman_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('message_edit_stake_fisherman_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('message_unstake_fisherman_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('message_pause_fisherman_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('message_unpause_fisherman_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('message_fisherman_pause_servicer_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('message_stake_watcher_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('message_edit_stake_watcher_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('message_unstake_watcher_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('message_pause_watcher_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('message_unpause_watcher_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('message_watcher_pause_servicer_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('message_test_score_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('message_prove_test_score_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('message_stake_app_fee_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +

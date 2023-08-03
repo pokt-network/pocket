@@ -4040,7 +4040,7 @@ stringData:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: fishermen-private-keys
+  name: watchers-private-keys
 type: Opaque
 stringData:
   "000": 4a3334ccda886924cc3bc6bbf1f543d206b3defe7edcaee1f385c4103d05672e5641512f469e48c21c56c0052643357cf324c55a1a09b18dd543fc4b506a5ffe # 0000389effc7ee0228526847bb5eaced48adc2f4 (5641512f469e48c21c56c0052643357cf324c55a1a09b18dd543fc4b506a5ffe)

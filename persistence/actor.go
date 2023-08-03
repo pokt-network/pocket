@@ -14,8 +14,8 @@ func (p *PostgresContext) GetActor(actorType coreTypes.ActorType, address []byte
 		schema = types.ApplicationActor
 	case types.ServicerActor.GetActorType():
 		schema = types.ServicerActor
-	case types.FishermanActor.GetActorType():
-		schema = types.FishermanActor
+	case types.WatcherActor.GetActorType():
+		schema = types.WatcherActor
 	case types.ValidatorActor.GetActorType():
 		schema = types.ValidatorActor
 	default:
@@ -124,16 +124,16 @@ func (p *PostgresContext) GetAllServicers(height int64) (sn []*coreTypes.Actor, 
 	return
 }
 
-func (p *PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, err error) {
+func (p *PostgresContext) GetAllWatchers(height int64) (f []*coreTypes.Actor, err error) {
 	ctx, tx := p.getCtxAndTx()
-	rows, err := tx.Query(ctx, types.FishermanActor.GetAllQuery(height))
+	rows, err := tx.Query(ctx, types.WatcherActor.GetAllQuery(height))
 	if err != nil {
 		return nil, err
 	}
 	var actors []*coreTypes.Actor
 	for rows.Next() {
 		var actor *coreTypes.Actor
-		actor, height, err = p.getActorFromRow(types.FishermanActor.GetActorType(), rows)
+		actor, height, err = p.getActorFromRow(types.WatcherActor.GetActorType(), rows)
 		if err != nil {
 			return
 		}
@@ -141,7 +141,7 @@ func (p *PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, e
 	}
 	rows.Close()
 	for _, actor := range actors {
-		actor, err = p.getChainsForActor(ctx, tx, types.FishermanActor, actor, height)
+		actor, err = p.getChainsForActor(ctx, tx, types.WatcherActor, actor, height)
 		if err != nil {
 			return
 		}
@@ -153,7 +153,7 @@ func (p *PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, e
 // OPTIMIZE: There is an opportunity to have one SQL query returning all the actorsp
 func (p *PostgresContext) GetAllStakedActors(height int64) (allActors []*coreTypes.Actor, err error) {
 	type actorGetter func(height int64) ([]*coreTypes.Actor, error)
-	actorGetters := []actorGetter{p.GetAllValidators, p.GetAllServicers, p.GetAllFishermen, p.GetAllApps}
+	actorGetters := []actorGetter{p.GetAllValidators, p.GetAllServicers, p.GetAllWatchers, p.GetAllApps}
 	for _, actorGetter := range actorGetters {
 		var actors []*coreTypes.Actor
 		actors, err = actorGetter(height)

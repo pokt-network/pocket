@@ -6,7 +6,7 @@ option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
 import "actor.proto";
 
-// A deterministic pseudo-random structure that pairs applications to a set of servicers and fishermen
+// A deterministic pseudo-random structure that pairs applications to a set of servicers and watchers
 // using on-chain data as a source of entropy
 message Session {
     string id = 1; // a universally unique ID for the session
@@ -22,5 +22,5 @@ message Session {
     core.Actor application = 7; // the application that is being served
     // IMPROVE: `map<string, core.Actor>` with the address as the key can simplify and optimize the logic on the clients
     repeated core.Actor servicers = 8; // the set of servicers that are serving the application
-    repeated core.Actor fishermen = 9; // the set of fishermen that are fishing for servicers
+    repeated core.Actor watchers = 9; // the set of watchers that are monitoring servicers
 }

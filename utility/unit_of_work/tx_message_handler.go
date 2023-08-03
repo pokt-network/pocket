@@ -109,8 +109,8 @@ func (u *baseUtilityUnitOfWork) handleStakeMessage(message *typesUtil.MessageSta
 	switch message.ActorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		er = u.persistenceRWContext.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		er = u.persistenceRWContext.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		er = u.persistenceRWContext.InsertWatcher(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		er = u.persistenceRWContext.InsertServicer(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -166,8 +166,8 @@ func (u *baseUtilityUnitOfWork) handleEditStakeMessage(message *typesUtil.Messag
 	switch message.ActorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		er = u.persistenceRWContext.UpdateApp(message.Address, message.Amount, message.Chains)
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		er = u.persistenceRWContext.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		er = u.persistenceRWContext.UpdateWatcher(message.Address, message.ServiceUrl, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		er = u.persistenceRWContext.UpdateServicer(message.Address, message.ServiceUrl, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:

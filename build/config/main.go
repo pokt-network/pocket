@@ -21,7 +21,7 @@ var (
 	numValidators   = flag.Int("numValidators", 4, "number of validators that will be in the network; this affects the contents of the genesis file as well as the # of config files")
 	numServicers    = flag.Int("numServicers", 1, "number of servicers that will be in the network's genesis file")
 	numApplications = flag.Int("numApplications", 1, "number of applications that will be in the network's genesis file")
-	numFishermen    = flag.Int("numFishermen", 1, "number of fishermen that will be in the network's genesis file")
+	numWatchers     = flag.Int("numWatchers", 1, "number of watchers that will be in the network's genesis file")
 	genPrefix       = flag.String("genPrefix", "", "the prefix, if any, to append to the genesis and config files")
 )
 
@@ -30,7 +30,7 @@ func init() {
 }
 
 func main() {
-	genesis, validatorPrivateKeys := test_artifacts.NewGenesisState(*numValidators, *numServicers, *numFishermen, *numApplications)
+	genesis, validatorPrivateKeys := test_artifacts.NewGenesisState(*numValidators, *numServicers, *numWatchers, *numApplications)
 	configs := test_artifacts.NewDefaultConfigs(validatorPrivateKeys)
 	genesisJson, err := json.MarshalIndent(genesis, "", "  ")
 	if err != nil {

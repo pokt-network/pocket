@@ -43,7 +43,7 @@ sequenceDiagram
 
 4. Wait for `Session` end / secret key to be revealed
 5. Collect Volume Applicable Relays (based on secret key) from storage
-6. Report Volume Applicable Relays to the assigned `Fisherman`
+6. Report Volume Applicable Relays to the assigned `Watcher`
 
 ```mermaid
 sequenceDiagram
@@ -52,13 +52,13 @@ sequenceDiagram
 	    actor Servicer
         participant Internal State
         participant Internal Storage
-        actor Fisherman
+        actor Watcher
 	    loop Repeats Every Session End
 	        Servicer->>Internal State: GetSecretKey(sessionHeader)
             Internal State->>Servicer: HashCollision = SecretKey(govParams)
 	        Servicer->>Internal Storage: RelaysThatEndWith(HashCollision)
             Internal Storage->>Servicer: VolumeApplicableRelays
-            Servicer->>Fisherman: Send(VolumeApplicableRelays)
+            Servicer->>Watcher: Send(VolumeApplicableRelays)
 	    end
 ```
 
@@ -137,10 +137,10 @@ _See the [Session Protocol](https://github.com/pokt-network/pocket/blob/main/uti
 
 2. This function also signifies deleting the non-volume-applicable `Relays`
 
-### Report volume metric applicable relays to `Fisherman`
+### Report volume metric applicable relays to `Watcher`
 
-1. All volume applicable relays need to be sent to the assigned trusted `Fisherman` (selected by the [Session Protocol](https://github.com/pokt-network/pocket/blob/main/utility/doc/PROTOCOLS.md)) for a proper verification of the volume completed.
-2. Send `volumeRelays` to `fishermanServiceUrl` through http.
+1. All volume applicable relays need to be sent to the assigned trusted `Watcher` (selected by the [Session Protocol](https://github.com/pokt-network/pocket/blob/main/utility/doc/PROTOCOLS.md)) for a proper verification of the volume completed.
+2. Send `volumeRelays` to `watcherServiceUrl` through http.
 
 ```mermaid
 graph TD

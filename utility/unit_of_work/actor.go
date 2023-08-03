@@ -22,8 +22,8 @@ func (u *baseUtilityUnitOfWork) setActorStakeAmount(actorType coreTypes.ActorTyp
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		err = u.persistenceRWContext.SetAppStakeAmount(addr, amountStr)
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		err = u.persistenceRWContext.SetFishermanStakeAmount(addr, amountStr)
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		err = u.persistenceRWContext.SetWatcherStakeAmount(addr, amountStr)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		err = u.persistenceRWContext.SetServicerStakeAmount(addr, amountStr)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -43,8 +43,8 @@ func (u *baseUtilityUnitOfWork) setActorUnbondingHeight(actorType coreTypes.Acto
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		err = u.persistenceRWContext.SetAppUnstakingHeightAndStatus(addr, height, int32(coreTypes.StakeStatus_Unstaking))
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		err = u.persistenceRWContext.SetFishermanUnstakingHeightAndStatus(addr, height, int32(coreTypes.StakeStatus_Unstaking))
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		err = u.persistenceRWContext.SetWatcherUnstakingHeightAndStatus(addr, height, int32(coreTypes.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		err = u.persistenceRWContext.SetServicerUnstakingHeightAndStatus(addr, height, int32(coreTypes.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -64,8 +64,8 @@ func (u *baseUtilityUnitOfWork) setActorPausedHeight(actorType coreTypes.ActorTy
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		err = u.persistenceRWContext.SetAppPauseHeight(addr, height)
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		err = u.persistenceRWContext.SetFishermanPauseHeight(addr, height)
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		err = u.persistenceRWContext.SetWatcherPauseHeight(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		err = u.persistenceRWContext.SetServicerPauseHeight(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -89,8 +89,8 @@ func (u *baseUtilityUnitOfWork) getActorStakeAmount(actorType coreTypes.ActorTyp
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		stakeAmount, err = u.persistenceReadContext.GetAppStakeAmount(u.height, addr)
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		stakeAmount, err = u.persistenceReadContext.GetFishermanStakeAmount(u.height, addr)
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		stakeAmount, err = u.persistenceReadContext.GetWatcherStakeAmount(u.height, addr)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		stakeAmount, err = u.persistenceReadContext.GetServicerStakeAmount(u.height, addr)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -116,8 +116,8 @@ func (u *baseUtilityUnitOfWork) getMaxAllowedPausedBlocks(actorType coreTypes.Ac
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		paramName = typesUtil.AppMaxPauseBlocksParamName
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		paramName = typesUtil.FishermanMaxPauseBlocksParamName
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		paramName = typesUtil.WatcherMaxPauseBlocksParamName
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		paramName = typesUtil.ServicerMaxPauseBlocksParamName
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -139,8 +139,8 @@ func (u *baseUtilityUnitOfWork) getMinRequiredPausedBlocks(actorType coreTypes.A
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		paramName = typesUtil.AppMinimumPauseBlocksParamName
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		paramName = typesUtil.FishermanMinimumPauseBlocksParamName
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		paramName = typesUtil.WatcherMinimumPauseBlocksParamName
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		paramName = typesUtil.ServicerMinimumPauseBlocksParamName
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -163,8 +163,8 @@ func (u *baseUtilityUnitOfWork) getPausedHeightIfExists(actorType coreTypes.Acto
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		pauseHeight, err = u.persistenceReadContext.GetAppPauseHeightIfExists(addr, u.height)
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		pauseHeight, err = u.persistenceReadContext.GetFishermanPauseHeightIfExists(addr, u.height)
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		pauseHeight, err = u.persistenceReadContext.GetWatcherPauseHeightIfExists(addr, u.height)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		pauseHeight, err = u.persistenceReadContext.GetServicerPauseHeightIfExists(addr, u.height)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -187,8 +187,8 @@ func (u *baseUtilityUnitOfWork) getActorStatus(actorType coreTypes.ActorType, ad
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		status, err = u.persistenceReadContext.GetAppStatus(addr, u.height)
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		status, err = u.persistenceReadContext.GetFishermanStatus(addr, u.height)
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		status, err = u.persistenceReadContext.GetWatcherStatus(addr, u.height)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		status, err = u.persistenceReadContext.GetServicerStatus(addr, u.height)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -214,8 +214,8 @@ func (u *baseUtilityUnitOfWork) getMinRequiredStakeAmount(actorType coreTypes.Ac
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		paramName = typesUtil.AppMinimumStakeParamName
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		paramName = typesUtil.FishermanMinimumStakeParamName
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		paramName = typesUtil.WatcherMinimumStakeParamName
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		paramName = typesUtil.ServicerMinimumStakeParamName
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -242,8 +242,8 @@ func (u *baseUtilityUnitOfWork) getUnbondingHeight(actorType coreTypes.ActorType
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		paramName = typesUtil.AppUnstakingBlocksParamName
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		paramName = typesUtil.FishermanUnstakingBlocksParamName
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		paramName = typesUtil.WatcherUnstakingBlocksParamName
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		paramName = typesUtil.ServicerUnstakingBlocksParamName
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -265,8 +265,8 @@ func (u *baseUtilityUnitOfWork) getMaxAllowedChains(actorType coreTypes.ActorTyp
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		paramName = typesUtil.AppMaxChainsParamName
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		paramName = typesUtil.FishermanMaxChainsParamName
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		paramName = typesUtil.WatcherMaxChainsParamName
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		paramName = typesUtil.ServicerMaxChainsParamName
 	default:
@@ -288,8 +288,8 @@ func (u *baseUtilityUnitOfWork) getActorExists(actorType coreTypes.ActorType, ad
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		exists, err = u.persistenceReadContext.GetAppExists(addr, u.height)
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		exists, err = u.persistenceReadContext.GetFishermanExists(addr, u.height)
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		exists, err = u.persistenceReadContext.GetWatcherExists(addr, u.height)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		exists, err = u.persistenceReadContext.GetServicerExists(addr, u.height)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -314,8 +314,8 @@ func (u *baseUtilityUnitOfWork) getActorOutputAddress(actorType coreTypes.ActorT
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		outputAddr, err = u.persistenceReadContext.GetAppOutputAddress(operator, u.height)
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		outputAddr, err = u.persistenceReadContext.GetFishermanOutputAddress(operator, u.height)
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		outputAddr, err = u.persistenceReadContext.GetWatcherOutputAddress(operator, u.height)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		outputAddr, err = u.persistenceReadContext.GetServicerOutputAddress(operator, u.height)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:

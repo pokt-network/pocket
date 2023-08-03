@@ -59,20 +59,20 @@ func prepareGovParamParamTypesMap() map[string]int {
 		typesUtil.ValidatorMaxEvidenceAgeInBlocksParamName: INT,
 		typesUtil.DoubleSignBurnPercentageParamName:        INT,
 		typesUtil.MissedBlocksBurnPercentageParamName:      INT,
-		typesUtil.FishermanMinimumStakeParamName:           BIGINT,
-		typesUtil.FishermanMaxChainsParamName:              INT,
-		typesUtil.FishermanUnstakingBlocksParamName:        INT64,
-		typesUtil.FishermanMinimumPauseBlocksParamName:     INT,
-		typesUtil.FishermanMaxPauseBlocksParamName:         INT,
-		typesUtil.FishermanPerSessionParamName:             INT,
+		typesUtil.WatcherMinimumStakeParamName:             BIGINT,
+		typesUtil.WatcherMaxChainsParamName:                INT,
+		typesUtil.WatcherUnstakingBlocksParamName:          INT64,
+		typesUtil.WatcherMinimumPauseBlocksParamName:       INT,
+		typesUtil.WatcherMaxPauseBlocksParamName:           INT,
+		typesUtil.WatcherPerSessionParamName:               INT,
 		typesUtil.MessageDoubleSignFee:                     BIGINT,
 		typesUtil.MessageSendFee:                           BIGINT,
-		typesUtil.MessageStakeFishermanFee:                 BIGINT,
-		typesUtil.MessageEditStakeFishermanFee:             BIGINT,
-		typesUtil.MessageUnstakeFishermanFee:               BIGINT,
-		typesUtil.MessagePauseFishermanFee:                 BIGINT,
-		typesUtil.MessageUnpauseFishermanFee:               BIGINT,
-		typesUtil.MessageFishermanPauseServicerFee:         BIGINT,
+		typesUtil.MessageStakeWatcherFee:                   BIGINT,
+		typesUtil.MessageEditStakeWatcherFee:               BIGINT,
+		typesUtil.MessageUnstakeWatcherFee:                 BIGINT,
+		typesUtil.MessagePauseWatcherFee:                   BIGINT,
+		typesUtil.MessageUnpauseWatcherFee:                 BIGINT,
+		typesUtil.MessageWatcherPauseServicerFee:           BIGINT,
 		typesUtil.MessageTestScoreFee:                      BIGINT,
 		typesUtil.MessageProveTestScoreFee:                 BIGINT,
 		typesUtil.MessageStakeAppFee:                       BIGINT,
@@ -157,8 +157,8 @@ func (u *baseUtilityUnitOfWork) getFee(msg typesUtil.Message, actorType coreType
 		switch actorType {
 		case coreTypes.ActorType_ACTOR_TYPE_APP:
 			return getGovParam[*big.Int](u, typesUtil.MessageStakeAppFee)
-		case coreTypes.ActorType_ACTOR_TYPE_FISH:
-			return getGovParam[*big.Int](u, typesUtil.MessageStakeFishermanFee)
+		case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+			return getGovParam[*big.Int](u, typesUtil.MessageStakeWatcherFee)
 		case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 			return getGovParam[*big.Int](u, typesUtil.MessageStakeServicerFee)
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -170,8 +170,8 @@ func (u *baseUtilityUnitOfWork) getFee(msg typesUtil.Message, actorType coreType
 		switch actorType {
 		case coreTypes.ActorType_ACTOR_TYPE_APP:
 			return getGovParam[*big.Int](u, typesUtil.MessageEditStakeAppFee)
-		case coreTypes.ActorType_ACTOR_TYPE_FISH:
-			return getGovParam[*big.Int](u, typesUtil.MessageEditStakeFishermanFee)
+		case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+			return getGovParam[*big.Int](u, typesUtil.MessageEditStakeWatcherFee)
 		case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 			return getGovParam[*big.Int](u, typesUtil.MessageEditStakeServicerFee)
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -183,8 +183,8 @@ func (u *baseUtilityUnitOfWork) getFee(msg typesUtil.Message, actorType coreType
 		switch actorType {
 		case coreTypes.ActorType_ACTOR_TYPE_APP:
 			return getGovParam[*big.Int](u, typesUtil.MessageUnstakeAppFee)
-		case coreTypes.ActorType_ACTOR_TYPE_FISH:
-			return getGovParam[*big.Int](u, typesUtil.MessageUnstakeFishermanFee)
+		case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+			return getGovParam[*big.Int](u, typesUtil.MessageUnstakeWatcherFee)
 		case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 			return getGovParam[*big.Int](u, typesUtil.MessageUnstakeServicerFee)
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -196,8 +196,8 @@ func (u *baseUtilityUnitOfWork) getFee(msg typesUtil.Message, actorType coreType
 		switch actorType {
 		case coreTypes.ActorType_ACTOR_TYPE_APP:
 			return getGovParam[*big.Int](u, typesUtil.MessageUnpauseAppFee)
-		case coreTypes.ActorType_ACTOR_TYPE_FISH:
-			return getGovParam[*big.Int](u, typesUtil.MessageUnpauseFishermanFee)
+		case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+			return getGovParam[*big.Int](u, typesUtil.MessageUnpauseWatcherFee)
 		case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 			return getGovParam[*big.Int](u, typesUtil.MessageUnpauseServicerFee)
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:

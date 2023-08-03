@@ -133,8 +133,8 @@ func TestUtilityUnitOfWork_HandleMessageUnstake(t *testing.T) {
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
 				paramName = typesUtil.AppUnstakingBlocksParamName
-			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				paramName = typesUtil.FishermanUnstakingBlocksParamName
+			case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+				paramName = typesUtil.WatcherUnstakingBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 				paramName = typesUtil.ServicerUnstakingBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -184,8 +184,8 @@ func TestUtilityUnitOfWork_HandleMessageUnpause(t *testing.T) {
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
 				paramName = typesUtil.AppMinimumPauseBlocksParamName
-			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				paramName = typesUtil.FishermanMinimumPauseBlocksParamName
+			case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+				paramName = typesUtil.WatcherMinimumPauseBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 				paramName = typesUtil.ServicerMinimumPauseBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -264,8 +264,8 @@ func TestUtilityUnitOfWork_GetUnbondingHeight(t *testing.T) {
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
 				unstakingBlocks, err = getGovParam[int64](uow, typesUtil.AppUnstakingBlocksParamName)
-			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				unstakingBlocks, err = getGovParam[int64](uow, typesUtil.FishermanUnstakingBlocksParamName)
+			case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+				unstakingBlocks, err = getGovParam[int64](uow, typesUtil.WatcherUnstakingBlocksParamName)
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 				unstakingBlocks, err = getGovParam[int64](uow, typesUtil.ServicerUnstakingBlocksParamName)
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -299,8 +299,8 @@ func TestUtilityUnitOfWork_BeginUnstakingMaxPausedActors(t *testing.T) {
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
 				paramName = typesUtil.AppMaxPauseBlocksParamName
-			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				paramName = typesUtil.FishermanMaxPauseBlocksParamName
+			case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+				paramName = typesUtil.WatcherMaxPauseBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 				paramName = typesUtil.ServicerMaxPauseBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -384,10 +384,10 @@ func TestUtilityUnitOfWork_BeginUnstakingActorsPausedBefore_UnbondUnstakingActor
 				poolAddress = coreTypes.Pools_POOLS_APP_STAKE.Address()
 				paramName1 = typesUtil.AppMaxPauseBlocksParamName
 				paramName2 = typesUtil.AppUnstakingBlocksParamName
-			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				poolAddress = coreTypes.Pools_POOLS_FISHERMAN_STAKE.Address()
-				paramName1 = typesUtil.FishermanMaxPauseBlocksParamName
-				paramName2 = typesUtil.FishermanUnstakingBlocksParamName
+			case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+				poolAddress = coreTypes.Pools_POOLS_WATCHER_STAKE.Address()
+				paramName1 = typesUtil.WatcherMaxPauseBlocksParamName
+				paramName2 = typesUtil.WatcherUnstakingBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 				poolAddress = coreTypes.Pools_POOLS_SERVICER_STAKE.Address()
 				paramName1 = typesUtil.ServicerMaxPauseBlocksParamName
@@ -659,9 +659,9 @@ func getAllTestingActors(t *testing.T, uow *baseUtilityUnitOfWork, actorType cor
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		apps := getAllTestingApps(t, uow)
 		actors = append(actors, apps...)
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		fish := getAllTestingFish(t, uow)
-		actors = append(actors, fish...)
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		watchers := getAllTestingWatchers(t, uow)
+		actors = append(actors, watchers...)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		nodes := getAllTestingServicers(t, uow)
 		actors = append(actors, nodes...)
@@ -700,8 +700,8 @@ func getAllTestingValidators(t *testing.T, uow *baseUtilityUnitOfWork) []*coreTy
 	return actors
 }
 
-func getAllTestingFish(t *testing.T, uow *baseUtilityUnitOfWork) []*coreTypes.Actor {
-	actors, err := uow.persistenceReadContext.GetAllFishermen(uow.height)
+func getAllTestingWatchers(t *testing.T, uow *baseUtilityUnitOfWork) []*coreTypes.Actor {
+	actors, err := uow.persistenceReadContext.GetAllWatchers(uow.height)
 	require.NoError(t, err)
 	return actors
 }

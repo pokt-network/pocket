@@ -56,7 +56,7 @@ persistence         # Directly contains the persistence module interface for eac
 ├── context.go      # Postgres context logic
 ├── debug.go        # For temporary LocalNet
 ├── db.go           # Helpers to connect and initialize the Postgres database
-├── fisherman.go
+├── watcher.go
 ├── genesis.go      # Populate genesis logic
 ├── gov.go
 ├── module.go       # Implementation of the persistence module interface
@@ -77,7 +77,7 @@ persistence         # Directly contains the persistence module interface for eac
 │   ├── application.go
 │   ├── base_actor.go            # Implementation of the `protocol_actor.go` interface shared across all actors
 │   ├── block.go
-│   ├── fisherman.go
+│   ├── watcher.go
 │   ├── gov.go
 │   ├── persistence_genesis.go   # Implements shared genesis interface
 │   ├── protocol_actor.go        # Interface definition for the schema shared across all actors
@@ -223,12 +223,12 @@ These are major TODOs spanning the entire repo so they are documented in one pla
 Short-term (i.e. simpler starter) tasks:
 
 - [ ] DOCUMENT: Need to do a better job at documenting the process of paused apps being turned into unstaking apps.
-- [ ] CLEANUP: Remove unused parameters from `the PostgresContext` interface (i.e. see where \_ is used in the implementation such as in `InsertFisherman`)
+- [ ] CLEANUP: Remove unused parameters from `the PostgresContext` interface (i.e. see where \_ is used in the implementation such as in `InsertWatcher`)
 - [ ] IMPROVE: Consider converting all address params from bytes to string to avoid unnecessary encoding
 - [ ] CLEANUP(#76): Review all the `gov_*.go` related files and simplify the code
 - [ ] REFACTOR/DISCUSS: Should we prefix the functions in the `PersistenceModule` with the Param / Actor it's impacting to make autocomplete in implementation better?
 - [ ] DISCUSS: Consider removing all `Set` methods (e.g. `SetAccountAmount`) and replace with `Add` (e.g. `AddAccountAmount`) by having it leverage a "default zero".
-- [ ] REFACTOR(https://github.com/pokt-network/pocket/issues/102): Split `account` and `pool` into a shared actor (e.g. like fisherman/validator/servicer/application) and simplify the code in half
+- [ ] REFACTOR(https://github.com/pokt-network/pocket/issues/102): Split `account` and `pool` into a shared actor (e.g. like watcher/validator/servicer/application) and simplify the code in half
 - [ ] CLEANUP: Remove `tokens` or `stakedTokens` in favor of using `amount` everywhere since the denomination is not clear. As a follow up. Consider a massive rename to make the denomination explicit.
 
 Mid-term (i.e. new feature or major refactor) tasks:

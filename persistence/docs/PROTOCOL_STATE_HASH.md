@@ -27,7 +27,7 @@ This document defines how Pocket V1 takes a snapshot of its world state. An intr
 | Component             | Data Type                             | Implementation Options - Examples                      | Implementation Selected - Current   | Example             | Use Case                                                                         |
 | --------------------- | ------------------------------------- | ------------------------------------------------------ | ----------------------------------- | ------------------- | -------------------------------------------------------------------------------- |
 | Data Tables           | SQL Database / Engine                 | MySQL, SQLite, PostgreSQL                              | PostgresSQL                         | Validator SQL Table | Validating & updating information when applying a transaction                    |
-| Merkle Trees          | Merkle Trie backed by Key-Value Store | Celestia's SMT, Libra's JMT, Cosmos' IAVL, Verkle Tree | Pocket's SMT (Forked from Celestia) | Fisherman Trie      | Maintains the state of all account based trees                                   |
+| Merkle Trees          | Merkle Trie backed by Key-Value Store | Celestia's SMT, Libra's JMT, Cosmos' IAVL, Verkle Tree | Pocket's SMT (Forked from Celestia) | Watcher Trie      | Maintains the state of all account based trees                                   |
 | Blocks                | Serialization Codec                   | Amino, Protobuf, Thrift, Avro                          | Protobuf                            | Block protobuf      | Serialized and inserted into the Block Store                                     |
 | Objects (e.g. Actors) | Serialization Codec                   | Amino, Protobuf, Thrift, Avro                          | Protobuf                            | Servicer protobuf   | Serialized and inserted into the corresponding Tree                              |
 | Block Store           | Key Value Store                       | LevelDB, BadgerDB, RocksDB, BoltDB                     | BadgerDb                            | Block Store         | Maintains a key-value store of the blockchain blocks                             |
@@ -45,7 +45,7 @@ An individual Merkle Tree is created for each type of actor, record or data type
 
 - Applications
 - Validators
-- Fisherman
+- Watcher
 - Servicers
 
 **Account Merkle Trees**:

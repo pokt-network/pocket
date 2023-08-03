@@ -14,7 +14,7 @@ import (
 var actorTypeToSchemaName = map[coreTypes.ActorType]ptypes.ProtocolActorSchema{
 	coreTypes.ActorType_ACTOR_TYPE_APP:      ptypes.ApplicationActor,
 	coreTypes.ActorType_ACTOR_TYPE_VAL:      ptypes.ValidatorActor,
-	coreTypes.ActorType_ACTOR_TYPE_FISH:     ptypes.FishermanActor,
+	coreTypes.ActorType_ACTOR_TYPE_WATCHER:  ptypes.WatcherActor,
 	coreTypes.ActorType_ACTOR_TYPE_SERVICER: ptypes.ServicerActor,
 }
 

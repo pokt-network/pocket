@@ -22,7 +22,7 @@ The CLI is meant to be an user but also a machine friendly way for interacting w
 * [client Account](client_Account.md)	 - Account specific commands
 * [client Application](client_Application.md)	 - Application actor specific commands
 * [client Consensus](client_Consensus.md)	 - Consensus specific commands
-* [client Fisherman](client_Fisherman.md)	 - Fisherman actor specific commands
+* [client Watcher](client_Watcher.md)	 - Watcher actor specific commands
 * [client Governance](client_Governance.md)	 - Governance specific commands
 * [client Keys](client_Keys.md)	 - Key specific commands
 * [client Query](client_Query.md)	 - Commands related to querying on-chain data via the node's RPC server

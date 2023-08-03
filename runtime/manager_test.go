@@ -1718,13 +1718,13 @@ var expectedGenesis = &genesis.GenesisState{
 			Output:          "001022b138896c4c5466ac86b24a9bbe249905c2",
 		},
 	},
-	Fishermen: []*types.Actor{
+	Watchers: []*types.Actor{
 		{
-			ActorType:       types.ActorType_ACTOR_TYPE_FISH,
+			ActorType:       types.ActorType_ACTOR_TYPE_WATCHER,
 			Address:         "0010336c3a2cc1ec71fecc45c360214f757194aa",
 			PublicKey:       "d913a05a6f4bde35413bdcc6343238960cfc7d8aff425fb712dcaa52f1476dbf",
 			Chains:          []string{"0001"},
-			ServiceUrl:      "fisherman1:42069",
+			ServiceUrl:      "watcher1:42069",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -1819,7 +1819,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 					Keybase:   defaultCfg.Keybase,
 					Servicer:  &configs.ServicerConfig{Enabled: true},
 					Validator: &configs.ValidatorConfig{Enabled: true},
-					Fisherman: defaultCfg.Fisherman,
+					Watcher:   defaultCfg.Watcher,
 					IBC: &configs.IBCConfig{
 						Enabled:   true,
 						StoresDir: defaults.DefaultIBCStoresDir,

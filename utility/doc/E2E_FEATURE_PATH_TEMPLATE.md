@@ -118,7 +118,7 @@ Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&
 - [ ] Validator
 - [ ] Application
 - [ ] Servicer
-- [ ] Fisherman
+- [ ] Watcher
 - [ ] Portal
 
 **Data Structures**:

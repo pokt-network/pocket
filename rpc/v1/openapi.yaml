@@ -504,13 +504,13 @@ paths:
           content:
             text/plain:
               example: "description of failure"
-  /v1/query/fisherman:
+  /v1/query/watcher:
     post:
       tags:
         - query
-      summary: Returns the data for the specific fisherman address at a given height
+      summary: Returns the data for the specific watcher address at a given height
       requestBody:
-        description: Request fisherman data at the specified height, height = 0 is used as the latest
+        description: Request watcher data at the specified height, height = 0 is used as the latest
         content:
           application/json:
             schema:
@@ -521,7 +521,7 @@ paths:
         required: true
       responses:
         "200":
-          description: Returns fisherman data at the specified height
+          description: Returns watcher data at the specified height
           content:
             application/json:
               schema:
@@ -532,17 +532,17 @@ paths:
             text/plain:
               example: "description of failure"
         "500":
-          description: An error occurred while retrieving the fisherman data at the specified height
+          description: An error occurred while retrieving the watcher data at the specified height
           content:
             text/plain:
               example: "description of failure"
-  /v1/query/fishermen:
+  /v1/query/watchers:
     post:
       tags:
         - query
-      summary: Returns the data for the all fishermen at the specified height
+      summary: Returns the data for the all watchers at the specified height
       requestBody:
-        description: Request all fishermen data at the specified height, height = 0 is used as the latest; Max per_page=1000
+        description: Request all watchers data at the specified height, height = 0 is used as the latest; Max per_page=1000
         content:
           application/json:
             schema:
@@ -554,18 +554,18 @@ paths:
         required: true
       responses:
         "200":
-          description: Returns all fishermen data at the specified height
+          description: Returns all watchers data at the specified height
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/QueryFishermenResponse"
+                $ref: "#/components/schemas/QueryWatchersResponse"
         "400":
           description: Bad request
           content:
             text/plain:
               example: "description of failure"
         "500":
-          description: An error occurred while retrieving all fishermen data at the specified height
+          description: An error occurred while retrieving all watchers data at the specified height
           content:
             text/plain:
               example: "description of failure"
@@ -1265,19 +1265,19 @@ components:
       properties:
         block:
           $ref: "#/components/schemas/Block"
-    QueryFishermenResponse:
+    QueryWatchersResponse:
       type: object
       required:
-        - fishermen
-        - total_fishermen
+        - watchers
+        - total_watchers
         - page
         - total_pages
       properties:
-        fishermen:
+        watchers:
           type: array
           items:
             $ref: "#/components/schemas/ProtocolActor"
-        total_fishermen:
+        total_watchers:
           type: integer
           format: int64
         page:
@@ -1411,7 +1411,7 @@ components:
         - geozone
         - application
         - servicers
-        - fishermen
+        - watchers
       properties:
         session_id:
           type: string
@@ -1434,7 +1434,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ProtocolActor"
-        fishermen:
+        watchers:
           type: array
           items:
             $ref: "#/components/schemas/ProtocolActor"
@@ -1461,7 +1461,7 @@ components:
       enum:
         - validator
         - servicer
-        - fisherman
+        - watcher
         - application
     Actor:
       type: object

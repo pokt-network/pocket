@@ -21,7 +21,7 @@ const (
 	testingValidatorCount   = 5
 	testingServicerCount    = 1
 	testingApplicationCount = 1
-	testingFishermenCount   = 1
+	testingWatchersCount    = 1
 
 	testNonce  = "defaultNonceString"
 	testSchema = "test_schema"
@@ -118,7 +118,7 @@ func newTestRuntimeConfig(databaseURL string) *runtime.Manager {
 		testingValidatorCount,
 		testingServicerCount,
 		testingApplicationCount,
-		testingFishermenCount,
+		testingWatchersCount,
 	)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
 	return runtimeCfg

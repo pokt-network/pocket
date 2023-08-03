@@ -303,7 +303,7 @@ func (s *rpcServer) PostV1QueryBlockTxs(ctx echo.Context) error {
 	})
 }
 
-func (s *rpcServer) PostV1QueryFisherman(ctx echo.Context) error {
+func (s *rpcServer) PostV1QueryWatcher(ctx echo.Context) error {
 	var body QueryAccountHeight
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
@@ -320,16 +320,16 @@ func (s *rpcServer) PostV1QueryFisherman(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	fisherman, err := readCtx.GetFisherman(addrBz, height)
+	watcher, err := readCtx.GetWatcher(addrBz, height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	actor := protocolActorToRPCProtocolActor(fisherman)
+	actor := protocolActorToRPCProtocolActor(watcher)
 	return ctx.JSON(http.StatusOK, actor)
 }
 
-func (s *rpcServer) PostV1QueryFishermen(ctx echo.Context) error {
+func (s *rpcServer) PostV1QueryWatchers(ctx echo.Context) error {
 	var body QueryHeightPaginated
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
@@ -342,26 +342,26 @@ func (s *rpcServer) PostV1QueryFishermen(ctx echo.Context) error {
 	}
 	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
 
-	allFishermen, err := readCtx.GetAllFishermen(height)
+	allWatchers, err := readCtx.GetAllWatchers(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	start, end, totalPages, err := getPageIndexes(len(allFishermen), int(body.Page), int(body.PerPage))
+	start, end, totalPages, err := getPageIndexes(len(allWatchers), int(body.Page), int(body.PerPage))
 	if err != nil && !errors.Is(err, errNoItems) {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 	if totalPages == 0 || errors.Is(err, errNoItems) {
-		return ctx.JSON(http.StatusOK, QueryFishermenResponse{})
+		return ctx.JSON(http.StatusOK, QueryWatchersResponse{})
 	}
 
-	rpcFishermen := protocolActorToRPCProtocolActors(allFishermen[start : end+1])
+	rpcWatchers := protocolActorToRPCProtocolActors(allWatchers[start : end+1])
 
-	return ctx.JSON(http.StatusOK, QueryFishermenResponse{
-		Fishermen:      rpcFishermen,
-		TotalFishermen: int64(len(allFishermen)),
-		Page:           body.Page,
-		TotalPages:     int64(totalPages),
+	return ctx.JSON(http.StatusOK, QueryWatchersResponse{
+		Watchers:      rpcWatchers,
+		TotalWatchers: int64(len(allWatchers)),
+		Page:          body.Page,
+		TotalPages:    int64(totalPages),
 	})
 }
 

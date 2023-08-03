@@ -182,11 +182,11 @@ build_and_watch: ## Continous build Pocket's main entrypoint as files change
 # TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
 .PHONY: compose_and_watch
 compose_and_watch: docker_check db_start monitoring_start ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-	${docker-compose} up --force-recreate validator1 validator2 validator3 validator4 servicer1 fisherman1
+	${docker-compose} up --force-recreate validator1 validator2 validator3 validator4 servicer1 watcher1
 
 .PHONY: rebuild_and_compose_and_watch
 rebuild_and_compose_and_watch: docker_check db_start monitoring_start ## Rebuilds the container from scratch and launches compose_and_watch
-	${docker-compose} up --build --force-recreate validator1 validator2 validator3 validator4 servicer1 fisherman1
+	${docker-compose} up --build --force-recreate validator1 validator2 validator3 validator4 servicer1 watcher1
 
 .PHONY: db_start
 db_start: docker_check ## Start a detached local postgres and admin instance; compose_and_watch is responsible for instantiating the actual schemas
@@ -538,11 +538,11 @@ todo_this_commit: ## List all the TODOs needed to be done in this commit
 numValidators ?= 4
 numServicers ?= 1
 numApplications ?= 1
-numFishermen ?= 1
+numWatchers ?= 1
 
 .PHONY: gen_genesis_and_config
 gen_genesis_and_config: ## Generate the genesis and config files for LocalNet
-	go run ./build/config/main.go --genPrefix="gen." --numValidators=${numValidators} --numServicers=${numServicers} --numApplications=${numApplications} --numFishermen=${numFishermen}
+	go run ./build/config/main.go --genPrefix="gen." --numValidators=${numValidators} --numServicers=${numServicers} --numApplications=${numApplications} --numWatchers=${numWatchers}
 
 .PHONY: gen_genesis_and_config
 clear_genesis_and_config: ## Clear the genesis and config files for LocalNet

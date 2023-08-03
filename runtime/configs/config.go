@@ -31,7 +31,7 @@ type Config struct {
 	Keybase     *KeybaseConfig     `json:"keybase"` // Determines and configures which keybase to use, `file` or `vault`. IMPROVE(#626): See for rationale around proto design. We have proposed a better config design, but did not implement it due to viper limitations
 	Validator   *ValidatorConfig   `json:"validator"`
 	Servicer    *ServicerConfig    `json:"servicer"`
-	Fisherman   *FishermanConfig   `json:"fisherman"`
+	Watcher     *WatcherConfig     `json:"watcher"`
 	IBC         *IBCConfig         `json:"ibc"`
 	IBCHost     *IBCHostConfig     `json:"ibc_host"`
 }
@@ -158,9 +158,9 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			VaultMountPath: defaults.DefaultKeybaseVaultMountPath,
 		},
 		Validator: &ValidatorConfig{},
-		// INCOMPLETE(#858): use defaultServicerConfig once the default configuration issue is resolved, i.e. once configuring fisherman disables default servicer
-		Servicer:  &ServicerConfig{},
-		Fisherman: &FishermanConfig{},
+		// INCOMPLETE(#858): use defaultServicerConfig once the default configuration issue is resolved, i.e. once configuring watcher disables default servicer
+		Servicer: &ServicerConfig{},
+		Watcher:  &WatcherConfig{},
 		IBC: &IBCConfig{
 			Enabled:   defaults.DefaultIBCEnabled,
 			StoresDir: defaults.DefaultIBCStoresDir,

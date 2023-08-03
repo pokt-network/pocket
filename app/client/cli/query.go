@@ -203,11 +203,11 @@ func queryHeightCommands() []*cobra.Command {
 			},
 		},
 		{
-			Use:     "Fisherman <address> [--height]",
-			Short:   "Get the fisherman data of an address",
-			Long:    "Queries the node RPC to obtain the fisherman data of the speicifed address at the given (or latest if unspecified) height",
+			Use:     "Watcher <address> [--height]",
+			Short:   "Get the watcher data of an address",
+			Long:    "Queries the node RPC to obtain the watcher data of the speicifed address at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(1),
-			Aliases: []string{"fisherman"},
+			Aliases: []string{"watcher"},
 			RunE: func(cmd *cobra.Command, args []string) error {
 				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
@@ -219,7 +219,7 @@ func queryHeightCommands() []*cobra.Command {
 					Height:  height,
 				}
 
-				response, err := client.PostV1QueryFisherman(cmd.Context(), body)
+				response, err := client.PostV1QueryWatcher(cmd.Context(), body)
 				if err != nil {
 					return unableToConnectToRpc(err)
 				}
@@ -524,11 +524,11 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 			},
 		},
 		{
-			Use:     "Fishermen [--height] [--page] [--per_page]",
-			Short:   "Get all the data of all fishermen",
-			Long:    "Queries the node RPC to obtain the paginated data for all fishermen at the given (or latest if unspecified) height",
+			Use:     "Watchers [--height] [--page] [--per_page]",
+			Short:   "Get all the data of all watchers",
+			Long:    "Queries the node RPC to obtain the paginated data for all watchers at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(0),
-			Aliases: []string{"fishermen"},
+			Aliases: []string{"watchers"},
 			RunE: func(cmd *cobra.Command, args []string) error {
 				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
@@ -541,7 +541,7 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 					PerPage: per_page,
 				}
 
-				response, err := client.PostV1QueryFishermen(cmd.Context(), body)
+				response, err := client.PostV1QueryWatchers(cmd.Context(), body)
 				if err != nil {
 					return unableToConnectToRpc(err)
 				}

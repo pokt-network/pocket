@@ -32,7 +32,7 @@ const (
 // TODO: Move schema related functionality into its own package
 var protocolActorSchemas = []types.ProtocolActorSchema{
 	types.ApplicationActor,
-	types.FishermanActor,
+	types.WatcherActor,
 	types.ServicerActor,
 	types.ValidatorActor,
 }

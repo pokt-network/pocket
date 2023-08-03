@@ -12,7 +12,7 @@ localnet_config_path = root_dir + "/localnet_config.yaml"
 localnet_config_defaults = {
     "validators": {"count": 4},
     "servicers": {"count": 1},
-    "fishermen": {"count": 1},
+    "watchers": {"count": 1},
     "full_nodes": {"count": 1}
 }
 
@@ -224,18 +224,18 @@ for x in range(localnet_config["servicers"]["count"]):
 
     k8s_resource("servicer-%s-pocket" % formatted_number, labels=['pocket-servicers'])
 
-# Provisions fishermen nodes
+# Provisions watchers nodes
 actor_number = 0
-for x in range(localnet_config["fishermen"]["count"]):
+for x in range(localnet_config["watchers"]["count"]):
     actor_number = actor_number + 1
     formatted_number = formatted_actor_number(actor_number)
 
     k8s_yaml(helm(chart_dir,
-        name="fisherman-%s-pocket" % formatted_number,
+        name="watcher-%s-pocket" % formatted_number,
         set=[
             "global.postgresql.auth.postgresPassword=LocalNetPassword",
             "image.repository=pocket-image",
-            "privateKeySecretKeyRef.name=fishermen-private-keys",
+            "privateKeySecretKeyRef.name=watchers-private-keys",
             "privateKeySecretKeyRef.key=%s" % formatted_number,
             "genesis.preProvisionedGenesis.enabled=false",
             "genesis.externalConfigMap.name=v1-localnet-genesis",
@@ -243,12 +243,12 @@ for x in range(localnet_config["fishermen"]["count"]):
             "postgresql.primary.persistence.enabled=false",
             "podAnnotations.prometheus\\.io/scrape=true",
             "podAnnotations.prometheus\\.io/port=9000",
-            "config.fisherman.enabled=true",
-            "nodeType=fisherman",
+            "config.watcher.enabled=true",
+            "nodeType=watcher",
         ],
-        values=[chart_dir + "/pocket-fisherman-overrides.yaml"] if os.path.exists(chart_dir + "/pocket-fisherman-overrides.yaml") else [],))
+        values=[chart_dir + "/pocket-watcher-overrides.yaml"] if os.path.exists(chart_dir + "/pocket-watcher-overrides.yaml") else [],))
 
-    k8s_resource("fisherman-%s-pocket" % formatted_number, labels=['pocket-fishermen'])
+    k8s_resource("watcher-%s-pocket" % formatted_number, labels=['pocket-watchers'])
 
 # Provisions full nodes
 actor_number = 0

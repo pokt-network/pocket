@@ -63,10 +63,10 @@ func (s *rpcServer) PostV1ClientGetSession(ctx echo.Context) error {
 		rpcServicers = append(rpcServicers, actor)
 	}
 
-	rpcFishermen := make([]ProtocolActor, 0)
-	for _, fisher := range session.GetFishermen() {
-		actor := protocolActorToRPCProtocolActor(fisher)
-		rpcFishermen = append(rpcFishermen, actor)
+	rpcWatchers := make([]ProtocolActor, 0)
+	for _, watcher := range session.GetWatchers() {
+		actor := protocolActorToRPCProtocolActor(watcher)
+		rpcWatchers = append(rpcWatchers, actor)
 	}
 
 	return ctx.JSON(http.StatusOK, Session{
@@ -78,7 +78,7 @@ func (s *rpcServer) PostV1ClientGetSession(ctx echo.Context) error {
 		Geozone:          string(session.GetGeoZone()),
 		Application:      rpcApp,
 		Servicers:        rpcServicers,
-		Fishermen:        rpcFishermen,
+		Watchers:         rpcWatchers,
 	})
 }
 

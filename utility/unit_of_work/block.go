@@ -114,9 +114,9 @@ func (uow *baseUtilityUnitOfWork) unbondUnstakingActors() (err coreTypes.Error) 
 		case coreTypes.ActorType_ACTOR_TYPE_APP:
 			readyToUnbond, er = uow.persistenceReadContext.GetAppsReadyToUnstake(uow.height, int32(coreTypes.StakeStatus_Unstaking))
 			poolAddress = coreTypes.Pools_POOLS_APP_STAKE.Address()
-		case coreTypes.ActorType_ACTOR_TYPE_FISH:
-			readyToUnbond, er = uow.persistenceReadContext.GetFishermenReadyToUnstake(uow.height, int32(coreTypes.StakeStatus_Unstaking))
-			poolAddress = coreTypes.Pools_POOLS_FISHERMAN_STAKE.Address()
+		case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+			readyToUnbond, er = uow.persistenceReadContext.GetWatchersReadyToUnstake(uow.height, int32(coreTypes.StakeStatus_Unstaking))
+			poolAddress = coreTypes.Pools_POOLS_WATCHER_STAKE.Address()
 		case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 			readyToUnbond, er = uow.persistenceReadContext.GetServicersReadyToUnstake(uow.height, int32(coreTypes.StakeStatus_Unstaking))
 			poolAddress = coreTypes.Pools_POOLS_SERVICER_STAKE.Address()
@@ -190,8 +190,8 @@ func (uow *baseUtilityUnitOfWork) beginUnstakingActorsPausedBefore(pausedBeforeH
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		er = uow.persistenceRWContext.SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(coreTypes.StakeStatus_Unstaking))
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		er = uow.persistenceRWContext.SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(coreTypes.StakeStatus_Unstaking))
+	case coreTypes.ActorType_ACTOR_TYPE_WATCHER:
+		er = uow.persistenceRWContext.SetWatcherStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(coreTypes.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		er = uow.persistenceRWContext.SetServicerStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(coreTypes.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:

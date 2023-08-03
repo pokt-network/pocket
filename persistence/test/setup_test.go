@@ -53,7 +53,7 @@ var (
 	genesisStateNumValidators   = 5
 	genesisStateNumServicers    = 1
 	genesisStateNumApplications = 1
-	genesisStateNumFishermen    = 1
+	genesisStateNumWatchers     = 1
 
 	// Initialized in TestMain
 	testPersistenceMod modules.PersistenceModule
@@ -115,7 +115,7 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 		genesisStateNumValidators,
 		genesisStateNumServicers,
 		genesisStateNumApplications,
-		genesisStateNumServicers,
+		genesisStateNumWatchers,
 	)
 	runtimeMgr := runtime.NewManager(cfg, genesisState)
 	bus, err := runtime.CreateBus(runtimeMgr)

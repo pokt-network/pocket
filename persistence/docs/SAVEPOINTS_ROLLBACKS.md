@@ -34,7 +34,7 @@ As it stands we use multiple data stores (please refer to [PROTOCOL_STATE_HASH.m
 | Block Store           | Key Value Store                       | BadgerDB                          |
 | Merkle Trees          | Merkle Trie backed by Key-Value Store | BadgerDB                          |
 
-Something worth mentioning specifically about `Merkle Trees` is the fact that we store a separate tree for each `Actor` type (i.e. `App`, `Validator`, `Fisherman`, etc.), for `Accounts` & `Pools` and for the data types such as `Transactions`, `Params` and `Flags`.
+Something worth mentioning specifically about `Merkle Trees` is the fact that we store a separate tree for each `Actor` type (i.e. `App`, `Validator`, `Watcher`, etc.), for `Accounts` & `Pools` and for the data types such as `Transactions`, `Params` and `Flags`.
 
 This means that each tree is a separate data store.
 

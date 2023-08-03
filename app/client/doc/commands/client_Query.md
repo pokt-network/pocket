@@ -30,8 +30,8 @@ Commands related to querying on-chain data via the node's RPC server
 * [client Query Balance](client_Query_Balance.md)	 - Get the balance of an address
 * [client Query Block](client_Query_Block.md)	 - Get the block data
 * [client Query BlockTxs](client_Query_BlockTxs.md)	 - Get all the transactions in the block
-* [client Query Fisherman](client_Query_Fisherman.md)	 - Get the fisherman data of an address
-* [client Query Fishermen](client_Query_Fishermen.md)	 - Get all the data of all fishermen
+* [client Query Watcher](client_Query_Watcher.md)	 - Get the watcher data of an address
+* [client Query Watchers](client_Query_Watchers.md)	 - Get all the data of all watchers
 * [client Query Height](client_Query_Height.md)	 - Get current block height
 * [client Query Param](client_Query_Param.md)	 - Get the value of the parameter
 * [client Query Servicer](client_Query_Servicer.md)	 - Get the servicer data of an address
