@@ -1,8 +1,7 @@
 Feature: State Sync Namespace
 
   # IMPROVE(#959): Remove time-based waits from tests
-
-
+  # TODO(#964): Remove the `skip_in_ci` tag for these tests
   @skip_in_ci
   Scenario: New FullNode does not sync to Blockchain at height 2
         Given the network is at genesis
