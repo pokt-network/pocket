@@ -197,4 +197,4 @@ jobs:
 
       - id: "run-e2e-tests"
         run: |
-          ./argo-linux-amd64 submit --wait --log --namespace devnet-issue-${{ github.event.pull_request.number }} --from 'wftmpl/dev-e2e-tests' --paramter tags="~@skip_in_ci" --parameter gitsha="${{ github.event.pull_request.head.sha }}"
+          ./argo-linux-amd64 submit --wait --log --namespace devnet-issue-${{ github.event.pull_request.number }} --from 'wftmpl/dev-e2e-tests' --parameter tags="~@skip_in_ci" --parameter gitsha="${{ github.event.pull_request.head.sha }}"
