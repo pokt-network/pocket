@@ -86,6 +86,7 @@ Optionally activate changelog pre-commit hook
 cp .githooks/pre-commit .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
+
 _**NOTE**: The pre-commit changelog verification has been disabled during the developement of V1 as of 2023-05-16 to unblock development velocity; see more details [here](https://github.com/pokt-network/pocket/assets/1892194/394fdb09-e388-44aa-820d-e9d5a23578cf). This check is no longer done in the CI and is not recommended for local development either currently._
 
 ### Pocket Network CLI
@@ -167,7 +168,7 @@ Note that there are a few tests in the library that are prone to race conditions
 
 ### Running LocalNet
 
-At the time of writing, we have two basic approaches to running a LocalNet. We suggest getting started with the `Docker Compose` approach outlined below before moving to the advanced Kubernetes configuration.
+At the time of writing, we have two basic approaches to running a LocalNet. We suggest getting started with the `Docker Compose` (aka `lightweight LocalNet`) approach outlined below before moving to the advanced Kubernetes (aka LocalNet) configuration.
 
 #### [Advanced] Kubernetes
 
@@ -186,13 +187,13 @@ make docker_wipe
 2. In one shell, run the 4 nodes setup:
 
 ```bash
-make compose_and_watch
+make lightweight_localnet
 ```
 
 4. In another shell, run the development client:
 
 ```bash
-make client_start && make client_connect
+make lightweight_localnet_client && make lightweight_localnet_client_debug
 ```
 
 4. Check the state of each node:

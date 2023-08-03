@@ -19,7 +19,8 @@ else
 fi
 
 reflex \
-  --start-service \
-  -r '\.go' \
-  --decoration="none" \
-  -s -- sh -c "$command";
+    --start-service \
+    -R '^app/client' \
+    -r '\.go' \
+    --decoration="none" \
+    -s -- sh -c "$command"
