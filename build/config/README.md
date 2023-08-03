@@ -12,7 +12,7 @@ It is not recommended at this time to build infrastructure components that rely 
 
 ## Origin Document
 
-Currently, the Genesis and Configuration generator is necessary to create development `localnet` environments for iterating on V1. A current example (as of 09/2022) of this is the `make compose_and_watch` debug utility that generates a `localnet` using `docker-compose` by injecting the appropriate `config.json` and `genesis.json` files.
+Currently, the Genesis and Configuration generator is necessary to create development `localnet` environments for iterating on V1. A current example (as of 09/2022) of this is the `make lightweight_localnet` debug utility that generates a `localnet` using `docker-compose` by injecting the appropriate `config.json` and `genesis.json` files.
 
 ## Usage
 

@@ -251,7 +251,7 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/text v0.7.0
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
 	golang.org/x/tools v0.3.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
