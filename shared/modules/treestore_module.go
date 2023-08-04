@@ -44,8 +44,3 @@ type TreeStoreModule interface {
 	// GetTreeHashes returns a map of tree names to their root hashes
 	GetTreeHashes() map[string]string
 }
-
-type Archivable interface {
-	Backup(dir string) error
-	Load(dir string) error
-}

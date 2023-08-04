@@ -276,3 +276,9 @@ type PersistenceLocalContext interface {
 	//	for the application associated with the session
 	GetSessionTokensUsed(*coreTypes.Session) (*big.Int, error)
 }
+
+// Archivable defines a two function interface for backing up and loading an archive.
+type Archivable interface {
+	Backup(dir string) error
+	Load(dir string) error
+}
