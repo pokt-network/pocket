@@ -171,8 +171,8 @@ sequenceDiagram
   Node->>Node:Start
   Node->>Network:Join
   loop
-    Node->>Network:RequestCurrentHeight
-    Network-->>Node: 
+    Node->>+Network:RequestCurrentHeight
+    Network-->>-Node: 
     Node->>Node:SwitchMode
   end
 
@@ -180,16 +180,16 @@ sequenceDiagram
     par
       Node->>Consensus:Pause
     and
-      Node->>StateSync:Start
+      Node->>+StateSync:Start
       Note over Node,StateSync: Details omitted for another diagram
-      StateSync-->>Node:SyncDone
+      StateSync-->>-Node:SyncDone
     end
   else ConsensusMode
     par
       Node->>StateSync:Pause
     and
-      Node->>Consensus:Start
-      Consensus-->>Node:OutOfSync
+      Node->>+Consensus:Start
+      Consensus-->>-Node:OutOfSync
     end
   end
 ```
@@ -218,20 +218,20 @@ sequenceDiagram
   par
     loop
       Note left of Network: Constantly asking for the highest<br /> known block from network
-      Node->>Network:UpdateNetworkCurrentHeight
-      Network-->>Node: 
+      Node->>+Network:UpdateNetworkCurrentHeight
+      Network-->>-Node: 
     end
   and
-    Node->>Persistence:GetLastDownloadedBlock
-    Persistence-->>Node: 
+    Node->>+Persistence:GetLastDownloadedBlock
+    Persistence-->>-Node: 
 
     loop LastDownloadedBlock < NetworkCurrentHeight
-      Node->>Network:GetBlock
-      Network-->>Node: 
+      Node->>+Network:GetBlock
+      Network-->>-Node: 
       Note left of Network: Currently the node asks all the network<br />for the block it wants to download
 
-      Node->>Persistence:Append
-      Persistence-->>Node: 
+      Node->>+Persistence:Append
+      Persistence-->>-Node: 
       Note left of Node: append if new block
 
       Node->>Node:Wait(until new block)
@@ -247,17 +247,15 @@ _Note: We do not detail how individual transactions are applied or how state is 
 * The `apply` routine remains alive as long as `sync` mode is on
 * It needs a starting state (genesis, or loaded local state) to build blocks from
 * Each block is validated and applied before moving to the next one
-* The block application is a sequential process starting from genesis, applying blocks up till network current height
-* Since basic validation is done at download step and assume that the Pocket node trusts its persistence layer, it is safe to skip basic revalidation
+* The block application begins at the genesis block (1) and sequentially processes additional blocks until it arrives at the head of the chain (i.e the most recent block or highest block height)
+* Since basic validation is done at the download step and assumes that the Pocket node trusts its persistence layer, it is safe to skip basic re-validation
 * The `apply` mechanism needs to maintain a chain of trust while applying blocks by performing the following:
-  * Before applying a block `n`, verify that is is signed by a quorum of `n-1`'s validator set (genesis validator set for block `1`)
+  * Before applying block at height `h`, verify that it is signed by a quorum from the validator set at height `h-1`; note that the genesis validator set is used for block `1`
   * By applying each block, the validator set is updated (validators joining or leaving), starting from genesis validator set for any new node
-* With this chain of trust, a synching node systematically detects invalid blocks
+* With this chain of trust form a total of `3t+1` validators, where at least `2t+1` validators are honest and live. A synching node systematically detects invalid blocks
   * No malicious or faulty node could inject an alternative block without making at least `2t+1` validators sign it
   * The persistence layer is mainly a cache for the block application, so a node won't restart block application from genesis each time it's rebooted
 * When the routine applies `NetworkCurrentHeight`, it signals it so the node could switch to `consensus` mode. Meanwhile, it waits to apply a new downloaded block
-
-_Improvement: After applying a block, the server's signature (the one the block has been downloaded from) is replaced by the current node signature. Meaning that from now on, the current node endorse the block validity (when serving the block to other synchers). It could also serve as means to check the integrity of its own database._
 
 ```mermaid
 sequenceDiagram
@@ -265,30 +263,31 @@ sequenceDiagram
 
   participant Persistence
   participant SyncRoutine
-  participant BlockApplier
+  Note over ApplyBlockRoutine: This routine is an abstraction<br /> around block application logic
+  participant ApplyBlockRoutine
   participant State
 
   loop AppliedBlock < NetworkCurrentHeight
-    SyncRoutine->>Persistence:GetDownloadedBlock
-    Persistence-->>SyncRoutine: 
+    SyncRoutine->>+Persistence:GetDownloadedBlock
+    Persistence-->>-SyncRoutine: 
 
     Note right of Persistence: Or genesis if starting from scratch
-    SyncRoutine->>State:GetValidatorSet
-    State-->>SyncRoutine: 
+    SyncRoutine->>+State:GetValidatorSet
+    State-->>-SyncRoutine: 
 
     SyncRoutine->>SyncRoutine:Verify(block.qc, ValidatorSet)
 
-    SyncRoutine->>BlockApplier:ApplyBlock
-    BlockApplier-->>SyncRoutine: 
+    SyncRoutine->>+ApplyBlockRoutine:ApplyBlock
+    ApplyBlockRoutine-->>-SyncRoutine: 
 
-    Note left of BlockApplier: Tells if it's valid block and what are the  <br />changes to be made to the state
+    Note left of ApplyBlockRoutine: Tells if it's valid block and what are the  <br />changes to be made to the state
     SyncRoutine->>State:Update
 
     Note left of State: ValidatorSet should be updated here
     SyncRoutine->>Persistence:MarkBlockAsApplied
 
     SyncRoutine->>SyncRoutine:Wait(until block downloaded)
-    Note left of BlockApplier: Wait for the next block to apply<br /> if it's not downloaded yet
+    Note left of ApplyBlockRoutine: Wait for the next block to apply<br /> if it's not downloaded yet
 
     SyncRoutine->>SyncRoutine:If all blocks applied:<br />SignalSyncEnd
     Note right of SyncRoutine: StateSync has finished<br />Switch to consensus mode
@@ -301,9 +300,8 @@ In this mode, the current node is up to date w.r.t. the latest block applied by 
 
 This process is driven by:
 * A pace maker, that alerts the consensus flow about key timings in the block production process
-  * `MinBlockTime`: The earliest time a leader node could reap the mempool and start proposing a new block
-  * `RoundTimeout`: How much time a round is allowed to take before calling for another one
-  * Pacemaker uses a local clock and a node is only aware of the global pace through new round events
+  * `MinBlockTime`: The earliest time a leader node should reap the mempool and start proposing a new block
+  * `RoundTimeout`: The amount time a replicas wait before starting a new round
 * A random but deterministic process to elect the leader of each round
   * Given a unique random seed known to all validators and information about the current (height, round) being validated, any validator is able to know who is the leader without needing to communicate with others
   * The leader election strategy aims to give validators a chance of leading the round proportional to their stake
