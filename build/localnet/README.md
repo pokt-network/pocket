@@ -24,7 +24,6 @@ This guide shows how to deploy a LocalNet using [pocket-operator](https://github
 - [Debug with dlv](#debug-with-dlv)
   - [k8s LocalNet: Connect to a node debugging server](#k8s-localnet-connect-to-a-node-debugging-server)
     - [Configure VSCode debugger](#configure-vscode-debugger)
-  - [docker-compose based LocalNet](#docker-compose-based-localnet)
   - [Debug tests](#debug-tests)
 - [Troubleshooting](#troubleshooting)
   - [Why?](#why)
@@ -245,7 +244,20 @@ Then you have just to set your breakpoints and start the debugging session (no n
 
 [Watch demo](https://github.com/pokt-network/pocket/assets/231488/3525161f-2098-488a-8f36-8747e40320a6)
 
-### docker-compose based LocalNet
+k8s runs liveness and readiness checks will restart the pods that are not responsive. In order to not have the debugging session dropped because of the pod restarting, you have to comment `livenessProbe` and `readinessProbe` sections in `charts/pocket/templates/statefulset.yaml`
+
+```yaml
+# Comment this section disable liveness checks for debugging
+livenessProbe:
+  httpGet:
+    path: /v1/health
+    port: rpc
+# Comment this section disable readiness checks for debugging
+readinessProbe:
+  httpGet:
+    path: /v1/health
+    port: rpc
+```
 
 ### Debug tests
 
