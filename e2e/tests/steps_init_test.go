@@ -211,7 +211,7 @@ func (s *rootSuite) TheNetworkCommitsTheTransactions() {
 	}
 
 	// trigger the next view
-	_, err := s.validator.RunCommand("dui", "TriggerNextView")
+	_, err := s.node.RunCommand("Debug", "TriggerView")
 	require.NoError(s, err)
 
 	// Make a copy of the pendingTxs slice to keep track of the transactions still pending
@@ -227,7 +227,7 @@ func (s *rootSuite) TheNetworkCommitsTheTransactions() {
 		for _, tx := range remainingTxs {
 
 			// check if the tx has been committed
-			res, err := s.validator.RunCommand("query", "tx", tx)
+			res, err := s.node.RunCommand("query", "tx", tx)
 			if err != nil {
 				e2eLogger.Info().Msgf("failed to query tx %s: %s", tx, err.Error())
 				stillPendingTxs = append(stillPendingTxs, tx)

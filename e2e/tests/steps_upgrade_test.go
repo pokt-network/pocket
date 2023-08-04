@@ -14,7 +14,7 @@ import (
 )
 
 func (s *rootSuite) TheUserSubmitsAMajorProtocolUpgrade() {
-	res, err := s.validator.RunCommand("query", "upgrade")
+	res, err := s.node.RunCommand("query", "upgrade")
 	require.NoError(s, err)
 
 	var qur rpc.QueryUpgradeResponse
@@ -32,7 +32,7 @@ func (s *rootSuite) TheUserSubmitsAMajorProtocolUpgrade() {
 	newVersion, err := semver.Parse(qur.Version)
 	require.NoError(s, err)
 	newVersion.Major++
-	res, err = s.validator.RunCommand("gov", "upgrade", test_artifacts.DefaultParams().AclOwner, newVersion.String(), fmt.Sprint(qur.Height+1))
+	res, err = s.node.RunCommand("gov", "upgrade", test_artifacts.DefaultParams().AclOwner, newVersion.String(), fmt.Sprint(qur.Height+1))
 	require.NoError(s, err)
 
 	// TECHBDEBT: cli outputs debug logs last non-blank line is our answer
@@ -47,12 +47,12 @@ func (s *rootSuite) TheUserSubmitsAMajorProtocolUpgrade() {
 	// ensure it is a valid sha256 hash
 	require.Regexp(s, "^([a-f0-9]{64})$", answer, "invalid tx hash")
 	s.pendingTxs = append(s.pendingTxs, answer)
-	s.validator.result = res
+	s.node.result = res
 }
 
 func (s *rootSuite) TheSystemReachesTheUpgradeHeight() {
 	for {
-		res, err := s.validator.RunCommand("query", "upgrade")
+		res, err := s.node.RunCommand("query", "upgrade")
 		require.NoError(s, err)
 
 		// parse into QueryUpgradeResponse
