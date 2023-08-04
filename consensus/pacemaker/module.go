@@ -270,9 +270,14 @@ func (m *pacemaker) NewHeight() {
 
 // StartMinBlockTimeDelay should be called when a delay should be introduced into proposing a new block
 func (m *pacemaker) StartMinBlockTimeDelay() {
+	if m.debug.manualMode {
+		m.logger.Info().Msg("Manual mode is enabled. Not starting block time delay.")
+		return
+	}
+
 	// Discard any previous timer if one exists
 	if m.prepareStepDelayer.cancelFunc != nil {
-		m.logger.Warn().Msg("RegisterMinBlockTimeDelay has an existing timer which should not happen. Releasing for now...")
+		m.logger.Warn().Msg("StartMinBlockTimeDelay has an existing timer which should not happen. Releasing for now...")
 		m.prepareStepDelayer.cancelFunc()
 	}
 
@@ -320,6 +325,11 @@ func (m *pacemaker) StartMinBlockTimeDelay() {
 //   - If a late message is received AFTER the a block is marked as proposed by another call, the late message is discarded
 //   - Reads and assignments to pacemaker.prepareStepDelayer state are protected by a mutex
 func (m *pacemaker) DelayBlockPreparation() bool {
+	if m.debug.manualMode {
+		m.logger.Info().Msg("Manual mode is enabled. Not delaying block preparation.")
+		return true
+	}
+
 	m.prepareStepDelayer.m.Lock()
 
 	if m.prepareStepDelayer.shouldProposeBlock {
