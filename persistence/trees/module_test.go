@@ -15,7 +15,6 @@ import (
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 )
 
-// DISCUSS: This is duplicated from inside trees package. Is it worth exporting or is it better as duplicate code?
 var stateTreeNames = []string{
 	"root",
 	"app",
