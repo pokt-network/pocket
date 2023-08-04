@@ -254,7 +254,7 @@ _Note: We do not detail how individual transactions are applied or how state is 
   * By applying each block, the validator set is updated (validators joining or leaving), starting from genesis validator set for any new node
 * With this chain of trust form a total of `3t+1` validators, where at least `2t+1` validators are honest and live. A synching node systematically detects invalid blocks
   * No malicious or faulty node could inject an alternative block without making at least `2t+1` validators sign it
-  * The persistence layer is mainly a cache for the block application, so a node won't restart block application from genesis each time it's rebooted
+  * The persistence layer is used as a resume point for the block application, so a node won't restart block application from genesis each time it's rebooted
 * When the routine applies `NetworkCurrentHeight`, it signals it so the node could switch to `consensus` mode. Meanwhile, it waits to apply a new downloaded block
 
 ```mermaid
@@ -314,6 +314,7 @@ This process is driven by:
 The pace maker ensures minimum block production time with the aim to have a constant production pace.
 * Adding a delay instead of directly proposing a block makes the the process concurrent.
   * It ensures that the block proposal is done only once after each `NewRound` step
+* Minimum block production time behavior is automatically disabled when the consensus is in debug mode with manual mode enabled (Manual next view triggering)
 * When the leader gathers enough `NewRound` messages from replicas to propose a block, a first call to propose a block is made
   * The proposal attempt may happen before `MinBlockTime` which the `PaceMaker` will delay.
   * While delayed, more `NewRound` messages may come-in and the node will use the higher QC obtained by these late messages to propose the block (discards the previous QC).
