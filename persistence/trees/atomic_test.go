@@ -22,7 +22,12 @@ const (
 	h1 = "7d5712ea1507915c40e295845fa58773baa405b24b87e9d99761125d826ff915"
 )
 
-var testKey = []byte("fiz")
+var (
+	testFoo = []byte("foo")
+	testBar = []byte("bar")
+	testKey = []byte("fiz")
+	testVal = []byte("buz")
+)
 
 func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -49,7 +54,7 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 
 	// insert test data into every tree
 	for _, treeName := range stateTreeNames {
-		err := ts.merkleTrees[treeName].tree.Update([]byte("foo"), []byte("bar"))
+		err := ts.merkleTrees[treeName].tree.Update(testFoo, testBar)
 		require.NoError(t, err)
 	}
 
@@ -82,7 +87,7 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 
 	// insert additional test data into all of the trees
 	for _, treeName := range stateTreeNames {
-		require.NoError(t, ts.merkleTrees[treeName].tree.Update(testKey, []byte("buz")))
+		require.NoError(t, ts.merkleTrees[treeName].tree.Update(testKey, testVal))
 	}
 
 	// rollback the changes made to the trees above BEFORE anything was committed
@@ -178,6 +183,7 @@ func TestTreeStore_SaveAndLoad(t *testing.T) {
 
 // creates a new tree store with a tmp directory for nodestore persistence
 // and then starts the tree store and returns its pointer.
+// TECHDEBT(#796) - Organize and dedupe this function into testutil package
 func newTestTreeStore(t *testing.T) *treeStore {
 	t.Helper()
 	ctrl := gomock.NewController(t)
@@ -198,7 +204,7 @@ func newTestTreeStore(t *testing.T) *treeStore {
 	require.NotNil(t, ts.rootTree.tree)
 
 	for _, treeName := range stateTreeNames {
-		err := ts.merkleTrees[treeName].tree.Update([]byte("foo"), []byte("bar"))
+		err := ts.merkleTrees[treeName].tree.Update(testFoo, testBar)
 		require.NoError(t, err)
 	}
 
@@ -211,6 +217,7 @@ func newTestTreeStore(t *testing.T) *treeStore {
 	return ts
 }
 
+// TECHDEBT(#796) - Organize and dedupe this function into testutil package
 func isEmpty(dir string) (bool, error) {
 	f, err := os.Open(dir)
 	if err != nil {

@@ -97,6 +97,10 @@ func (bs *blockStore) Backup(path string) error {
 	return bs.kv.Backup(path)
 }
 
+///////////////
+// Accessors //
+///////////////
+
 func (bs *blockStore) Delete(key []byte) error         { return bs.kv.Delete(key) }
 func (bs *blockStore) Exists(key []byte) (bool, error) { return bs.kv.Exists(key) }
 func (bs *blockStore) GetAll(prefixKey []byte, descending bool) (keys, values [][]byte, err error) {
