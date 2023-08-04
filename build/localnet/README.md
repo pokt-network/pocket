@@ -227,6 +227,8 @@ make kube_config
 
 Add the following to your VSCode debugging configuration file `.vscode/launch.json`. You can add the file from IDE if it does not exist.
 
+![image](https://github.com/pokt-network/pocket/assets/231488/2882008e-3632-469c-9d1e-2f77ad785dfe)
+
 ```json
 {
   "name": "Debug Pocket Node",
