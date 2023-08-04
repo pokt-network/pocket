@@ -16,9 +16,16 @@ This guide shows how to deploy a LocalNet using [pocket-operator](https://github
   - [Interacting w/ LocalNet](#interacting-w-localnet)
     - [Make Targets](#make-targets)
   - [Addresses and keys on LocalNet](#addresses-and-keys-on-localnet)
+    - [Applications staked on LocalNet](#applications-staked-on-localnet)
+    - [Servicers staked on LocalNet](#servicers-staked-on-localnet)
 - [How to change configuration files](#how-to-change-configuration-files)
   - [Overriding default values for localnet with Tilt](#overriding-default-values-for-localnet-with-tilt)
 - [How does it work?](#how-does-it-work)
+- [Debug with dlv](#debug-with-dlv)
+  - [k8s LocalNet: Connect to a node debugging server](#k8s-localnet-connect-to-a-node-debugging-server)
+    - [Configure VSCode debugger](#configure-vscode-debugger)
+  - [docker-compose based LocalNet](#docker-compose-based-localnet)
+  - [Debug tests](#debug-tests)
 - [Troubleshooting](#troubleshooting)
   - [Why?](#why)
   - [Force Trigger an Update](#force-trigger-an-update)
@@ -210,17 +217,17 @@ Tilt continuously monitors files on local filesystem in [specific directories](T
 
 ### k8s LocalNet: Connect to a node debugging server
 
-LocalNet Pocket nodes have a dlv debugging server opened on port 7081. In order to connect a debugging client (VSCode, GoLand) and be able to set breakpoints, we need to setup a tunnel with the pod we want to debug.
+LocalNet Pocket nodes have a `dlv` debugging server opened on port `7081`. In order to connect a debugging client (VSCode, GoLand) and be able to set breakpoints, we need to setup a tunnel to the pod we want to debug.
 
-```
-kubectl port-forward validator-001-pocket-0 7081:7081
+```bash
+make kube_config
 ```
 
 #### Configure VSCode debugger
 
-Add the following to VSCode `launch.json` configuration
+Add the following to your VSCode debugging configuration file `.vscode/launch.json`. You can add the file from IDE if it does not exist.
 
-```
+```json
 {
   "name": "Debug Pocket Node",
   "type": "go",
