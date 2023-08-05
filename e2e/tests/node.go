@@ -5,6 +5,7 @@ package e2e
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
@@ -62,6 +63,9 @@ func (n *nodePod) RunCommandOnHost(rpcUrl string, args ...string) (*commandResul
 		"--remote_cli_url=" + rpcUrl,
 	}
 	args = append(base, args...)
+
+	e2eLogger.Debug().Msgf("Running command: kubectl %s", strings.Join(args, " "))
+
 	cmd := exec.Command("kubectl", args...)
 	r := &commandResult{}
 	out, err := cmd.Output()

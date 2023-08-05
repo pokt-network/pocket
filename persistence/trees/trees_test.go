@@ -37,7 +37,7 @@ var (
 )
 
 const (
-	treesHash1 = "5282ee91a3ec0a6f2b30e4780b369bae78c80ef3ea40587fef6ae263bf41f244"
+	treesHash1 = "764f122ba41041ff583c02e922abe698f7148ea30ff0d32c78315538e337a3a5"
 )
 
 func TestTreeStore_Update(t *testing.T) {
