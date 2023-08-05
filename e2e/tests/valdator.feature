@@ -12,6 +12,9 @@ Feature: Validator Namespace
     When the user stakes their validator with amount 150000000001 uPOKT
     Then the user should be able to see standard output containing ""
     And the validator should have exited without error
+    And the user runs the command "query UnconfirmedTxs"
+    Then the user should be able to see standard output containing "TODO assert on output properly here"
+    And the validator should have exited without error
 
   Scenario: User Can Unstake An Address
     Given the user has a validator
