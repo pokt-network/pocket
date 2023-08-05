@@ -48,7 +48,7 @@ All necessary dependencies, except Docker and Kubernetes cluster, are installed 
 3. `Kubernetes cluster`: refer to [Choosing Kubernetes Distribution](#choosing-kubernetes-distribution) section for more details.
 4. `kubectl`: CLI is required and should be configured to access the cluster. This should happen automatically if using Docker Desktop, Rancher Desktop, k3s, k3d, minikube, etc.
 5. [helm](https://helm.sh/docs/intro/install): required to template the YAML manifests for the dependencies (e.g., Postgres, Grafana). Installation instructions available.
-6. [rsync](https://www.hostinger.com/tutorials/how-to-use-rsync): required to for some extensions used with `Tilt`; https://github.com/tilt-dev/tilt-extensions/tree/master/syncback#usage
+6. [rsync](https://www.hostinger.com/tutorials/how-to-use-rsync): required to for some extensions used with `Tilt`; <https://github.com/tilt-dev/tilt-extensions/tree/master/syncback#usage>
 
 ### Choosing Kubernetes Distribution
 
@@ -199,6 +199,9 @@ cat <<EOF > charts/pocket/pocket-validator-overrides.yaml
 config:
   rpc:
     use_cors: true
+  logger:
+    level: debug
+    format: pretty
 EOF
 ```
 

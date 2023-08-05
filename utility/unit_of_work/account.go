@@ -17,10 +17,16 @@ import (
 func (u *baseUtilityUnitOfWork) getAccountAmount(address []byte) (*big.Int, coreTypes.Error) {
 	amountStr, err := u.persistenceReadContext.GetAccountAmount(address, u.height)
 	if err != nil {
+		if e := u.logger.Trace(); e.Enabled() {
+			e.Err(err).Msg("failed to get account amount from persistence read context")
+		}
 		return nil, coreTypes.ErrGetAccountAmount(err)
 	}
 	amount, err := utils.StringToBigInt(amountStr)
 	if err != nil {
+		if e := u.logger.Trace(); e.Enabled() {
+			e.Err(err).Msg("failed to convert string to big int amountStr: " + amountStr)
+		}
 		return nil, coreTypes.ErrStringToBigInt(err)
 	}
 	return amount, nil

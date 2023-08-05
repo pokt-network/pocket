@@ -100,9 +100,16 @@ func (uow *leaderUtilityUnitOfWork) reapMempool(txMempool mempool.TXMempool, max
 			break // we've reached our max
 		}
 
+		txHash, err := tx.Hash()
+
+		if err != nil {
+			uow.logger.Err(err).Msg("Error hashing transaction during mempool reaping")
+			return nil, err
+		}
+
 		idxTx, err := uow.HandleTransaction(tx, txIdx)
 		if err != nil {
-			uow.logger.Err(err).Msg("Error handling the transaction")
+			uow.logger.Err(err).Msgf("Error handling transaction during mempool reaping: %s", txHash)
 			// TODO(#327): Properly implement 'unhappy path' for save points
 			if err := uow.revertToLastSavepoint(); err != nil {
 				return nil, err

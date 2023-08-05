@@ -132,7 +132,7 @@ WORKDIR /
 docker_build_with_restart(
     "client-image",
     root_dir,
-    dockerfile_contents="""FROM debian:bullseye
+    dockerfile_contents="""FROM debian:bookworm
 RUN apt-get update && apt-get install -y procps bash-completion jq
 RUN echo "source /etc/bash_completion" >> ~/.bashrc
 # tail -n +2 removes the first line of the completion script since the CLI spits out some logs

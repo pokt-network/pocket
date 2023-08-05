@@ -210,10 +210,6 @@ func (s *rootSuite) TheNetworkCommitsTheTransactions() {
 		require.FailNow(s, "no pending transactions to commit")
 	}
 
-	// trigger the next view
-	_, err := s.node.RunCommand("Debug", "TriggerView")
-	require.NoError(s, err)
-
 	// Make a copy of the pendingTxs slice to keep track of the transactions still pending
 	remainingTxs := make([]string, len(s.pendingTxs))
 	copy(remainingTxs, s.pendingTxs)

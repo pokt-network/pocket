@@ -39,7 +39,14 @@ func (p *PostgresContext) InitGenesisParams(params *genesis.Params) error {
 	if p.Height != 0 {
 		return fmt.Errorf("cannot initialize params at height %d", p.Height)
 	}
-	_, err := tx.Exec(ctx, types.InsertParams(params, p.Height))
+
+	sql := types.InsertParams(params, p.Height)
+
+	if e := p.logger.Trace(); e.Enabled() {
+		e.Msg("initializing genesis params: " + sql)
+	}
+
+	_, err := tx.Exec(ctx, sql)
 	if err != nil {
 		return err
 	}

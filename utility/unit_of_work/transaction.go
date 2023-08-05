@@ -16,6 +16,9 @@ import (
 func (u *baseUtilityUnitOfWork) HandleTransaction(tx *coreTypes.Transaction, index int) (*coreTypes.IndexedTransaction, coreTypes.Error) {
 	msg, err := u.basicValidateTransaction(tx)
 	if err != nil {
+		if e := u.logger.Debug(); e.Enabled() {
+			u.logger.Error().Err(err).Msg("basicValidateTransaction failed")
+		}
 		return nil, err
 	}
 	msgHandlingResult := u.handleMessage(msg)
@@ -28,6 +31,9 @@ func (u *baseUtilityUnitOfWork) basicValidateTransaction(tx *coreTypes.Transacti
 	// Check if the transaction has a valid message
 	msg, err := u.validateTxMessage(tx)
 	if err != nil {
+		if e := u.logger.Debug(); e.Enabled() {
+			e.Err(err).Msg("validateTxMessage failed")
+		}
 		return nil, err
 	}
 
@@ -41,6 +47,9 @@ func (u *baseUtilityUnitOfWork) basicValidateTransaction(tx *coreTypes.Transacti
 	// Validate that the signer has a valid signature
 	address, err = u.validateTxSignature(address, msg)
 	if err != nil {
+		if e := u.logger.Debug(); e.Enabled() {
+			e.Err(err).Msg("validateTxSignature failed")
+		}
 		return nil, err
 	}
 	// Update the address of the message signer based on the validated signature
@@ -49,6 +58,9 @@ func (u *baseUtilityUnitOfWork) basicValidateTransaction(tx *coreTypes.Transacti
 	// Validate that the signer has enough funds to pay the fee of the message signed
 	// and deduct the fee from the signer's account if so.
 	if err := u.validateAndDeductTxFees(address, msg); err != nil {
+		if e := u.logger.Debug(); e.Enabled() {
+			e.Err(err).Msg("validateAndDeductTxFees failed")
+		}
 		return nil, err
 	}
 
@@ -90,10 +102,16 @@ func (u *baseUtilityUnitOfWork) validateAndDeductTxFees(address crypto.Address, 
 	// Retrieve the amounts and fees
 	fee, err := u.getFee(msg, msg.GetActorType())
 	if err != nil {
+		if e := u.logger.Debug(); e.Enabled() {
+			e.Err(err).Msg("getFee failed for address: " + address.ToString())
+		}
 		return err
 	}
 	accountAmount, err := u.getAccountAmount(address)
 	if err != nil {
+		if e := u.logger.Debug(); e.Enabled() {
+			e.Err(err).Msg("getAccountAmount failed for address: " + address.ToString())
+		}
 		return coreTypes.ErrGetAccountAmount(err)
 	}
 
