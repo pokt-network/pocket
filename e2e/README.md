@@ -38,7 +38,7 @@ Feature: Example Namespace
 
   Scenario: User Needs Example
     Given the user has a node
-    When the user runs the command "example"
+    When the user runs the command with no error "example"
     Then the user should be able to see standard output containing "Example Output"
     And the pocket client should have exited without error
 ```

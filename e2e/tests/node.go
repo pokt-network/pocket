@@ -63,18 +63,23 @@ func (n *nodePod) RunCommandOnHost(rpcUrl string, args ...string) (*commandResul
 		"--remote_cli_url=" + rpcUrl,
 	}
 	args = append(base, args...)
-
-	e2eLogger.Debug().Msgf("Running command: kubectl %s", strings.Join(args, " "))
+	cmdStr := strings.Join(args, " ")
+	e2eLogger.Debug().Msgf("Running command: kubectl %s", cmdStr)
 
 	cmd := exec.Command("kubectl", args...)
 	r := &commandResult{}
 	out, err := cmd.Output()
-	if err != nil {
-		return nil, err
-	}
 	r.Stdout = string(out)
 	n.result = r
 	// IMPROVE: make targetPodName configurable
 	n.targetPodName = targetDevClientPod
-	return r, nil
+
+	if err != nil {
+		// unpack ExitError to get stderr
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			r.Stderr = string(exitErr.Stderr)
+		}
+	}
+	e2eLogger.Debug().Str("stderr", r.Stderr).Err(err).Msgf("command result: %s", string(out))
+	return r, err
 }

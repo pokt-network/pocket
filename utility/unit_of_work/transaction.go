@@ -77,6 +77,10 @@ func (u *baseUtilityUnitOfWork) validateTxMessage(tx *coreTypes.Transaction) (ty
 	if !ok {
 		return nil, coreTypes.ErrDecodeMessage(fmt.Errorf("not a supported message type"))
 	}
+	// Validate the message the same as the client is expected to
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, err
+	}
 	return msg, nil
 }
 

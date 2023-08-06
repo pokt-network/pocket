@@ -2,7 +2,7 @@ Feature: Validator Namespace
 
   Scenario: User Wants Help Using The Validator Command
     Given the user has a node
-    When the user runs the command "Validator help"
+    When the user runs the command with no error "Validator help"
     Then the user should be able to see standard output containing "Available Commands"
     And the node should have exited without error
 

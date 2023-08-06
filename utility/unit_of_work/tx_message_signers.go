@@ -89,8 +89,4 @@ func (u *baseUtilityUnitOfWork) getPruneIBCStoreSingerCandidates(msg *ibcTypes.P
 	return [][]byte{msg.Signer}, nil
 }
 
-func (u *baseUtilityUnitOfWork) getMessageUpgradeSignerCandidates(msg *typesUtil.MessageUpgrade) ([][]byte, coreTypes.Error) {
-	return [][]byte{msg.Signer}, nil
-}
-
 // TODO: 0xbigboss MessageCancelUpgrade

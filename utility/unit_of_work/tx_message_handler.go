@@ -2,8 +2,10 @@ package unit_of_work
 
 import (
 	"encoding/hex"
+	"errors"
 	"math/big"
 
+	"github.com/blang/semver/v4"
 	ibcTypes "github.com/pokt-network/pocket/ibc/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -242,13 +244,33 @@ func (u *baseUtilityUnitOfWork) handlePruneIBCStore(message *ibcTypes.PruneIBCSt
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) handleMessageUpgrade(message *typesUtil.MessageUpgrade) coreTypes.Error {
-	u.logger.Debug().Str("version", message.Version).Int64("height", message.Height).Msg("setting upgrade")
-
-	// validate new upgrade
-
-	if err := u.persistenceRWContext.SetUpgrade(hex.EncodeToString(message.Signer), message.Version, message.Height); err != nil {
-		return coreTypes.ErrSettingUpgrade(err)
+func (u *baseUtilityUnitOfWork) handleMessageUpgrade(msg *typesUtil.MessageUpgrade) coreTypes.Error {
+	u.logger.Debug().Str("version", msg.Version).Int64("height", msg.Height).Msg("setting upgrade")
+	if msg.Height <= u.height {
+		return coreTypes.ErrSettingUpgrade(errors.New("upgrade height must be greater than current height"))
+	}
+	ver, err := semver.Parse(msg.Version)
+	if err != nil {
+		return coreTypes.ErrInvalidProtocolVersion(msg.Version)
+	}
+	curStr, err := u.persistenceRWContext.GetVersionAtHeight(msg.Height)
+	if err != nil {
+		return coreTypes.ErrSettingUpgrade(errors.Join(err, errors.New("getting current version")))
+	}
+	cur, err := semver.Parse(curStr)
+	if err != nil {
+		return coreTypes.ErrSettingUpgrade(errors.Join(err, errors.New("parsing current version")))
+	}
+	// ensure version is not too large of a jump
+	if ver.Major-cur.Major > 1 {
+		return coreTypes.ErrSettingUpgrade(errors.Join(err, errors.New("major version jump too large")))
+	}
+	// ensure version is greater than current
+	if ver.LTE(cur) {
+		return coreTypes.ErrSettingUpgrade(errors.Join(err, errors.New("version must be greater than current")))
+	}
+	if err := u.persistenceRWContext.SetUpgrade(hex.EncodeToString(msg.Signer), msg.Version, msg.Height); err != nil {
+		return coreTypes.ErrSettingUpgrade(errors.Join(err, errors.New("setting upgrade")))
 	}
 	return nil
 }

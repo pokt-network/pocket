@@ -76,7 +76,7 @@ func TestFeatures(t *testing.T) {
 
 func (s *rootSuite) TheUserHasANode() {
 	res, err := s.node.RunCommand("help")
-	require.NoErrorf(s, err, res.Stderr)
+	require.NoErrorf(s, err, res.Stderr, "failed to run command: 'help' due to error: %s", err)
 	s.node.result = res
 }
 
@@ -84,11 +84,42 @@ func (s *rootSuite) TheNodeShouldHaveExitedWithoutError() {
 	require.NoError(s, s.node.result.Err)
 }
 
-func (s *rootSuite) TheUserRunsTheCommand(cmd string) {
+func (s *rootSuite) TheUserRunsTheCommandWithNoError(cmd string) {
 	cmds := strings.Split(cmd, " ")
 	res, err := s.node.RunCommand(cmds...)
-	require.NoError(s, err)
+	require.NoError(s, err, fmt.Sprintf("failed to run command: '%s' due to error: %s", cmd, err))
 	s.node.result = res
+}
+
+func (s *rootSuite) TheUserRunsTheCommandWithError(cmd string) {
+	cmds := strings.Split(cmd, " ")
+	res, err := s.node.RunCommand(cmds...)
+	require.Error(s, err, fmt.Sprintf("expected error running command: '%s'", cmd))
+	s.node.result = res
+}
+
+func (s *rootSuite) TheUserSubmitsTheTransaction(cmd string) {
+	s.TheUserRunsTheCommandWithNoError(cmd)
+	// TECHBDEBT: cli outputs debug logs last non-blank line is our answer
+	var lines = strings.Split(s.node.result.Stdout, "\n")
+	var answer string
+	for i := len(lines) - 1; i >= 0; i-- {
+		if lines[i] != "" {
+			answer = lines[i]
+			break
+		}
+	}
+	// ensure it is a valid sha256 hash
+	require.Regexp(s, "^([a-f0-9]{64})$", answer, "invalid tx hash")
+	s.pendingTxs = append(s.pendingTxs, answer)
+}
+
+func (s *rootSuite) TheUserQueriesTheTransaction(cmd string) {
+	if len(s.pendingTxs) == 0 {
+		e2eLogger.Info().Msg("no pending transactions to query")
+		require.FailNow(s, "no pending transactions to query")
+	}
+	s.TheUserRunsTheCommandWithNoError("query tx " + s.pendingTxs[len(s.pendingTxs)-1])
 }
 
 // TheDeveloperRunsTheCommand is similar to TheUserRunsTheCommand but exclusive to `Debug` commands
@@ -199,8 +230,7 @@ func (s *rootSuite) ShouldBeAtHeight(pod string, height int64) {
 
 	res := getResponseFromStdout[expectedResponse](s, resRaw.Stdout, validate)
 	require.NotNil(s, res)
-
-	require.Equal(s, height, *res.Height)
+	require.Equal(s, height, *res.Height, "height mismatch")
 }
 
 // TheNetworkCommitsTheTransactions is a step that triggers the next view and verifies that all pending transactions are committed
@@ -261,6 +291,10 @@ func (s *rootSuite) TheNetworkCommitsTheTransactions() {
 
 func (s *rootSuite) TheUserShouldBeAbleToSeeStandardOutputContaining(arg1 string) {
 	require.Contains(s, s.node.result.Stdout, arg1)
+}
+
+func (s *rootSuite) TheUserShouldBeAbleToSeeStandardErrorContaining(arg1 string) {
+	require.Contains(s, s.node.result.Stderr, arg1)
 }
 
 func (s *rootSuite) TheUserStakesTheirValidatorWithAmountUpokt(amount int64) {

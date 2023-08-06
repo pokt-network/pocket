@@ -4,7 +4,7 @@ Feature: Upgrade Protocol
     Given the network is at genesis
     And the network has "4" actors of type "Validator"
     And "validator-001" should be at height "0"
-    And the user runs the command "query upgrade"
+    And the user runs the command with no error "query upgrade"
     Then the user should be able to see standard output containing "<version>"
 
     Examples:
@@ -16,33 +16,49 @@ Feature: Upgrade Protocol
     And the network has "4" actors of type "Validator"
     And "validator-001" should be at height "0"
     And the user is an ACL Owner
-    When the user submits a major protocol upgrade
-    And the network commits the transactions
-    When the user runs the command "query upgrade"
-    Then the user should be able to see the new version
+    When the user runs the command with no error "gov upgrade da034209758b78eaea06dd99c07909ab54c99b45 2.0.0 1"
+    And the developer runs the command "TriggerView"
+    And the developer waits for "1000" milliseconds
+    And "validator-001" should be at height "1"
+    And the user runs the command with no error "query upgrade"
+    Then the user should be able to see standard output containing "2.0.0"
 
-  Scenario: ACL Owner Submits an Invalid Protocol Upgrade Using CLI
+  Scenario: ACL Owner Fails Basic Validation Submitting a Protocol Upgrade Using CLI
     Given the network is at genesis
     And the network has "4" actors of type "Validator"
     And "validator-001" should be at height "0"
     And the user is an ACL Owner
-    And the user has an invalid upgrade protocol command
-    When the user runs the command "gov upgrade"
-    Then the system should validate the command
-    And the system should reject the command due to invalid input
+    When the user runs the command with error "<cmd>"
+    Then the user should be able to see standard error containing "<error>"
 
-  Scenario: ACL Owner Submits a Protocol Upgrade with Too Many Versions Ahead Using CLI
+    Examples:
+      | cmd                                                             | error                                             |
+      | gov upgrade da034209758b78eaea06dd99c07909ab54c99b45 2.0.zxcv 1 | CODE: 149, ERROR: the protocol version is invalid |
+      | gov upgrade da034209758b78eaea06dd99c07909ab54c99b45 new 1      | CODE: 149, ERROR: the protocol version is invalid |
+
+  Scenario: ACL Owner Fails Consensus Validation Submitting a Protocol Upgrade Using CLI
     Given the network is at genesis
     And the network has "4" actors of type "Validator"
+    And "validator-001" should be at height "0"
     And the user is an ACL Owner
-    And the user has a upgrade protocol command with too many versions jump
-    When the user runs the command "gov upgrade"
-    Then the system should validate the command
-    And the system should reject the command due to too many versions ahead
+    When the user runs the command with no error "<cmd>"
+    And the developer runs the command "TriggerView"
+    And the developer waits for "1000" milliseconds
+    And "validator-001" should be at height "1"
+    And the user queries the transaction
+    Then the user should be able to see standard output containing "<error>"
 
-  Scenario: Regular User Submits an Upgrade Using CLI
+    Examples:
+      | cmd                                                          | error                                             |
+      | gov upgrade da034209758b78eaea06dd99c07909ab54c99b45 3.0.0 1 | CODE: 149, ERROR: the protocol version is invalid |
+      | gov upgrade da034209758b78eaea06dd99c07909ab54c99b45 2.0.0 0 | CODE: 149, ERROR: the protocol version is invalid |
+
+  Scenario: Regular User Fails Consensus Validation Submits an Upgrade Using CLI
     Given the network is at genesis
     And the network has "4" actors of type "Validator"
-    When the user submits a major protocol upgrade
-    When the user runs the command "gov upgrade 100.0.0 100000"
-    Then the user should be able to see standard output containing "invalid upgrade proposal: sender is not authorized to submit upgrade proposals"
+    When the user submits the transaction "gov upgrade 00101f2ff54811e84df2d767c661f57a06349b7e 2.0.0 1"
+    And the developer runs the command "TriggerView"
+    And the developer waits for "1000" milliseconds
+    And "validator-001" should be at height "1"
+    And the user queries the transaction
+    Then the user should be able to see standard output containing "CODE: 3, ERROR: the signer of the message is not a proper candidate: da034209758b78eaea06dd99c07909ab54c99b45"

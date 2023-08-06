@@ -270,3 +270,11 @@ func (u *baseUtilityUnitOfWork) getStringParam(paramName string) (string, coreTy
 	}
 	return value, nil
 }
+
+func (u *baseUtilityUnitOfWork) getMessageUpgradeSignerCandidates(_ *typesUtil.MessageUpgrade) ([][]byte, coreTypes.Error) {
+	owner, err := u.getStringParam(typesUtil.AclOwner)
+	if err != nil {
+		return nil, coreTypes.ErrGetParam(typesUtil.AclOwner, err)
+	}
+	return [][]byte{[]byte(owner)}, nil
+}
