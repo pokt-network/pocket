@@ -260,6 +260,7 @@ This is a general set of technical links and recommended reading our team has fo
 - [Joachim Neu](https://www.jneu.net/); focus on the articles under the **Technical reports** section
 - [Decentralized Thoughts by Ittai Ibrahim](about-ittai); The best blog about everything consensus blockchain related by one of the leading researchers in the field (the RSS feed is available [here](https://decentralizedthoughts.github.io/feed.xml))
 - [Polymer Labs](https://polymerlabs.medium.com/); polymer has very easy to digest and easy to read blogs on IBC and interoperability
+- [Julia Evans' blog](https://jvns.ca/)
 
 ## ❌ Non-suggested reads
 
