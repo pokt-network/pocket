@@ -20,7 +20,7 @@ const (
 	committedBlocsChannelSize = 100
 	metadataChannelSize       = 1000
 	blocksChannelSize         = 1000
-	metadataSyncPeriod        = 45 * time.Second
+	metadataSyncPeriod        = 10 * time.Second
 )
 
 type StateSyncModule interface {
@@ -99,10 +99,21 @@ func (m *stateSync) StartSynchronousStateSync() {
 	// Get a view into the state of the network
 	_, maxHeight := m.getAggregatedStateSyncMetadata()
 
+	m.logger.Info().
+		Uint64("current_height", currentHeight).
+		Uint64("max_height", maxHeight).
+		Msg("Synchronous state sync is requesting blocks...")
+
 	// Synchronously request block requests from the current height to the aggregated metadata height
 	// Note that we are using `<=` because:
 	// - maxHeight is the max * committed * height of the network
 	// - currentHeight is the latest * committing * height of the node
+
+	// We do not need to request the genesis block from anyone
+	if currentHeight == 0 {
+		currentHeight += 1
+	}
+
 	for currentHeight <= maxHeight {
 		m.logger.Info().Msgf("Synchronous state sync is requesting block: %d, ending height: %d", currentHeight, maxHeight)
 
@@ -132,7 +143,7 @@ func (m *stateSync) StartSynchronousStateSync() {
 		case blockHeight := <-m.committedBlocksChannel:
 			m.logger.Info().Msgf("State sync received event that block %d is committed!", blockHeight)
 		case <-time.After(blockWaitingPeriod):
-			m.logger.Warn().Msgf("Timed out waiting for block %d to be committed...", currentHeight)
+			m.logger.Error().Msgf("Timed out waiting for block %d to be committed...", currentHeight)
 		}
 
 		// Update the height and continue catching up to the latest known state
@@ -159,8 +170,18 @@ func (m *stateSync) StartSynchronousStateSync() {
 }
 
 func (m *stateSync) HandleStateSyncMetadataResponse(res *typesCons.StateSyncMetadataResponse) {
-	m.logger.Info().Msg("Handling state sync metadata response")
+	m.logger.Info().Fields(map[string]any{
+		"peer_address": res.PeerAddress,
+		"min_height":   res.MinHeight,
+		"max_height":   res.MaxHeight,
+	}).Msg("Handling state sync metadata response")
 	m.metadataReceived <- res
+
+	if res.MaxHeight > 0 && m.GetBus().GetConsensusModule().CurrentHeight() <= res.MaxHeight {
+		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced); err != nil {
+			m.logger.Error().Err(err).Msg("Failed to send state machine event")
+		}
+	}
 }
 
 func (m *stateSync) HandleBlockCommittedEvent(msg *messaging.ConsensusNewHeightEvent) {

@@ -99,6 +99,7 @@ func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEv
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Info().Str("source", consensusFSMHandlerSource).Msg("Node is in Sync Mode. About to start synchronous sync loop...")
 	go m.stateSync.StartSynchronousStateSync()
+	m.logger.Info().Str("source", consensusFSMHandlerSource).Msg("Node is in Sync Mode. Finished synchronous sync loop!!!")
 	return nil
 }
 

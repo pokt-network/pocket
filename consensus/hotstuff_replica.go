@@ -163,7 +163,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 	if err := m.commitBlock(m.block); err != nil {
 		m.logger.Error().Err(err).Msg("Could not commit block")
 		m.paceMaker.InterruptRound("failed to commit block")
-		return
+	return
 	}
 
 	m.paceMaker.NewHeight()

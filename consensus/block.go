@@ -78,6 +78,9 @@ func (m *consensusModule) isBlockInMessageValidBasic(msg *typesCons.HotstuffMess
 
 // refreshUtilityUnitOfWork is a helper that creates a new Utility Unit Of Work and clears/nullifies a previous one if it exists
 func (m *consensusModule) refreshUtilityUnitOfWork() error {
+	// m.m.Lock()
+	// defer m.m.Unlock()
+
 	// Catch-all structure to release the previous utility UOW if it wasn't properly cleaned up.
 	utilityUnitOfWork := m.utilityUnitOfWork
 

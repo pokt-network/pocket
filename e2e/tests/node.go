@@ -21,7 +21,8 @@ var (
 )
 
 func init() {
-	defaultRPCHost := runtime.GetEnv("RPC_HOST", defaults.RandomValidatorEndpointK8SHostname)
+	// defaultRPCHost := runtime.GetEnv("RPC_HOST", defaults.RandomValidatorEndpointK8SHostname)
+	defaultRPCHost := runtime.GetEnv("RPC_HOST", defaults.FullNode1EndpointK8SHostname)
 	defaultRPCURL = fmt.Sprintf("http://%s:%s", defaultRPCHost, defaults.DefaultRPCPort)
 }
 

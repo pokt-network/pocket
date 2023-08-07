@@ -52,6 +52,7 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 				Name: string(coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator),
 				Src: []string{
 					string(coreTypes.StateMachineState_Consensus_SyncMode),
+					// string(coreTypes.StateMachineState_Consensus_Synced),
 				},
 				Dst: string(coreTypes.StateMachineState_Consensus_Synced),
 			},
@@ -60,6 +61,8 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 				Src: []string{
 					string(coreTypes.StateMachineState_Consensus_Pacemaker),
 					string(coreTypes.StateMachineState_Consensus_Synced),
+					// string(coreTypes.StateMachineState_Consensus_Unsynced),
+					string(coreTypes.StateMachineState_Consensus_SyncMode),
 					string(coreTypes.StateMachineState_P2P_Bootstrapped),
 				},
 				Dst: string(coreTypes.StateMachineState_Consensus_Unsynced),

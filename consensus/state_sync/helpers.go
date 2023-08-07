@@ -21,7 +21,9 @@ func (m *stateSync) sendStateSyncMessage(msg *typesCons.StateSyncMessage, dst cr
 // For now, aggregating the messages when requests is good enough.
 func (m *stateSync) getAggregatedStateSyncMetadata() (minHeight, maxHeight uint64) {
 	chanLen := len(m.metadataReceived)
-	m.logger.Info().Msgf("Looping over %d state sync metadata responses", chanLen)
+	m.logger.Info().
+		Int16("num_state_sync_metadata_messages", int16(chanLen)).
+		Msgf("About to loop overstate sync metadata responses")
 
 	for i := 0; i < chanLen; i++ {
 		metadata := <-m.metadataReceived
@@ -32,5 +34,9 @@ func (m *stateSync) getAggregatedStateSyncMetadata() (minHeight, maxHeight uint6
 			minHeight = metadata.MinHeight
 		}
 	}
+	m.logger.Info().Fields(map[string]any{
+		"min_height": minHeight,
+		"max_height": maxHeight,
+	}).Msg("Finished aggregating state sync metadata")
 	return
 }

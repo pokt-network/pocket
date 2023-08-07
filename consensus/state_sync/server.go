@@ -24,6 +24,11 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := metadataReq.PeerAddress
 
+	// No blocks or metadata to share at genesis
+	if consensusMod.CurrentHeight() == 0 {
+		return
+	}
+
 	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
 	prevPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
@@ -80,6 +85,11 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) {
 	consensusMod := m.GetBus().GetConsensusModule()
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := blockReq.PeerAddress
+
+	// No blocks or metadata to share at genesis
+	if consensusMod.CurrentHeight() == 0 {
+		return
+	}
 
 	// Check if the block should be retrievable based on the node's consensus height
 	prevPersistedBlockHeight := consensusMod.CurrentHeight() - 1

@@ -307,19 +307,19 @@ func (u *baseUtilityUnitOfWork) getActorExists(actorType coreTypes.ActorType, ad
 
 // IMPROVE: Need to re-evaluate the design of `Output Address` to support things like "rev-share"
 // and multiple output addresses.
-func (u *baseUtilityUnitOfWork) getActorOutputAddress(actorType coreTypes.ActorType, operator []byte) ([]byte, coreTypes.Error) {
+func (uow *baseUtilityUnitOfWork) getActorOutputAddress(actorType coreTypes.ActorType, operator []byte) ([]byte, coreTypes.Error) {
 	var outputAddr []byte
 	var err error
 
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		outputAddr, err = u.persistenceReadContext.GetAppOutputAddress(operator, u.height)
+		outputAddr, err = uow.persistenceReadContext.GetAppOutputAddress(operator, uow.height)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		outputAddr, err = u.persistenceReadContext.GetFishermanOutputAddress(operator, u.height)
+		outputAddr, err = uow.persistenceReadContext.GetFishermanOutputAddress(operator, uow.height)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-		outputAddr, err = u.persistenceReadContext.GetServicerOutputAddress(operator, u.height)
+		outputAddr, err = uow.persistenceReadContext.GetServicerOutputAddress(operator, uow.height)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		outputAddr, err = u.persistenceReadContext.GetValidatorOutputAddress(operator, u.height)
+		outputAddr, err = uow.persistenceReadContext.GetValidatorOutputAddress(operator, uow.height)
 	default:
 		err = coreTypes.ErrUnknownActorType(actorType.String())
 	}

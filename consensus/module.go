@@ -282,7 +282,7 @@ func (m *consensusModule) loadPersistedState() error {
 	defer readCtx.Release()
 
 	latestHeight, err := readCtx.GetMaximumBlockHeight()
-	if err != nil || latestHeight == 0 {
+	if err != nil {
 		// TODO: Proper state sync not implemented yet
 		return nil
 	}
