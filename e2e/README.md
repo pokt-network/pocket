@@ -7,6 +7,7 @@
   - [Build Tags](#build-tags)
   - [Issue templates](#issue-templates)
 - [Implementation](#implementation)
+- [Keywords](#keywords)
 
 > tl; dr - `make localnet_up` and then `make test_e2e`
 
@@ -35,8 +36,8 @@ Issues can formally define features by attaching an erroring `feature` file to b
 ```gherkin
 Feature: Example Namespace
 
-  Scenario: User Needs Example 
-    Given the user has a validator
+  Scenario: User Needs Example
+    Given the user has a node
     When the user runs the command "example"
     Then the user should be able to see standard output containing "Example Output"
     And the pocket client should have exited without error
@@ -46,7 +47,7 @@ Feature: Example Namespace
 
 The test suite is located in `e2e/tests` and it contains a set of Cucumber feature files and the associated Go tests to run them. `make test_e2e` sees any files named with the pattern `*.feature` in `e2e/tests` and runs them with [godog](https://github.com/cucumber/godog), the Go test runner for Cucumber tests. The LocalNet must be up and running for the E2E test suite to run.
 
-The Validator issues RPC commands on the container by calling `kubectl exec` and targeting the pod in the cluster by name. It records the results of the command including stdout and stderr, allowing for assertions about the results of the command.
+The Node issues RPC commands on the container by calling `kubectl exec` and targeting the pod in the cluster by name. It records the results of the command including stdout and stderr, allowing for assertions about the results of the command.
 
 ```mermaid
 ---
@@ -60,10 +61,26 @@ flowchart TD
         Kubeconfig --> Kubectl
         Kubeconfig --> DevNet
     subgraph E2E [E2E scenarios]
-        Kubectl -- commandResult --> Validator
-        Validator -- args --> Kubectl
+        Kubectl -- commandResult --> Node
+        Node -- args --> Kubectl
     end
     subgraph DevNet [DevNet]
         Runner[E2E Test Runner]
     end
 ```
+
+## Keywords
+
+The keywords below are a summary of the source documentation available [here](https://cucumber.io/docs/gherkin/reference/#keywords).
+
+- **Feature**: This keyword, followed by the name and optional description, is used to describe a feature of the system that you're testing. It should provide a high-level description of a software feature, and to group related scenarios.
+- **Scenario**: This keyword, followed by the name and optional description, is used to describe a particular behavior of the system that you're testing. A feature can have multiple scenarios, and each scenario should follow the 'Given-When-Then' structure.
+- **Given**: This keyword is used to set up a situation or a context. It puts the system in a known state before the user interacts with the system.
+- **When**: This keyword is used to describe an action or event. This is something the user does or the system does.
+- **Then**: This keyword is used to describe an expected outcome or result.
+- **And**, But: These keywords are used when you have more than one Given, When, or Then step. They help to make the specifications more readable.
+- **Background**: This keyword provides the context for the following scenarios. It allows you to add some context to the scenarios in a single place.
+- **Scenario Outline**: This keyword can be used when the same test is performed multiple times with a different combination of values.
+- **Examples**: This keyword is used in conjunction with **Scenario Outline** to provide the values for the test.
+- **Rule**: This keyword is used to represent one business rule that should be implemented. It provides additional information for a feature.
+- **Tags**: This is not a Gherkin keyword but an integral part of organizing your Cucumber features. They are preceded by '@' symbol and can be used before Feature, Scenario, Scenario Outline, or Examples.

@@ -505,7 +505,7 @@ func newTestP2PModule(t *testing.T, bus modules.Bus) modules.P2PModule {
 	return p2pMock
 }
 
-// TECHDEBT: centralise these helper functions in internal/testutils
+// TECHDEBT: centralize these helper functions in internal/testutils
 func newTestRuntimeConfig(t *testing.T) *runtime.Manager {
 	t.Helper()
 	cfg, err := configs.CreateTempConfig(&configs.Config{

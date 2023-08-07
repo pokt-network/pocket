@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	mocks "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/assert"
@@ -13,6 +14,9 @@ import (
 )
 
 func TestEnableActorModules(t *testing.T) {
+	privateKey, err := crypto.GeneratePrivateKey()
+	require.NoError(t, err)
+
 	tests := []struct {
 		name                 string
 		config               *configs.Config
@@ -24,7 +28,10 @@ func TestEnableActorModules(t *testing.T) {
 		{
 			name: "servicer only",
 			config: &configs.Config{
-				Servicer: &configs.ServicerConfig{Enabled: true},
+				Servicer: &configs.ServicerConfig{
+					Enabled:    true,
+					PrivateKey: privateKey.String(),
+				},
 			},
 			expectedNames: []string{"servicer"},
 		},
@@ -46,7 +53,10 @@ func TestEnableActorModules(t *testing.T) {
 			name: "validator and servicer",
 			config: &configs.Config{
 				Validator: &configs.ValidatorConfig{Enabled: true},
-				Servicer:  &configs.ServicerConfig{Enabled: true},
+				Servicer: &configs.ServicerConfig{
+					Enabled:    true,
+					PrivateKey: privateKey.String(),
+				},
 			},
 			expectedNames: []string{"validator", "servicer"},
 		},

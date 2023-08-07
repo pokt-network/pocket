@@ -158,7 +158,7 @@ make docker_loki_install
 1. Spin up the stack
 
 ```bash
-make compose_and_watch
+make lightweight_localnet
 ```
 
 2. Wait a few seconds and **Voila!**

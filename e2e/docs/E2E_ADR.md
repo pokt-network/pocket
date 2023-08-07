@@ -79,7 +79,7 @@ Below is an example of testing the `help` command of the Pocket binary.
 Feature: Root Namespace
 
   Scenario: User Needs Help
-    Given the user has a validator
+    Given the user has a node
     When the user runs the command "help"
     Then the user should be able to see standard output containing "Available Commands"
     And the pocket client should have exited without error
@@ -124,16 +124,16 @@ type PocketClient interface {
 ```
 
 - The `PocketClient` interface is included in the test suite and defines a single function interface with the `RunCommand` method.
-- The `validatorPod` adapter fulfills the `PocketClient` interface and lets us call commands through Kubernetes. This is the main way that tests assemble the environment for later assertions.
+- The `nodePod` adapter fulfills the `PocketClient` interface and lets us call commands through Kubernetes. This is the main way that tests assemble the environment for later assertions.
 
 ```go
-// validatorPod holds the connection information to pod validator-001 for testing
-type validatorPod struct {
+// nodePod holds the connection information to pod validator-001 for testing
+type nodePod struct {
     result *commandResult // stores the result of the last command that was run
 }
 
 // RunCommand runs a command on the pocket binary
-func (v *validatorPod) RunCommand(args ...string) (*commandResult, error) {
+func (v *nodePod) RunCommand(args ...string) (*commandResult, error) {
     base := []string{
         "exec", "-i", "deploy/pocket-v1-cli-client",
         "--container", "pocket",
