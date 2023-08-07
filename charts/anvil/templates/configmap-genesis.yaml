@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "anvil.fullname" . }}-genesis
+  labels:
+    {{- include "anvil.labels" . | nindent 4 }}
+data:
+  # genesis.json for a custom relay chain/service used in E2E tests. This genesis.json is provided as input to the Anvil node, and account and balance
+  #   values are hardcoded in the E2E tests.
+  #
+  #   Genesis sets the following account and balance:
+  #
+  #   account: 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720 : one of the development accounts setup automatically by Anvil
+  #   balance: 400000 : arbitrarily selected value, will be hard-coded in E2E tests
+  genesis.json: |
+    {
+      "chain_id": "test-eth",
+      "difficulty": "1",
+      "gasLimit": "8000000",
+      "alloc": {
+         "0xa0Ee7A142d267C1f36714E4a8F75612F20a79720": { "balance": "400000", "private_key": "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6" }
+      }
+    }

@@ -314,6 +314,16 @@ for x in range(localnet_config["full_nodes"]["count"]):
 
     k8s_resource("full-node-%s-pocket" % formatted_number, labels=["pocket-full-nodes"])
 
+# Provisions anvil node and service for E2E testing
+k8s_yaml(
+    helm(
+        root_dir + "/charts/anvil",
+        name="anvil-node",
+    )
+)
+
+k8s_resource("anvil-node", labels=["anvil-nodes"])
+
 # Exposes grafana
 k8s_resource(
     new_name="grafana",
