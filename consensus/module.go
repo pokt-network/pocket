@@ -25,27 +25,23 @@ import (
 
 var _ modules.ConsensusModule = &consensusModule{}
 
-// TODO: This should be configurable
-const (
-	metadataChannelSize = 1000
-	blocksChannelSize   = 1000
-)
-
 type consensusModule struct {
 	base_modules.IntegrableModule
 
-	privateKey cryptoPocket.Ed25519PrivateKey
+	logger *modules.Logger
 
+	// General configs
 	consCfg      *configs.ConsensusConfig
 	genesisState *genesis.GenesisState
 
-	logger *modules.Logger
+	// The key used for participating in consensus
+	privateKey  cryptoPocket.Ed25519PrivateKey
+	nodeAddress string
 
 	// m is a mutex used to control synchronization when multiple goroutines are accessing the struct and its fields / properties.
-	//
-	// The idea is that you want to acquire a Lock when you are writing values and a RLock when you want to make sure that no other goroutine is changing the values you are trying to read concurrently.
-	//
-	// Locking context should be the smallest possible but not smaller than a single "unit of work".
+	// The idea is that you want to acquire a Lock when you are writing values and a RLock when you want to make sure that no other
+	// goroutine is changing the values you are trying to read concurrently. Locking context should be the smallest possible but not
+	// smaller than a single "unit of work".
 	m sync.RWMutex
 
 	// Hotstuff
@@ -53,9 +49,11 @@ type consensusModule struct {
 	round  uint64
 	step   typesCons.HotstuffStep
 	block  *coreTypes.Block // The current block being proposed / voted on; it has not been committed to finality
-	// TODO(#315): Move the statefulness of `IndexedTransaction` to the persistence module
-	IndexedTransactions []coreTypes.IndexedTransaction // The current block applied transaction results / voted on; it has not been committed to finality
 
+	// Stores messages aggregated during a single consensus round from other validators
+	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
+
+	// Hotstuff safety
 	prepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	lockedQC  *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
 
@@ -63,27 +61,13 @@ type consensusModule struct {
 	leaderId *typesCons.NodeId
 	nodeId   typesCons.NodeId
 
-	nodeAddress string
-
 	// Module Dependencies
-	// IMPROVE(#283): Investigate whether the current approach to how the `utilityUnitOfWork` should be
-	//                managed or changed. Also consider exposing a function that exposes the context
-	//                to streamline how its accessed in the module (see the ticket).
 	utilityUnitOfWork modules.UtilityUnitOfWork
 	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
+	// State Sync
 	stateSync state_sync.StateSyncModule
-
-	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
-
-	// block responses received from peers are collected in this channel
-	blocksReceived chan *typesCons.GetBlockResponse
-
-	// metadata responses received from peers are collected in this channel
-	metadataReceived chan *typesCons.StateSyncMetadataResponse
-
-	serverModeEnabled bool
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -96,13 +80,13 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 		return nil, err
 	}
 
-	paceMakerMod, err := pacemaker.CreatePacemaker(bus)
+	paceMakerMod, err := pacemaker.Create(bus)
 	if err != nil {
 		return nil, err
 	}
 	pm := paceMakerMod.(pacemaker.Pacemaker)
 
-	stateSyncMod, err := state_sync.CreateStateSync(bus)
+	stateSyncMod, err := state_sync.Create(bus)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +114,6 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	for _, option := range options {
 		option(m)
 	}
-
 	bus.RegisterModule(m)
 
 	// Ensure `CurrentHeightProvider` submodule is registered.
@@ -139,38 +122,25 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	}
 
 	runtimeMgr := bus.GetRuntimeMgr()
-
-	consensusCfg := runtimeMgr.GetConfig().Consensus
-
-	m.serverModeEnabled = consensusCfg.ServerModeEnabled
+	m.consCfg = runtimeMgr.GetConfig().Consensus
 
 	genesisState := runtimeMgr.GetGenesis()
 	if err := m.ValidateGenesis(genesisState); err != nil {
 		return nil, fmt.Errorf("genesis validation failed: %w", err)
 	}
-
-	privateKey, err := cryptoPocket.NewPrivateKey(consensusCfg.GetPrivateKey())
-	if err != nil {
-		return nil, err
-	}
-	address := privateKey.Address().String()
-
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
-	if err != nil {
-		return nil, err
-	}
-
-	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
-
-	m.privateKey = privateKey.(cryptoPocket.Ed25519PrivateKey)
-	m.consCfg = consensusCfg
 	m.genesisState = genesisState
 
-	m.nodeId = valAddrToIdMap[address]
-	m.nodeAddress = address
+	// TECHDEBT: Should we use the same private key everywhere (top level config, consensus config, etc...) or should we consolidate them?
+	privateKey, err := cryptoPocket.NewPrivateKey(m.consCfg.GetPrivateKey())
+	if err != nil {
+		return nil, err
+	}
+	m.privateKey = privateKey.(cryptoPocket.Ed25519PrivateKey)
 
-	m.metadataReceived = make(chan *typesCons.StateSyncMetadataResponse, metadataChannelSize)
-	m.blocksReceived = make(chan *typesCons.GetBlockResponse, blocksChannelSize)
+	m.nodeAddress = privateKey.Address().String()
+	if m.updateNodeId() != nil {
+		return nil, err
+	}
 
 	m.initMessagesPool()
 
@@ -200,13 +170,15 @@ func (m *consensusModule) Start() error {
 		return err
 	}
 
-	go m.metadataSyncLoop()
-	go m.blockApplicationLoop()
+	if err := m.stateSync.Start(); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func (m *consensusModule) Stop() error {
+	m.logger.Info().Msg("Stopping consensus module")
 	return nil
 }
 
@@ -287,6 +259,20 @@ func (m *consensusModule) CurrentStep() uint64 {
 	return uint64(m.step)
 }
 
+func (m *consensusModule) GetNodeAddress() string {
+	return m.nodeAddress
+}
+
+func (m *consensusModule) updateNodeId() error {
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		return err
+	}
+	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
+	m.nodeId = valAddrToIdMap[m.nodeAddress]
+	return nil
+}
+
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...
 func (m *consensusModule) loadPersistedState() error {
 	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height
@@ -296,7 +282,7 @@ func (m *consensusModule) loadPersistedState() error {
 	defer readCtx.Release()
 
 	latestHeight, err := readCtx.GetMaximumBlockHeight()
-	if err != nil || latestHeight == 0 {
+	if err != nil {
 		// TODO: Proper state sync not implemented yet
 		return nil
 	}

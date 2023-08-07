@@ -34,9 +34,12 @@ func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 	return nil
 }
 
+// isBlockInMessageValidBasic does basic validation of the block in the hotstuff message such as:
+// - validating if the block could/should be nil
+// - the state hash of the block
+// - the size of the block
 // ADDTEST: Add unit tests specific to block validation
-// IMPROVE: Rename to provide clarity of operation. ValidateBasic() is typically a stateless check not stateful
-func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (bool, error) {
+func (m *consensusModule) isBlockInMessageValidBasic(msg *typesCons.HotstuffMessage) (bool, error) {
 	block := msg.GetBlock()
 	step := msg.GetStep()
 
@@ -73,12 +76,17 @@ func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (b
 	return true, nil
 }
 
-// Creates a new Utility Unit Of Work and clears/nullifies any previous UOW if they exist
+// refreshUtilityUnitOfWork is a helper that creates a new Utility Unit Of Work and clears/nullifies a previous one if it exists
 func (m *consensusModule) refreshUtilityUnitOfWork() error {
+	// m.m.Lock()
+	// defer m.m.Unlock()
+
 	// Catch-all structure to release the previous utility UOW if it wasn't properly cleaned up.
 	utilityUnitOfWork := m.utilityUnitOfWork
+
+	// TECHDEBT: This should, theoretically, never happen. Need to identify all
+	// code paths where it does and fix it.
 	if utilityUnitOfWork != nil {
-		// TODO: This should, ideally, never be called
 		m.logger.Warn().Bool("TODO", true).Msg(typesCons.NilUtilityUOWWarning)
 		if err := utilityUnitOfWork.Release(); err != nil {
 			m.logger.Warn().Err(err).Msg("failed to release utility unit of work")

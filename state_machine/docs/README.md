@@ -66,7 +66,7 @@ These are the main building blocks:
 
 - **P2P_Bootstrapped**: The Consensus module handles `P2P_Bootstrapped` -> triggers a `Consensus_IsUnsynced` event -> transitions to `Consensus_Unsynced`.
 - **Consensus_Unsynced**: Node is out of sync, the Consensus module sends `Consensus_IsSyncing` event -> transitions to `Consensus_SyncMode` to start syncing with the rest of the network.
-- **Consensus_SyncMode**: The Consensus module runs `StartSyncing()` and requests blocks one by one from peers in its address book.
+- **Consensus_SyncMode**: The Consensus module runs `Start()` and requests blocks one by one from peers in its address book.
 - **Node finishes syncing**: When node completes syncing:
   - if the node is a validator, the Consensus module sends `Consensus_IsSyncedValidator` event -> transitions to `Consensus_Pacemaker`.
   - if the node is not a validator, the Consensus module sends `Consensus_IsSyncedNonValidator` event -> transitions to `Consensus_Synced`.

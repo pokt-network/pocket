@@ -10,7 +10,6 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
-// CONSIDERATION(#576): making this part of some new `ConnManager`.
 func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 	evt, err := codec.GetCodec().FromAny(event)
 	if err != nil {

@@ -40,6 +40,7 @@ message QuorumCertificate {
     uint64 height = 1;
     uint64 round = 2;
     HotstuffStep step = 3;
+    // TECHDEBT: Note that there is a circular dependency between the `Block` and `QuorumCertificate` types which we have to think about and resolve.
     core.Block block = 4;
     ThresholdSignature threshold_signature = 5;
 }

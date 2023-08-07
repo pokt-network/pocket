@@ -1,5 +1,7 @@
 package state_machine
 
+// TECHDEBT(#821): Remove the dependency of state sync on FSM, as well as the FSM in general.
+
 import (
 	"context"
 
@@ -45,7 +47,6 @@ func (*stateMachineModule) Create(bus modules.Bus, options ...modules.ModuleOpti
 			if err != nil {
 				m.logger.Fatal().Err(err).Msg("failed to pack state machine transition event")
 			}
-
 			bus.PublishEventToBus(newStateMachineTransitionEvent)
 		},
 	})

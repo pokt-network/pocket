@@ -57,7 +57,8 @@ func init() {
 	clusterManagerCmd.PersistentFlags().StringVar(
 		&flags.RemoteCLIURL,
 		"remote_cli_url",
-		defaults.Validator1EndpointK8SHostname,
+		// defaults.Validator1EndpointK8SHostname,
+		defaults.FullNode1EndpointK8SHostname,
 		"takes a remote endpoint in the form of <protocol>://<host>:<port> (uses RPC Port)",
 	)
 

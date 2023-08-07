@@ -1,5 +1,7 @@
 package state_machine
 
+// TECHDEBT(#821): Remove the dependency of state sync on FSM, as well as the FSM in general.
+
 import (
 	"github.com/looplab/fsm"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -50,6 +52,7 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 				Name: string(coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator),
 				Src: []string{
 					string(coreTypes.StateMachineState_Consensus_SyncMode),
+					// string(coreTypes.StateMachineState_Consensus_Synced),
 				},
 				Dst: string(coreTypes.StateMachineState_Consensus_Synced),
 			},
@@ -58,6 +61,8 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 				Src: []string{
 					string(coreTypes.StateMachineState_Consensus_Pacemaker),
 					string(coreTypes.StateMachineState_Consensus_Synced),
+					// string(coreTypes.StateMachineState_Consensus_Unsynced),
+					string(coreTypes.StateMachineState_Consensus_SyncMode),
 					string(coreTypes.StateMachineState_P2P_Bootstrapped),
 				},
 				Dst: string(coreTypes.StateMachineState_Consensus_Unsynced),

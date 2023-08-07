@@ -6,8 +6,10 @@ const (
 	ConsensusNewHeightEventType     = "pocket.ConsensusNewHeightEvent"
 	StateMachineTransitionEventType = "pocket.StateMachineTransitionEvent"
 
-	// Consensus
-	HotstuffMessageContentType  = "consensus.HotstuffMessage"
+	// Consensus - HotPOKT
+	HotstuffMessageContentType = "consensus.HotstuffMessage"
+
+	// Consensus - State Sync
 	StateSyncMessageContentType = "consensus.StateSyncMessage"
 
 	// Utility

@@ -8,116 +8,72 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
-	// Test preparation
-	clockMock := clock.NewMock()
-	timeReminder(t, clockMock, time.Second)
-
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
-	buses := GenerateBuses(t, runtimeMgrs)
-
-	// Create & start test pocket nodes
-	eventsChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
-	err := StartAllTestPocketNodes(t, pocketNodes)
-	require.NoError(t, err)
-
-	testHeight := uint64(4)
+func TestStateSync_MetadataRequestResponse_Success(t *testing.T) {
+	clockMock, sharedNetworkChannel, pocketNodes := prepareStateSyncTestEnvironment(t)
 
 	// Choose node 1 as the server node
-	// Set server node's height to test height.
 	serverNode := pocketNodes[1]
 	serverNodePeerId := serverNode.GetBus().GetConsensusModule().GetNodeAddress()
-	serverNode.GetBus().GetConsensusModule().SetHeight(testHeight)
+	// Set server node's height to test height.
+	serverNode.GetBus().GetConsensusModule().SetHeight(uint64(4))
 
 	// Choose node 2 as the requester node.
 	requesterNode := pocketNodes[2]
 	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 
-	// Test MetaData Req
-	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
-		Message: &typesCons.StateSyncMessage_MetadataReq{
-			MetadataReq: &typesCons.StateSyncMetadataRequest{
-				PeerAddress: requesterNodePeerAddress,
-			},
-		},
-	}
-	anyProto, err := anypb.New(stateSyncMetaDataReqMessage)
-	require.NoError(t, err)
-
 	// Send metadata request to the server node
-	P2PSend(t, serverNode, anyProto)
+	anyProto := prepareStateSyncGetMetadataMessage(t, requesterNodePeerAddress)
+	send(t, serverNode, anyProto)
 
-	// Start waiting for the metadata request on server node,
-	errMsg := "StateSync Metadata Request"
-	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, 1, 500, false)
+	// Wait for response from the server node
+	receivedMsgs, err := waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, "did not receive response to state sync metadata request", 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_MetadataRes{}))
 	require.NoError(t, err)
 
-	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
+	// Extract the response
+	msg, err := codec.GetCodec().FromAny(receivedMsgs[0])
 	require.NoError(t, err)
-
-	stateSyncMetaDataResMessage, ok := msg.(*typesCons.StateSyncMessage)
+	stateSyncMetaDataResMsg, ok := msg.(*typesCons.StateSyncMessage)
 	require.True(t, ok)
+	stateSyncMetaDataRes := stateSyncMetaDataResMsg.GetMetadataRes()
+	require.NotEmpty(t, stateSyncMetaDataRes)
 
-	metaDataRes := stateSyncMetaDataResMessage.GetMetadataRes()
-	require.NotEmpty(t, metaDataRes)
-
-	require.Equal(t, uint64(4), metaDataRes.MaxHeight)
-	require.Equal(t, uint64(1), metaDataRes.MinHeight)
-	require.Equal(t, serverNodePeerId, metaDataRes.PeerAddress)
+	// Validate the response
+	require.Equal(t, uint64(3), stateSyncMetaDataRes.MaxHeight) // 3 because node sends the last persisted height
+	require.Equal(t, uint64(1), stateSyncMetaDataRes.MinHeight)
+	require.Equal(t, serverNodePeerId, stateSyncMetaDataRes.PeerAddress)
 }
 
-func TestStateSync_ServerGetBlock_Success(t *testing.T) {
-	// Test preparation
-	clockMock := clock.NewMock()
-	timeReminder(t, clockMock, time.Second)
+func TestStateSync_BlockRequestResponse_Success(t *testing.T) {
+	clockMock, sharedNetworkChannel, pocketNodes := prepareStateSyncTestEnvironment(t)
 
-	// Test configs
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
-	buses := GenerateBuses(t, runtimeMgrs)
-
-	// Create & start test pocket nodes
-	eventsChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
-	err := StartAllTestPocketNodes(t, pocketNodes)
-	require.NoError(t, err)
-
-	testHeight := uint64(5)
+	// Choose node 1 as the server node
 	serverNode := pocketNodes[1]
-	serverNode.GetBus().GetConsensusModule().SetHeight(testHeight)
+	// Set server node's height to test height.
+	serverNode.GetBus().GetConsensusModule().SetHeight(uint64(5))
 
 	// Choose node 2 as the requester node
 	requesterNode := pocketNodes[2]
 	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 
-	// Passing Test
-	// Test GetBlock Req
-	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-		Message: &typesCons.StateSyncMessage_GetBlockReq{
-			GetBlockReq: &typesCons.GetBlockRequest{
-				PeerAddress: requesterNodePeerAddress,
-				Height:      1,
-			},
-		},
-	}
-
-	anyProto, err := anypb.New(stateSyncGetBlockMessage)
-	require.NoError(t, err)
+	// Prepare GetBlockRequest
+	stateSyncGetBlockMsg := prepareStateSyncGetBlockMessage(t, requesterNodePeerAddress, 1)
 
 	// Send get block request to the server node
-	P2PSend(t, serverNode, anyProto)
+	send(t, serverNode, stateSyncGetBlockMsg)
 
-	// Start waiting for the get block request on server node, expect to return error
-	errMsg := "StateSync Get Block Request Message"
-	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, 1, 500, false)
+	// Start waiting for the get block response on server node
+	receivedMsg, err := waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, "error waiting on response to a get block request", 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
 	require.NoError(t, err)
 
+	// validate the response
 	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
 	require.NoError(t, err)
 
@@ -128,25 +84,16 @@ func TestStateSync_ServerGetBlock_Success(t *testing.T) {
 	require.NotEmpty(t, getBlockRes)
 
 	require.Equal(t, uint64(1), getBlockRes.Block.GetBlockHeader().Height)
+
+	// IMPROVE: What other data should we validate from the response?
 }
 
-func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
-	// Test preparation
-	clockMock := clock.NewMock()
-	timeReminder(t, clockMock, time.Second)
-
-	// Test configs
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
-	buses := GenerateBuses(t, runtimeMgrs)
-
-	// Create & start test pocket nodes
-	eventsChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
-	err := StartAllTestPocketNodes(t, pocketNodes)
-	require.NoError(t, err)
+func TestStateSync_BlockRequestResponse_FailNonExistingBlock(t *testing.T) {
+	clockMock, sharedNetworkChannel, pocketNodes := prepareStateSyncTestEnvironment(t)
 
 	testHeight := uint64(5)
 
+	// Choose node 1 as the server node and set its height
 	serverNode := pocketNodes[1]
 	serverNode.GetBus().GetConsensusModule().SetHeight(testHeight)
 
@@ -154,140 +101,158 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 	requesterNode := pocketNodes[2]
 	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 
-	// Failing Test
-	// Get Block Req is current block height + 1
-	requestHeight := testHeight + 1
-	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-		Message: &typesCons.StateSyncMessage_GetBlockReq{
-			GetBlockReq: &typesCons.GetBlockRequest{
-				PeerAddress: requesterNodePeerAddress,
-				Height:      requestHeight,
-			},
-		},
-	}
-
-	anyProto, err := anypb.New(stateSyncGetBlockMessage)
-	require.NoError(t, err)
+	// Prepare a get block request for a non existing block (server is only at height 5)
+	stateSyncGetBlockMsg := prepareStateSyncGetBlockMessage(t, requesterNodePeerAddress, testHeight+2)
 
 	// Send get block request to the server node
-	P2PSend(t, serverNode, anyProto)
+	send(t, serverNode, stateSyncGetBlockMsg)
 
 	// Start waiting for the get block request on server node, expect to return error
-	errMsg := "StateSync Get Block Request Message"
-	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, 1, 500, false)
+	errMsg := "expecting to time out waiting on a response from a non existent"
+	_, err := waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, errMsg, 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
 	require.Error(t, err)
 }
 
 func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
+	clockMock, sharedNetworkChannel, pocketNodes := prepareStateSyncTestEnvironment(t)
+
+	// Select node 2 as the unsynched node that will catch up
+	unsyncedNodeId := typesCons.NodeId(pocketNodes[2].GetBus().GetConsensusModule().GetNodeId())
+	unsyncedNode := pocketNodes[unsyncedNodeId]
+	unsyncedNodeHeight := uint64(2)
+	targetHeight := uint64(6)
+
+	// Set the unsynced node to height (2) and rest of the nodes to height (4)
+	unsyncedNode.GetBus().GetConsensusModule().SetHeight(unsyncedNodeHeight)
+	for id, pocketNode := range pocketNodes {
+		consensusMod := pocketNode.GetBus().GetConsensusModule()
+		if id != unsyncedNodeId {
+			consensusMod.SetHeight(targetHeight)
+		}
+		consensusMod.SetStep(uint8(consensus.NewRound))
+		consensusMod.SetRound(uint64(0))
+	}
+
+	// Sanity check unsynched node is at height 2
+	assertHeight(t, unsyncedNodeId, uint64(2), getConsensusNodeState(unsyncedNode).Height)
+
+	// Broadcast metadata to all the others nodes so the node that's behind has a view of the network
+	anyProto := prepareStateSyncGetMetadataMessage(t, unsyncedNode.GetBus().GetConsensusModule().GetNodeAddress())
+	broadcast(t, pocketNodes, anyProto)
+
+	// Make sure the unsynched node has a view of the network
+	receivedMsgs, err := waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, "did not receive response to state sync metadata request", len(pocketNodes), 500, false, nil)
+	require.NoError(t, err)
+	for _, msg := range receivedMsgs {
+		send(t, unsyncedNode, msg)
+	}
+	// IMPROVE: Look into ways to assert on unsynched.MinHeightViewOfNetwork and unsynched.MaxHeightViewOfNetwork
+
+	// Trigger the next round of consensus so the unsynched nodes is prompted to start synching
+	triggerNextView(t, pocketNodes)
+	advanceTime(t, clockMock, 10*time.Millisecond)
+
+	// Wait for proposal messages
+	proposalMsgs, err := waitForNetworkConsensusEvents(t, clockMock, sharedNetworkChannel, typesCons.HotstuffStep(consensus.NewRound), consensus.Propose, numValidators*numValidators, 500, false)
+	require.NoError(t, err)
+
+	// Broadcast the proposal messages to all nodes
+	broadcastMessages(t, proposalMsgs, pocketNodes)
+	advanceTime(t, clockMock, 10*time.Millisecond)
+
+	// TODO: Figure out why we have one extra (non harmful) request at the very beginning
+	_, err = waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, "error waiting on response to a get block request", 1, 5000, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockReq{}))
+	require.NoError(t, err)
+
+	for unsyncedNodeHeight < targetHeight {
+		// Wait for the unsynched node to request the block at the current height
+		blockRequests, err := waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, "error waiting on response to a get block request", 1, 5000, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockReq{}))
+		require.NoError(t, err)
+
+		// Validate the height being requested is correct
+		msg, err := codec.GetCodec().FromAny(blockRequests[0])
+		require.NoError(t, err)
+		heightRequested := msg.(*typesCons.StateSyncMessage).GetGetBlockReq().Height
+		require.Equal(t, unsyncedNodeHeight, heightRequested)
+
+		// Broadcast the block request to all nodes
+		broadcast(t, pocketNodes, blockRequests[0])
+		advanceTime(t, clockMock, 10*time.Millisecond)
+
+		// Wait for the unsynched node to receive the block responses
+		blockResponses, err := waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, "error waiting on response to a get block response", numValidators-1, 5000, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
+		require.NoError(t, err)
+
+		// Validate that the block is the same from all the validators who send it (non byzantine scenario)
+		var blockResponse *typesCons.GetBlockResponse
+		for _, msg := range blockResponses {
+			msgAny, err := codec.GetCodec().FromAny(msg)
+			require.NoError(t, err)
+
+			stateSyncMessage, ok := msgAny.(*typesCons.StateSyncMessage)
+			require.True(t, ok)
+
+			if blockResponse == nil {
+				blockResponse = stateSyncMessage.GetGetBlockRes()
+				continue
+			}
+			require.Equal(t, blockResponse.Block, stateSyncMessage.GetGetBlockRes().Block)
+		}
+
+		// Send one of the responses (since they are equal) to the unsynched node to apply it
+		send(t, unsyncedNode, blockResponses[0])
+		advanceTime(t, clockMock, 10*time.Millisecond)
+		debugChannel := unsyncedNode.GetBus().GetDebugEventBus()
+	loop:
+		for {
+			select {
+			case e := <-debugChannel:
+				if e.GetContentType() == messaging.ConsensusNewHeightEventType {
+					msg, err := codec.GetCodec().FromAny(e.Content)
+					require.NoError(t, err)
+					blockCommittedEvent, ok := msg.(*messaging.ConsensusNewHeightEvent)
+					require.True(t, ok)
+					if unsyncedNodeHeight == blockCommittedEvent.Height {
+						break loop
+					}
+				}
+			case <-time.After(time.Second):
+				assert.Fail(t, "Timed out waiting for block %d to be committed...", unsyncedNodeHeight)
+			}
+		}
+
+		// ensure unsynced node height increased
+		nodeState := getConsensusNodeState(unsyncedNode)
+		assertHeight(t, unsyncedNodeId, unsyncedNodeHeight+1, nodeState.Height)
+
+		// Same as `unsyncedNodeHeight+=1`
+		unsyncedNodeHeight = unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
+	}
+
+	assertHeight(t, unsyncedNodeId, targetHeight, getConsensusNodeState(unsyncedNode).Height)
+}
+
+func prepareStateSyncTestEnvironment(t *testing.T) (*clock.Mock, modules.EventsChannel, idToNodeMapping) {
 	// Test preparation
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
-	buses := GenerateBuses(t, runtimeMgrs)
+
+	// Test configs
+	runtimeMgrs := generateNodeRuntimeMgrs(t, numValidators, clockMock)
+	buses := generateBuses(t, runtimeMgrs, runtime.WithNewDebugEventsChannel())
+
+	// This channel captures all the messages that consensus nodes would send to each other over the network
+	sharedNetworkChannel := make(modules.EventsChannel, 100)
 
 	// Create & start test pocket nodes
-	eventsChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
-
-	err := StartAllTestPocketNodes(t, pocketNodes)
+	pocketNodes := createTestConsensusPocketNodes(t, buses, sharedNetworkChannel)
+	err := startAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 
-	// Prepare leader info
-	testHeight := uint64(3)
-	testRound := uint64(0)
-	testStep := uint8(consensus.NewRound)
-
-	// Prepare unsynced node info
-	unsyncedNode := pocketNodes[2]
-	unsyncedNodeId := typesCons.NodeId(2)
-	unsyncedNodeHeight := uint64(2)
-
-	// Set the unsynced node to height (2) and rest of the nodes to height (3)
-	for id, pocketNode := range pocketNodes {
-		if id == unsyncedNodeId {
-			pocketNode.GetBus().GetConsensusModule().SetHeight(unsyncedNodeHeight)
-		} else {
-			pocketNode.GetBus().GetConsensusModule().SetHeight(testHeight)
-		}
-		pocketNode.GetBus().GetConsensusModule().SetStep(testStep)
-		pocketNode.GetBus().GetConsensusModule().SetRound(testRound)
-
-		utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(testHeight))
-		require.NoError(t, err)
-		pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
-	}
-
-	// Debug message to start consensus by triggering first view change
-	for _, pocketNode := range pocketNodes {
-		TriggerNextView(t, pocketNode)
-	}
-	currentRound := testRound + 1
-
-	// Get leaderId for the given height, round and step, by using the Consensus Modules' GetLeaderForView() function.
-	// Any node in pocketNodes mapping can be used to call GetLeaderForView() function.
-	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(testHeight, currentRound, testStep))
-	leader := pocketNodes[leaderId]
-	leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
-	require.NoError(t, err)
-
-	block := generatePlaceholderBlock(testHeight, leaderPK.Address())
-	leader.GetBus().GetConsensusModule().SetBlock(block)
-
-	// Assert that unsynced node has a different view of the network than the rest of the nodes
-	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 500, true)
-	require.NoError(t, err)
-
-	for nodeId, pocketNode := range pocketNodes {
-		nodeState := GetConsensusNodeState(pocketNode)
-		if nodeId == unsyncedNodeId {
-			assertNodeConsensusView(t, nodeId,
-				typesCons.ConsensusNodeState{
-					Height: unsyncedNodeHeight,
-					Step:   testStep,
-					Round:  uint8(currentRound),
-				},
-				nodeState)
-		} else {
-			assertNodeConsensusView(t, nodeId,
-				typesCons.ConsensusNodeState{
-					Height: testHeight,
-					Step:   testStep,
-					Round:  uint8(currentRound),
-				},
-				nodeState)
-		}
-		require.Equal(t, false, nodeState.IsLeader)
-		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
-	}
-
-	metadataReceived := &typesCons.StateSyncMetadataResponse{
-		PeerAddress: "unused_peer_addr_in_tests",
-		MinHeight:   uint64(1),
-		MaxHeight:   testHeight,
-	}
-
-	// Simulate state sync metadata response by pushing metadata to the unsynced node's consensus module
-	consensusModImpl := GetConsensusModImpl(unsyncedNode)
-	consensusModImpl.MethodByName("PushStateSyncMetadataResponse").Call([]reflect.Value{reflect.ValueOf(metadataReceived)})
-
-	for _, message := range newRoundMessages {
-		P2PBroadcast(t, pocketNodes, message)
-	}
-	advanceTime(t, clockMock, 10*time.Millisecond)
-
-	// 2. Propose
-	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 500, true)
-	require.NoError(t, err)
-
-	// TODO(#352): This function will be updated once state sync implementation is complete
-	err = WaitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, testHeight)
-	require.NoError(t, err)
-
-	// TODO(#352): Add height check once state sync implmentation is complete
+	return clockMock, sharedNetworkChannel, pocketNodes
 }
 
-// TODO(#352): Implement these tests
-
+// INCOMPLETE: Implement the following tests
 func TestStateSync_UnsyncedPeerSyncsABlock_Success(t *testing.T) {
 	t.Skip()
 }

@@ -1,9 +1,8 @@
 package modules
 
-//go:generate mockgen -destination=./mocks/consensus_module_mock.go github.com/pokt-network/pocket/shared/modules ConsensusModule,ConsensusPacemaker,ConsensusStateSync,ConsensusDebugModule
+//go:generate mockgen -destination=./mocks/consensus_module_mock.go github.com/pokt-network/pocket/shared/modules ConsensusModule,ConsensusPacemaker,ConsensusDebugModule
 
 import (
-	"github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -21,22 +20,28 @@ type ConsensusModule interface {
 	Module
 	KeyholderModule
 
-	ConsensusStateSync
 	ConsensusPacemaker
 	ConsensusDebugModule
 
-	// Consensus Engine Handlers
 	// TODO: Rename `HandleMessage` to a more specific name that is consistent with its business logic.
+	// Consensus message handlers
 	HandleMessage(*anypb.Any) error
+
 	// State Sync message handlers
 	HandleStateSyncMessage(*anypb.Any) error
-	// FSM transition event handler
+
+	// Internal event handler such as FSM transition events
 	HandleEvent(transitionMessageAny *anypb.Any) error
 
 	// Consensus State Accessors
+	// CLEANUP: Add `Get` prefixes to these functions
 	CurrentHeight() uint64
 	CurrentRound() uint64
 	CurrentStep() uint64
+
+	// Returns The cryptographic address associated with the node's private key.
+	// TECHDEBT: Consider removing this function altogether when we consolidate node identities
+	GetNodeAddress() string
 }
 
 // ConsensusPacemaker represents functions exposed by the Consensus module for Pacemaker specific business logic.
@@ -67,24 +72,15 @@ type ConsensusPacemaker interface {
 	GetNodeId() uint64
 }
 
-// ConsensusStateSync exposes functionality of the Consensus module for StateSync specific business logic.
-// These functions are intended to only be called by the StateSync module.
-// INVESTIGATE: This interface enable a fast implementation of state sync but look into a way of removing it in the future
-type ConsensusStateSync interface {
-	GetNodeIdFromNodeAddress(string) (uint64, error)
-	GetNodeAddress() string
-}
-
 // ConsensusDebugModule exposes functionality used for testing & development purposes.
 // Not to be used in production.
-// TODO: Add a flag so this is not compiled in the prod binary.
+// TECHDEBT: Move this into a separate file with the `//go:build debug test` tags
 type ConsensusDebugModule interface {
 	HandleDebugMessage(*messaging.DebugMessage) error
 
 	SetHeight(uint64)
 	SetRound(uint64)
-	SetStep(uint8) // REFACTOR: This should accept typesCons.HotstuffStep
-	SetBlock(*types.Block)
+	SetStep(uint8)
 
 	SetUtilityUnitOfWork(UtilityUnitOfWork)
 

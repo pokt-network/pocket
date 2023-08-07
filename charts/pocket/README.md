@@ -43,6 +43,7 @@ privateKeySecretKeyRef:
 | config.consensus.pacemaker_config.manual | bool | `true` |  |
 | config.consensus.pacemaker_config.timeout_msec | int | `10000` |  |
 | config.consensus.private_key | string | `""` |  |
+| config.consensus.server_mode_enabled | bool | `true` |  |
 | config.fisherman.enabled | bool | `false` |  |
 | config.ibc.enabled | bool | `true` |  |
 | config.ibc.host.private_key | string | `""` |  |

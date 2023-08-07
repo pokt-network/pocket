@@ -2,7 +2,6 @@ package consensus
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -83,74 +82,43 @@ func (m *consensusModule) togglePacemakerManualMode(_ *messaging.DebugMessage) {
 	m.paceMaker.SetManualMode(newMode)
 }
 
-// requests current block from all validators
+// sendGetBlockStateSyncMessage sends a messages to request specific blocks from peers
 func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage) {
-	currentHeight := m.CurrentHeight()
-	requestHeight := currentHeight - 1
-	peerAddress := m.GetNodeAddress()
-
 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_GetBlockReq{
 			GetBlockReq: &typesCons.GetBlockRequest{
-				PeerAddress: peerAddress,
-				Height:      requestHeight,
+				PeerAddress: m.GetNodeAddress(),
+				Height:      m.CurrentHeight() - 1,
 			},
 		},
 	}
-
-	validators, err := m.getValidatorsAtHeight(currentHeight)
+	anyMsg, err := anypb.New(stateSyncGetBlockMessage)
 	if err != nil {
-		m.logger.Debug().Msgf(typesCons.ErrPersistenceGetAllValidators.Error(), err)
+		m.logger.Error().Err(err).Str("proto_type", "GetBlockRequest").Msg("failed to create StateSyncGetBlockMessage")
+		return
 	}
-
-	for _, val := range validators {
-		if m.GetNodeAddress() == val.GetAddress() {
-			continue
-		}
-		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
-
-		anyMsg, err := anypb.New(stateSyncGetBlockMessage)
-		if err != nil {
-			m.logger.Error().Err(err).Str("proto_type", "GetBlockRequest").Msg("failed to send StateSyncMessage")
-		}
-
-		if err := m.GetBus().GetP2PModule().Send(valAddress, anyMsg); err != nil {
-			m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
-		}
+	if err := m.GetBus().GetP2PModule().Broadcast(anyMsg); err != nil {
+		m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
+		return
 	}
 }
 
-// requests metadata from all validators
+// sendGetMetadataStateSyncMessage sends a message to request metadata from their peers
 func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMessage) {
-	currentHeight := m.CurrentHeight()
-	peerAddress := m.GetNodeAddress()
-
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_MetadataReq{
 			MetadataReq: &typesCons.StateSyncMetadataRequest{
-				PeerAddress: peerAddress,
+				PeerAddress: m.GetNodeAddress(),
 			},
 		},
 	}
-
-	validators, err := m.getValidatorsAtHeight(currentHeight)
+	anyMsg, err := anypb.New(stateSyncMetaDataReqMessage)
 	if err != nil {
-		m.logger.Debug().Msgf(typesCons.ErrPersistenceGetAllValidators.Error(), err)
+		m.logger.Error().Err(err).Str("proto_type", "StateSyncMessage").Msg("failed to create StateSyncMetadataRequest")
+		return
 	}
-
-	for _, val := range validators {
-		if m.GetNodeAddress() == val.GetAddress() {
-			continue
-		}
-		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
-
-		anyMsg, err := anypb.New(stateSyncMetaDataReqMessage)
-		if err != nil {
-			m.logger.Error().Err(err).Str("proto_type", "GetMetadataRequest").Msg("failed to send StateSyncMessage")
-		}
-
-		if err := m.GetBus().GetP2PModule().Send(valAddress, anyMsg); err != nil {
-			m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
-		}
+	if m.GetBus().GetP2PModule().Broadcast(anyMsg) != nil {
+		m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
+		return
 	}
 }

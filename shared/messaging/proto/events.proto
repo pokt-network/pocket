@@ -6,10 +6,12 @@ option go_package = "github.com/pokt-network/pocket/shared/messaging";
 
 message NodeStartedEvent {}
 
+// Notifies the node that the consensus module has started a new height
 message ConsensusNewHeightEvent {
   uint64 height = 1;
 }
 
+// Notifies the node that the state of the node has transitioned through an event trigger
 message StateMachineTransitionEvent {
   string event = 1;
   string previous_state = 2;

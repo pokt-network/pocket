@@ -80,6 +80,7 @@ config:
       manual: true
       debug_time_between_steps_msec: 1000
     private_key: "" # @ignored This value is needed but ignored - use privateKeySecretKeyRef instead
+    server_mode_enabled: true
   utility:
     max_mempool_transaction_bytes: 1073741824
     max_mempool_transactions: 9000

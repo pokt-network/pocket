@@ -28,6 +28,7 @@ const (
 	DefaultRPCHost                          = "localhost"
 	Validator1EndpointDockerComposeHostname = "validator1"
 	Validator1EndpointK8SHostname           = "validator-001-pocket"
+	FullNode1EndpointK8SHostname            = "full-node-001-pocket"
 	RandomValidatorEndpointK8SHostname      = "pocket-validators"
 )
 

@@ -163,36 +163,46 @@ func (m *Node) GetBus() modules.Bus {
 // TODO: Move all message types this is dependant on to the `messaging` package
 func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	contentType := message.GetContentType()
-	logger.Global.Debug().Fields(map[string]any{
-		"message":     message,
-		"contentType": contentType,
-	}).Msg("node handling event")
+	// logger.Global.Debug().Fields(map[string]any{
+	// 	"message":     message,
+	// 	"contentType": contentType,
+	// }).Msg("node handling event")
 
 	switch contentType {
+
 	case messaging.NodeStartedEventType:
 		logger.Global.Info().Msg("Received NodeStartedEvent")
 		if err := node.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Start); err != nil {
 			return err
 		}
+
 	case messaging.HotstuffMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
+
 	case messaging.StateSyncMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleStateSyncMessage(message.Content)
+
 	case messaging.TxGossipMessageContentType:
 		return node.GetBus().GetUtilityModule().HandleUtilityMessage(message.Content)
-	case messaging.DebugMessageEventType:
-		return node.handleDebugMessage(message)
+
 	case messaging.ConsensusNewHeightEventType:
+		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
 		err_ibc := node.GetBus().GetIBCModule().HandleEvent(message.Content)
-		return errors.Join(err_p2p, err_ibc)
+		return errors.Join(err_p2p, err_ibc, err_consensus)
+
 	case messaging.StateMachineTransitionEventType:
 		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
 		return errors.Join(err_consensus, err_p2p)
+
+	case messaging.DebugMessageEventType:
+		return node.handleDebugMessage(message)
+
 	default:
 		logger.Global.Warn().Msgf("Unsupported message content type: %s", contentType)
 	}
+
 	return nil
 }
 

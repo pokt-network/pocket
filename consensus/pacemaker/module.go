@@ -60,37 +60,36 @@ type pacemaker struct {
 	logPrefix string
 }
 
-func CreatePacemaker(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return new(pacemaker).Create(bus, options...)
 }
 
 func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	runtimeMgr := bus.GetRuntimeMgr()
+	cfg := runtimeMgr.GetConfig()
+	pacemakerCfg := cfg.Consensus.PacemakerConfig
+
 	m := &pacemaker{
 		logPrefix: defaultLogPrefix,
+		debug: pacemakerDebug{
+			manualMode:                pacemakerCfg.GetManual(),
+			debugTimeBetweenStepsMsec: pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
+			quorumCertificate:         nil,
+		},
+		pacemakerCfg: pacemakerCfg,
 	}
+	m.roundTimeout = m.getRoundTimeout()
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
 	for _, option := range options {
 		option(m)
 	}
-
 	bus.RegisterModule(m)
-
-	runtimeMgr := bus.GetRuntimeMgr()
-	cfg := runtimeMgr.GetConfig()
-
-	m.pacemakerCfg = cfg.Consensus.PacemakerConfig
-	m.roundTimeout = m.getRoundTimeout()
-	m.debug = pacemakerDebug{
-		manualMode:                m.pacemakerCfg.GetManual(),
-		debugTimeBetweenStepsMsec: m.pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
-		quorumCertificate:         nil,
-	}
 
 	return m, nil
 }
 
 func (m *pacemaker) Start() error {
-	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 	m.RestartTimer()
 	return nil
 }
@@ -101,7 +100,6 @@ func (*pacemaker) GetModuleName() string {
 
 func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, error) {
 	consensusMod := m.GetBus().GetConsensusModule()
-
 	currentHeight := consensusMod.CurrentHeight()
 	currentRound := consensusMod.CurrentRound()
 	currentStep := typesCons.HotstuffStep(consensusMod.CurrentStep())
@@ -113,11 +111,11 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	}
 
 	// If this case happens, there are two possibilities:
-	// 1. The node is behind and needs to catch up, node must start syncing,
-	// 2. The leader is sending a malicious proposal.
+	// 	1. The node is behind and needs to catch up, node must start syncing,
+	// 	2. The leader is sending a malicious proposal.
 	// There, for both cases, node rejects the proposal, because:
-	// 1. If node is out of sync, node can't verify the block proposal, so rejects it. But node will eventually sync with the rest of the network and add the block.
-	// 2. If node is synced, node must reject the proposal because proposal is not valid.
+	// 	1. If node is out of sync, node can't verify the block proposal, so rejects it. But node will eventually sync with the rest of the network and add the block.
+	// 	2. If node is synced, node must reject the proposal because proposal is not valid.
 	if msg.Height > currentHeight {
 		m.logger.Info().Msgf("⚠️ [WARN] ⚠️ Node at height %d < message height %d", currentHeight, msg.Height)
 		err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
@@ -228,8 +226,10 @@ func (m *pacemaker) NewHeight() {
 
 	consensusMod := m.GetBus().GetConsensusModule()
 	consensusMod.ResetRound(true)
+
 	newHeight := consensusMod.CurrentHeight() + 1
 	consensusMod.SetHeight(newHeight)
+
 	m.logger.Info().Uint64("height", newHeight).Msg("🏁 Starting 1st round at new height 🏁")
 
 	// CONSIDERATION: We are omitting CommitQC and TimeoutQC here for simplicity, but should we add them?

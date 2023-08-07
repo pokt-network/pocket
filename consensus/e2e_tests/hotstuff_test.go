@@ -1,6 +1,7 @@
 package e2e_tests
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -10,36 +11,29 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
+func TestHotstuff_4Nodes1BlockHappyPath(t *testing.T) {
 	// Test preparation
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
 
 	// Test configs
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
-	buses := GenerateBuses(t, runtimeMgrs)
+	runtimeMgrs := generateNodeRuntimeMgrs(t, numValidators, clockMock)
+	buses := generateBuses(t, runtimeMgrs)
 
 	// Create & start test pocket nodes
-	eventsChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
-	err := StartAllTestPocketNodes(t, pocketNodes)
+	sharedNetworkChannel := make(modules.EventsChannel, 100)
+	pocketNodes := createTestConsensusPocketNodes(t, buses, sharedNetworkChannel)
+	err := startAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 
-	// Debug message to start consensus by triggering first view change
-	for _, pocketNode := range pocketNodes {
-		TriggerNextView(t, pocketNode)
-	}
-	advanceTime(t, clockMock, 10*time.Millisecond)
-
 	// Wait for nodes to reach height=1 by generating a block
-	block := WaitForNextBlock(t, clockMock, eventsChannel, pocketNodes, 1, 0, 500, true)
+	block := WaitForNextBlock(t, clockMock, sharedNetworkChannel, pocketNodes, 1, 0, 500, true)
 	require.Equal(t, uint64(1), block.BlockHeader.Height)
 
 	// Expecting NewRound messages for height=2 to be sent after a block is committed
-	_, err = waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, 2, uint8(consensus.NewRound), 0, 0, numValidators*numValidators, 500, true)
+	_, err = waitForProposalMsgs(t, clockMock, sharedNetworkChannel, pocketNodes, 2, uint8(consensus.NewRound), 0, 0, numValidators*numValidators, 500, true)
 	require.NoError(t, err)
 
 	// TODO(#615): Add QC verification here after valid block mocking is implemented with issue #352.
@@ -51,38 +45,23 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	requesterNode := pocketNodes[2]
 	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 
-	stateSyncGetBlockReq := typesCons.GetBlockRequest{
-		PeerAddress: requesterNodePeerAddress,
-		Height:      1,
-	}
-
-	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-		Message: &typesCons.StateSyncMessage_GetBlockReq{
-			GetBlockReq: &stateSyncGetBlockReq,
-		},
-	}
-
-	anyProto, err := anypb.New(stateSyncGetBlockMessage)
-	require.NoError(t, err)
-
 	// Send get block request to the server node
-	P2PSend(t, serverNode, anyProto)
+	stateSyncGetBlockMsg := prepareStateSyncGetBlockMessage(t, requesterNodePeerAddress, 1)
+	send(t, serverNode, stateSyncGetBlockMsg)
 
-	// Server node is waiting for the get block request message
-	numExpectedMsgs := 1
-	errMsg := "StateSync Get Block Request Message"
-	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 500, false)
+	// Server node is waiting for the get block response message
+	receivedMsg, err := waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, "error waiting for StateSync.GetBlockRequest message", 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
 	require.NoError(t, err)
 
+	// Verify that it was a get block request of the right height
 	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
 	require.NoError(t, err)
-
 	stateSyncGetBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
 	require.True(t, ok)
-
 	getBlockRes := stateSyncGetBlockResMessage.GetGetBlockRes()
 	require.NotEmpty(t, getBlockRes)
 
+	// Validate the data in the block received
 	require.Equal(t, uint64(1), getBlockRes.Block.GetBlockHeader().Height)
 }
 
@@ -135,53 +114,53 @@ func TestQuorumCertificate_ResistenceToSignatureMalleability(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4Nodes1Byzantine1Block(t *testing.T) {
+func TestHotstuff_4Nodes1Byzantine1Block(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4Nodes2Byzantine1Block(t *testing.T) {
+func TestHotstuff_4Nodes2Byzantine1Block(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4Nodes1BlockNetworkPartition(t *testing.T) {
+func TestHotstuff_4Nodes1BlockNetworkPartition(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4Nodes1Block4Rounds(t *testing.T) {
+func TestHotstuff_4Nodes1Block4Rounds(t *testing.T) {
 	t.Skip()
 }
-func TestHotstuff4Nodes2Blocks(t *testing.T) {
-	t.Skip()
-}
-
-func TestHotstuff4Nodes2NewNodes1Block(t *testing.T) {
+func TestHotstuff_4Nodes2Blocks(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4Nodes2DroppedNodes1Block(t *testing.T) {
+func TestHotstuff_4Nodes2NewNodes1Block(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4NodesFailOnPrepare(t *testing.T) {
+func TestHotstuff_4Nodes2DroppedNodes1Block(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4NodesFailOnPrecommit(t *testing.T) {
+func TestHotstuff_4NodesFailOnPrepare(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4NodesFailOnCommit(t *testing.T) {
+func TestHotstuff_4NodesFailOnPrecommit(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4NodesFailOnDecide(t *testing.T) {
+func TestHotstuff_4NodesFailOnCommit(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuffValidatorWithLockedQC(t *testing.T) {
+func TestHotstuff_4NodesFailOnDecide(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuffValidatorWithLockedQCMissingNewRoundMsg(t *testing.T) {
+func TestHotstuff_ValidatorWithLockedQC(t *testing.T) {
+	t.Skip()
+}
+
+func TestHotstuff_ValidatorWithLockedQCMissingNewRoundMsg(t *testing.T) {
 	t.Skip()
 }

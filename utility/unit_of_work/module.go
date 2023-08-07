@@ -15,6 +15,7 @@ const (
 
 var _ modules.UtilityUnitOfWork = &baseUtilityUnitOfWork{}
 
+// TODO: Rename all `u * baseUtilityUnitOfWork` to `uow * baseUtilityUnitOfWork` for consistency
 type baseUtilityUnitOfWork struct {
 	base_modules.IntegrableModule
 
@@ -117,6 +118,8 @@ func (uow *baseUtilityUnitOfWork) Commit(quorumCert []byte) error {
 }
 
 func (uow *baseUtilityUnitOfWork) Release() error {
+	uow.logger.Info().Msg("releasing the unit of work...")
+
 	rwCtx := uow.persistenceRWContext
 	if rwCtx != nil {
 		uow.persistenceRWContext = nil

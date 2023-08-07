@@ -13,11 +13,14 @@ const BusModuleName = "bus"
 // it, which could potentially be a feature rather than a bug.
 type EventsChannel chan *messaging.PocketEnvelope
 
+type BusOption func(Bus)
+
 type Bus interface {
 	// Bus Events
 	PublishEventToBus(e *messaging.PocketEnvelope)
 	GetBusEvent() *messaging.PocketEnvelope
 	GetEventBus() EventsChannel
+	GetDebugEventBus() EventsChannel
 
 	// Dependency Injection / Service Discovery
 	GetModulesRegistry() ModulesRegistry

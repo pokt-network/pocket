@@ -1,6 +1,13 @@
 # State Sync Protocol Design <!-- omit in toc -->
 
-_NOTE: This document makes some assumption of P2P implementation details, so please see [p2p](../../p2p/README.md) for the latest source of truth._
+⚠️ IMPORTANT NOTES TO THE (last updated on 08/03/2023):
+
+- TECHDEBT(#821): Once the FSM is remove, state sync will look completely different
+- State Sync implementation is a WIP and has taken several different shapes.
+- This document is out of date and needs to be updated to reflect the latest implementation. This will be done once a functional implementation is in place.
+- This document makes some assumption of P2P implementation details, so please see [p2p](../../p2p/README.md) for the latest source of truth.
+
+## Table of Contents <!-- omit in toc -->
 
 - [Background](#background)
 - [State Sync - Peer Metadata](#state-sync---peer-metadata)
@@ -55,9 +62,9 @@ Node gathers peer metadata from its peers in `StateSyncMetadataResponse` type, d
 
 ```golang
 type StateSyncMetadataResponse struct {
-    PeerAddress string
-	MinHeight   uint64
-	MaxHeight   uint64
+  PeerAddress string
+  MinHeight   uint64
+  MaxHeight   uint64
 }
 ```
 
@@ -87,7 +94,7 @@ type StateSyncModule interface {
   // ...
   GetAggregatedStateSyncMetadata() *StateSyncMetadataResponse // Aggregated metadata received from peers.
   IsSynced() (bool, error)
-  StartSyncing() error
+  Start() error
   // ...
 }
 ```
@@ -105,7 +112,7 @@ For every new block and block proposal `Validator`s receive:
 
 According to the result of the `IsSynced()` function:
 
-- If the node is out of sync, it runs `StartSyncing()` function. Node requests blocks one by one using the minimum and maximum height in aggregated state sync metadata.
+- If the node is out of sync, it runs `Start()` function. Node requests blocks one by one using the minimum and maximum height in aggregated state sync metadata.
 - If the node is in sync with its peers it rejects the block and/or block proposal.
 
 ```mermaid
@@ -114,13 +121,13 @@ flowchart TD
     A[Node] --> B[Periodic <br> Sync]
     A[Node] --> |New Block| C{IsSynced}
 
-    %% periodic snyc
+    %% periodic sync
     B --> |Request <br> metadata| D[Peers]
     D[Peers] --> |Collect metadata| B[Periodic <br> Sync]
 
 
-    %% is node sycnhed
-    C -->  |No| E[StartSyncing]
+    %% is node synched
+    C -->  |No| E[Start]
     C -->  |Yes| F[Apply Block]
 
     %% syncing
@@ -154,7 +161,7 @@ In `Unsynced` Mode, node transitions to `Sync Mode` by sending `Consensus_IsSync
 
 ### Sync Mode
 
-In `Sync` Mode, the Node is catching up to the latest block by making `GetBlock` requests, via `StartSyncing()` function to eligible peers in its address book. A peer can handle a `GetBlock` request if `PeerSyncMetadata.MinHeight` <= `localSyncState.MaxHeight` <= `PeerSyncMetadata.MaxHeight`.
+In `Sync` Mode, the Node is catching up to the latest block by making `GetBlock` requests, via `Start()` function to eligible peers in its address book. A peer can handle a `GetBlock` request if `PeerSyncMetadata.MinHeight` <= `localSyncState.MaxHeight` <= `PeerSyncMetadata.MaxHeight`.
 
 Though it is unspecified whether or not a Node may make `GetBlock` requests in order or in parallel, the cryptographic restraints of block processing require the Node to call `CommitBlock` sequentially until it is `Synced`.
 

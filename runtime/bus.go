@@ -21,21 +21,30 @@ type bus struct {
 	// Node events
 	channel modules.EventsChannel
 
+	// A secondary channel that receives all the same events as the main bus,
+	// but does not pull events when `GetBusEvent` is called
+	debugChannel modules.EventsChannel
+
 	modulesRegistry modules.ModulesRegistry
 
 	runtimeMgr modules.RuntimeMgr
 }
 
-func CreateBus(runtimeMgr modules.RuntimeMgr) (modules.Bus, error) {
-	return new(bus).Create(runtimeMgr)
+func CreateBus(runtimeMgr modules.RuntimeMgr, opts ...modules.BusOption) (modules.Bus, error) {
+	return new(bus).Create(runtimeMgr, opts...)
 }
 
-func (b *bus) Create(runtimeMgr modules.RuntimeMgr) (modules.Bus, error) {
+func (b *bus) Create(runtimeMgr modules.RuntimeMgr, opts ...modules.BusOption) (modules.Bus, error) {
 	bus := &bus{
-		channel: make(modules.EventsChannel, defaults.DefaultBusBufferSize),
+		channel:      make(modules.EventsChannel, defaults.DefaultBusBufferSize),
+		debugChannel: nil,
 
 		runtimeMgr:      runtimeMgr,
 		modulesRegistry: NewModulesRegistry(),
+	}
+
+	for _, o := range opts {
+		o(bus)
 	}
 
 	return bus, nil
@@ -52,6 +61,9 @@ func (m *bus) RegisterModule(module modules.Submodule) {
 
 func (m *bus) PublishEventToBus(e *messaging.PocketEnvelope) {
 	m.channel <- e
+	if m.debugChannel != nil {
+		m.debugChannel <- e
+	}
 }
 
 func (m *bus) GetBusEvent() *messaging.PocketEnvelope {
@@ -61,6 +73,11 @@ func (m *bus) GetBusEvent() *messaging.PocketEnvelope {
 
 func (m *bus) GetEventBus() modules.EventsChannel {
 	return m.channel
+}
+
+// GetDebugEventBus returns the debug event bus
+func (m *bus) GetDebugEventBus() modules.EventsChannel {
+	return m.debugChannel
 }
 
 func (m *bus) GetRuntimeMgr() modules.RuntimeMgr {

@@ -1,8 +1,10 @@
 package consensus
 
+// All the code below is used for debugging & testing purposes only and should not be used in prod.
+// TECHDEBT: Add debug/test tags to avoid accidental production usage.
+
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -47,10 +49,6 @@ func (m *consensusModule) SetStep(step uint8) {
 	m.step = typesCons.HotstuffStep(step)
 }
 
-func (m *consensusModule) SetBlock(block *coreTypes.Block) {
-	m.block = block
-}
-
 func (m *consensusModule) SetUtilityUnitOfWork(utilityUnitOfWork modules.UtilityUnitOfWork) {
 	m.utilityUnitOfWork = utilityUnitOfWork
 }
@@ -66,9 +64,4 @@ func (m *consensusModule) GetLeaderForView(height, round uint64, step uint8) uin
 		return 0
 	}
 	return uint64(leaderId)
-}
-
-// TODO(#609): Refactor to use the test-only package and remove reflection
-func (m *consensusModule) PushStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse) {
-	m.metadataReceived <- metadataRes
 }

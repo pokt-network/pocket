@@ -54,7 +54,8 @@ func (m *consensusModule) BroadcastMessageToValidators(msg *anypb.Any) error {
 }
 
 func (m *consensusModule) IsLeader() bool {
-	return m.leaderId != nil && *m.leaderId == m.nodeId
+	valMod, err := m.GetBus().GetUtilityModule().GetValidatorModule()
+	return err == nil && valMod != nil && m.leaderId != nil && *m.leaderId == m.nodeId
 }
 
 func (m *consensusModule) IsLeaderSet() bool {

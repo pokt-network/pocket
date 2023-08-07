@@ -23,44 +23,42 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 	paceMakerTimeoutMsec := uint64(10000) // Set a small pacemaker timeout
 	paceMakerTimeout := time.Duration(paceMakerTimeoutMsec) * time.Millisecond
 	consensusMessageTimeout := time.Duration(paceMakerTimeoutMsec / 5) // Must be smaller than pacemaker timeout because we expect a deterministic number of consensus messages.
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	runtimeMgrs := generateNodeRuntimeMgrs(t, numValidators, clockMock)
 	for _, runtimeConfig := range runtimeMgrs {
 		consCfg := runtimeConfig.GetConfig().Consensus.PacemakerConfig
 		consCfg.TimeoutMsec = paceMakerTimeoutMsec
 	}
-	buses := GenerateBuses(t, runtimeMgrs)
+	buses := generateBuses(t, runtimeMgrs)
 
 	// Create & start test pocket nodes
-	eventsChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
-	err := StartAllTestPocketNodes(t, pocketNodes)
+	sharedNetworkChannel := make(modules.EventsChannel, 100)
+	pocketNodes := createTestConsensusPocketNodes(t, buses, sharedNetworkChannel)
+	err := startAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 
 	// Debug message to start consensus by triggering next view
-	for _, pocketNode := range pocketNodes {
-		TriggerNextView(t, pocketNode)
-	}
+	triggerNextView(t, pocketNodes)
 
 	// Advance time by an amount shorter than the pacemaker timeout
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	_, err = waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, 1, uint8(consensus.NewRound), 0, 0, numValidators*numValidators, consensusMessageTimeout, true)
+	_, err = waitForProposalMsgs(t, clockMock, sharedNetworkChannel, pocketNodes, 1, uint8(consensus.NewRound), 0, 0, numValidators*numValidators, consensusMessageTimeout, true)
 	require.NoError(t, err)
 
 	// Force the pacemaker to time out
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
 	// Wait for the round=1 to fail
-	_, err = waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, 1, uint8(consensus.NewRound), 1, 0, numValidators*numValidators, consensusMessageTimeout, true)
+	_, err = waitForProposalMsgs(t, clockMock, sharedNetworkChannel, pocketNodes, 1, uint8(consensus.NewRound), 1, 0, numValidators*numValidators, consensusMessageTimeout, true)
 	require.NoError(t, err)
 
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
 	// Wait for the round=2 to fail
-	_, err = waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, 1, uint8(consensus.NewRound), 2, 0, numValidators*numValidators, consensusMessageTimeout, true)
+	_, err = waitForProposalMsgs(t, clockMock, sharedNetworkChannel, pocketNodes, 1, uint8(consensus.NewRound), 2, 0, numValidators*numValidators, consensusMessageTimeout, true)
 	require.NoError(t, err)
 
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
 	// Wait for the round=3 to succeed
-	newRoundMessages, err := waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, 1, uint8(consensus.NewRound), 3, 0, numValidators*numValidators, consensusMessageTimeout, true)
+	newRoundMessages, err := waitForProposalMsgs(t, clockMock, sharedNetworkChannel, pocketNodes, 1, uint8(consensus.NewRound), 3, 0, numValidators*numValidators, consensusMessageTimeout, true)
 	require.NoError(t, err)
 	broadcastMessages(t, newRoundMessages, pocketNodes)
 	advanceTime(t, clockMock, 10*time.Millisecond)
@@ -68,7 +66,7 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 	// Get the expected leader id for round=3
 	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(1, 3, uint8(consensus.NewRound)))
 	// Wait for nodes to proceed to Propose step in round=3
-	_, err = waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, 1, uint8(consensus.Prepare), 3, leaderId, numValidators, consensusMessageTimeout, true)
+	_, err = waitForProposalMsgs(t, clockMock, sharedNetworkChannel, pocketNodes, 1, uint8(consensus.Prepare), 3, leaderId, numValidators, consensusMessageTimeout, true)
 	require.NoError(t, err)
 }
 
@@ -77,13 +75,13 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
 
-	runtimeConfigs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
-	buses := GenerateBuses(t, runtimeConfigs)
+	runtimeConfigs := generateNodeRuntimeMgrs(t, numValidators, clockMock)
+	buses := generateBuses(t, runtimeConfigs)
 
 	// Create & start test pocket nodes
-	eventsChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
-	err := StartAllTestPocketNodes(t, pocketNodes)
+	sharedNetworkChannel := make(modules.EventsChannel, 100)
+	pocketNodes := createTestConsensusPocketNodes(t, buses, sharedNetworkChannel)
+	err := startAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 
 	// Starting point
@@ -92,7 +90,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 
 	// UnitTestNet configs
 	paceMakerTimeoutMsec := uint64(500) // Set a small pacemaker timeout
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	runtimeMgrs := generateNodeRuntimeMgrs(t, numValidators, clockMock)
 	for _, runtimeConfig := range runtimeMgrs {
 		runtimeConfig.GetConfig().Consensus.PacemakerConfig.TimeoutMsec = paceMakerTimeoutMsec
 	}
@@ -112,22 +110,23 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	// Prepare leader info
 	leaderRound := uint64(6)
 
+	// Any node in pocketNodes mapping can be used to get this function
+	leaderFn := pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView
+
 	// Get leaderId for the given height, round and step, by using the Consensus Modules' GetLeaderForView() function.
-	// Any node in pocketNodes mapping can be used to call GetLeaderForView() function.
-	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(testHeight, leaderRound, uint8(consensus.Prepare)))
+	leaderId := typesCons.NodeId(leaderFn(testHeight, leaderRound, uint8(consensus.Prepare)))
 	leader := pocketNodes[leaderId]
 	leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
 	require.NoError(t, err)
 
-	block := generatePlaceholderBlock(testHeight, leaderPK.Address())
-	leader.GetBus().GetConsensusModule().SetBlock(block)
-
 	// Set the leader to be in the highest round.
-	pocketNodes[1].GetBus().GetConsensusModule().SetRound(leaderRound - 2)
-	pocketNodes[2].GetBus().GetConsensusModule().SetRound(leaderRound - 3)
+	require.Equal(t, typesCons.NodeId(1), leaderId)
 	pocketNodes[leaderId].GetBus().GetConsensusModule().SetRound(leaderRound)
-	pocketNodes[4].GetBus().GetConsensusModule().SetRound(leaderRound - 4)
+	pocketNodes[2].GetBus().GetConsensusModule().SetRound(leaderRound - 1)
+	pocketNodes[3].GetBus().GetConsensusModule().SetRound(leaderRound - 2)
+	pocketNodes[4].GetBus().GetConsensusModule().SetRound(leaderRound - 3)
 
+	block := generatePlaceholderBlock(testHeight, leaderPK.Address())
 	prepareProposal := &typesCons.HotstuffMessage{
 		Type:          consensus.Propose,
 		Height:        testHeight,
@@ -144,13 +143,13 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 
 	broadcastMessages(t, []*anypb.Any{anyMsg}, pocketNodes)
 	advanceTime(t, clockMock, 10*time.Millisecond)
-	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, 2, consensus.Vote, numExpectedMsgs, time.Duration(msgTimeout), true)
+	_, err = waitForNetworkConsensusEvents(t, clockMock, sharedNetworkChannel, 2, consensus.Vote, numExpectedMsgs, time.Duration(msgTimeout), true)
 
 	require.NoError(t, err)
 
 	// Check that all the nodes caught up to the leader's (i.e. the latest) round
 	for nodeId, pocketNode := range pocketNodes {
-		nodeState := GetConsensusNodeState(pocketNode)
+		nodeState := getConsensusNodeState(pocketNode)
 		if nodeId == leaderId {
 			require.Equal(t, consensus.Prepare.String(), typesCons.HotstuffStep(nodeState.Step).String())
 		} else {

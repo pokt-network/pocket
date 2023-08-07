@@ -48,7 +48,7 @@ deps = [
     "build/debug.go",
     "consensus",
     "p2p",
-    "persistance",
+    "persistence",
     "rpc",
     "runtime",
     "shared",
@@ -56,6 +56,11 @@ deps = [
     "utility",
     "vendor",
     "logger",
+    "e2e",
+    "ibc",
+    "internal",
+    "state_machine",
+    "tools",
 ]
 
 deps_full_path = [root_dir + "/" + depdir for depdir in deps]

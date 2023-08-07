@@ -177,7 +177,6 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 }
 
 // Star-like (O(n)) broadcast - send to all nodes directly
-// INVESTIGATE: Re-evaluate if we should be using our structured broadcast (RainTree O(log3(n))) algorithm instead
 func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) {
 	m.logger.Info().Fields(hotstuffMsgToLoggingFields(msg)).Msg("📣 Broadcasting message 📣")
 
@@ -187,11 +186,11 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 		return
 	}
 
+	// Not using Broadcast because this is a direct message to all validators only
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
-
 	for _, val := range validators {
 		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
 			m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
@@ -271,26 +270,26 @@ func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Act
 	return readCtx.GetAllValidators(int64(height))
 }
 
-// TODO: This is a temporary solution, cache this in Consensus module. This field will be populated once with a single query to the persistence module.
-func (m *consensusModule) IsValidator() (bool, error) {
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
-	if err != nil {
-		return false, err
-	}
-
-	for _, actor := range validators {
-		if actor.Address == m.nodeAddress {
-			return true, nil
-		}
-	}
-
-	return false, nil
-}
-
 func hotstuffMsgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
 	return map[string]any{
 		"height": msg.GetHeight(),
 		"round":  msg.GetRound(),
 		"step":   typesCons.StepToString[msg.GetStep()],
 	}
+}
+
+func (m *consensusModule) maxPersistedBlockHeight() (uint64, error) {
+	// TECHDEBT: We don't need to pass the height here to retrieve the maximum block height.
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(m.CurrentHeight()))
+	if err != nil {
+		return 0, err
+	}
+	defer readCtx.Release()
+
+	maxHeight, err := readCtx.GetMaximumBlockHeight()
+	if err != nil {
+		return 0, err
+	}
+
+	return maxHeight, nil
 }
