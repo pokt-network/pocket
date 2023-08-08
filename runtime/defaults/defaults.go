@@ -82,7 +82,7 @@ var (
 	DefaultRemoteCLIURL = fmt.Sprintf("http://%s:%s", DefaultRPCHost, DefaultRPCPort)
 	// DefaultP2PBootstrapNodesCsv is a list of nodes to bootstrap the network with. By convention, for now, the first validator will provide bootstrapping facilities.
 	//
-	// In LocalNet, the developer will have only one of the two stack online, therefore this is also a poor's man way to simulate the scenario in which a boostrap node is offline.
+	// In LocalNet, the developer will have only one of the two stack online, therefore this is also a poor's man way to simulate the scenario in which a bootstrap node is offline.
 	DefaultP2PBootstrapNodesCsv = fmt.Sprintf("%s,%s",
 		fmt.Sprintf("http://%s:%s", Validator1EndpointDockerComposeHostname, DefaultRPCPort),
 		fmt.Sprintf("http://%s:%s", Validator1EndpointK8SHostname, DefaultRPCPort),
