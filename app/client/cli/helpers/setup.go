@@ -25,18 +25,8 @@ const debugPrivKey = "09fc8ee114e678e665d09179acb9a30060f680df44ba06b51434ee4794
 // p2p module which consumes them. Everything is registered to the bus.
 func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
 	// TECHDEBT: this was being used for backwards compatibility with LocalNet and need to re-evaluate if its still necessary
+	// CONSIDERATION: it may make sense to make this a viper key for consistency.
 	flags.ConfigPath = runtime.GetEnv("CONFIG_PATH", "build/config/config.validator1.json")
-	configs.ParseConfig(flags.ConfigPath)
-
-	// set final `remote_cli_url` value; order of precedence: flag > env var > config > default
-	flags.RemoteCLIURL = viper.GetString("remote_cli_url")
-
-	// By this time, the config path should be set.
-	// This is only being called for viper related side effects
-	// TECHDEBT(#907): refactor and improve how viper is used to parse configs throughout the codebase
-	_ = configs.ParseConfig(flags.ConfigPath)
-	// set final `remote_cli_url` value; order of precedence: flag > env var > config > default
-	flags.RemoteCLIURL = viper.GetString("remote_cli_url")
 
 	// By this time, the config path should be set.
 	// This is only being called for viper related side effects
