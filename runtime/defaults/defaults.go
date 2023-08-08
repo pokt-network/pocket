@@ -55,9 +55,10 @@ var (
 	DefaultP2PConnectionType = types.ConnectionType_TCPConnection
 	DefaultP2PMaxNonces      = uint64(1e5)
 	// telemetry
-	DefaultTelemetryEnabled  = true
-	DefaultTelemetryAddress  = "0.0.0.0:9000"
-	DefaultTelemetryEndpoint = "/metrics"
+	DefaultTelemetryEnabled           = true
+	DefaultTelemetryAddress           = "0.0.0.0:9000"
+	DefaultTelemetryEndpoint          = "/metrics"
+	DefaultP2PMaxBootstrapConcurrency = uint32(4)
 	// logger
 	DefaultLoggerLevel  = "debug"
 	DefaultLoggerFormat = "pretty"
