@@ -372,7 +372,8 @@ func (t *treeStore) Load(dir string) error {
 		nodeStore: nodeStore,
 	}
 
-	// import merkle tree roots trees from worldState
+	// import merkle trees with the proper hash
+	t.merkleTrees = make(map[string]*stateTree)
 	for treeName, treeRootHash := range w.MerkleRoots {
 		treePath := fmt.Sprintf("%s/%s_nodes", dir, treeName)
 		nodeStore, err := kvstore.NewKVStore(treePath)

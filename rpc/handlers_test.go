@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -18,7 +17,6 @@ import (
 )
 
 func Test_RPCPostV1NodeBackup(t *testing.T) {
-	// THIS WORKS BUT ADJUST LATER
 	type testCase struct {
 		name    string
 		setup   func(t *testing.T, e echo.Context) *rpcServer
@@ -26,6 +24,7 @@ func Test_RPCPostV1NodeBackup(t *testing.T) {
 		wantErr bool
 	}
 
+	// NB: testDir is used and cleared by each test case
 	var testDir = t.TempDir()
 
 	tests := []testCase{
@@ -48,16 +47,14 @@ func Test_RPCPostV1NodeBackup(t *testing.T) {
 			},
 			wantErr: false,
 			assert: func(t *testing.T, tt testCase, e echo.Context, s *rpcServer) {
-				empty, err := isEmpty(testDir)
-				require.NoError(t, err)
-				require.False(t, empty)
 				f, err := os.Open(testDir)
 				require.NoError(t, err)
 				dirs, err := f.ReadDir(-1)
 				require.NoError(t, err)
+				// assert that we wrote the expected 12 files into this directory
 				require.True(t, len(dirs) == 12)
 
-				// assert worldstate json was written
+				// assert worldstate.json was written
 				_, err = os.Open(filepath.Join(testDir, "worldstate.json"))
 				require.NoError(t, err)
 
@@ -71,38 +68,37 @@ func Test_RPCPostV1NodeBackup(t *testing.T) {
 				})
 			},
 		},
+		{
+			name: "should error if no directory specified",
+			setup: func(t *testing.T, e echo.Context) *rpcServer {
+				_, _, url := test_artifacts.SetupPostgresDocker()
+				pmod := testutil.NewTestPersistenceModule(t, url)
+
+				s := &rpcServer{
+					logger: *logger.Global.CreateLoggerForModule(modules.RPCModuleName),
+				}
+
+				s.SetBus(pmod.GetBus())
+
+				return s
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// create a new echo Context for each test
 			e := echo.New()
 			req := httptest.NewRequest(http.MethodPost, "/v1/node/backup", nil)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
-
-			// pass the fresh context to setup
 			s := tt.setup(t, c)
 
-			// call and assert
 			if err := s.PostV1NodeBackup(c); (err != nil) != tt.wantErr {
 				t.Errorf("rpcServer.PostV1NodeBackup() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			tt.assert(t, tt, c, s)
+			if tt.assert != nil {
+				tt.assert(t, tt, c, s)
+			}
 		})
 	}
-}
-
-// TECHDEBT(#796) - Organize and dedupe this function into testutil package
-func isEmpty(dir string) (bool, error) {
-	f, err := os.Open(dir)
-	if err != nil {
-		return false, err
-	}
-	defer f.Close()
-
-	_, err = f.Readdirnames(1) // Or f.Readdir(1)
-	if err == io.EOF {
-		return true, nil
-	}
-	return false, err // Either not empty or error, suits both cases
 }

@@ -277,8 +277,8 @@ type PersistenceLocalContext interface {
 	GetSessionTokensUsed(*coreTypes.Session) (*big.Int, error)
 }
 
-// Archivable defines a two function interface for backing up and loading an archive.
+// Archivable defines a single function interface for creating a reusable archive of a module.
 type Archivable interface {
+	// Backup creates an archive for the module in the given directory and returns an error if anything went wrong.
 	Backup(dir string) error
-	Load(dir string) error
 }
