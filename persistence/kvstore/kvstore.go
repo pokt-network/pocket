@@ -26,7 +26,8 @@ type KVStore interface {
 	Exists(key []byte) (bool, error)
 	ClearAll() error
 
-	Backup(filepath string) error
+	// Backup takes a directory and makes a backup of the KVStore in that directory.
+	Backup(dir string) error
 }
 
 const (

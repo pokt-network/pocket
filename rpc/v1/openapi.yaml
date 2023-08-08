@@ -951,6 +951,38 @@ paths:
                 node_roles:
                   - "validator"
                   - "servicer"
+  /v1/node/backup:
+    post:
+      tags:
+        - node
+      summary: Creates a backup of all node databases in the specified directory
+      requestBody:
+        description: Request backup creation in the specified dir 
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeBackup"
+            example:
+              dir: /path/to/backup/dir/
+        required: true
+      responses:
+        "200":
+          description: Returns account data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "TODO"
+        "500":
+          description: An error occurred while retrieving the account data at the specified height
+          content:
+            text/plain:
+              example: "TODO"
+
 
 externalDocs:
   description: Find out more about Pocket Network
@@ -1875,7 +1907,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PartialSignature"
-
+    NodeBackup: 
+      type: object
+      properties:
+        dir:
+          type: string
+        
   securitySchemes: {}
   links: {}
   callbacks: {}

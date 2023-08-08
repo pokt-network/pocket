@@ -23,6 +23,7 @@ type TreeStoreModule interface {
 	treeStoreFactory
 
 	AtomicStore
+	Archivable
 
 	// Update returns the computed state hash for a given height.
 	// * Height is passed through to the Update function and is used to query the TxIndexer for transactions

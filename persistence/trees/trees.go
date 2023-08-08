@@ -15,10 +15,11 @@ package trees
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"hash"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/jackc/pgx/v5"
@@ -115,6 +116,16 @@ type worldState struct {
 	rootHash     []byte
 	merkleTrees  map[string]*stateTree
 	merkleRoots  map[string][]byte
+}
+
+// worldStateJson holds exported members for proper JSON marshaling and unmarshaling.
+// It contains the root hash of the merkle roots as a byte slice and a map of the MerkleRoots
+// where each key is the name of the file in the same directory that corresponds to the baderDB
+// backup file for that tree. That tree's hash is the value of that object for checking the integrity
+// of each file and tree.
+type worldStateJson struct {
+	RootHash    []byte
+	MerkleRoots map[string][]byte //
 }
 
 // GetTree returns the root hash and nodeStore for the matching tree stored in the TreeStore.
@@ -298,7 +309,8 @@ func (t *treeStore) getStateHash() string {
 	}
 	// Convert the array to a slice and return it
 	// REF: https://stackoverflow.com/questions/28886616/convert-array-to-slice-in-go
-	hexHash := hex.EncodeToString(t.rootTree.tree.Root())
+	root := t.rootTree.tree.Root()
+	hexHash := hex.EncodeToString(root)
 	t.logger.Info().Msgf("#️⃣ calculated state hash: %s", hexHash)
 	return hexHash
 }
@@ -329,35 +341,51 @@ func (t *treeStore) Rollback() error {
 	return ErrFailedRollback
 }
 
-// Load sets the TreeStore trees to the values provided in the worldstate
-func (t *treeStore) Load(w *worldState) error {
-	t.merkleTrees = make(map[string]*stateTree)
+// Load sets the TreeStore merkle and root trees to the values provided in the worldstate
+func (t *treeStore) Load(dir string) error {
+	// look for a worldstate.json file to hydrate
+	data, err := readFile(filepath.Join(dir, "worldstate.json"))
+	if err != nil {
+		return err
+	}
 
-	// import root tree
-	rootTreePath := fmt.Sprintf("%s/%s_nodes", t.treeStoreDir, RootTreeName)
-	nodeStore, err := kvstore.NewKVStore(rootTreePath)
+	// assign tree store directory to dir if a valid worldstate.json exists
+	t.treeStoreDir = dir
+
+	// hydrate a worldstate from the json object
+	var w *worldStateJson
+	err = json.Unmarshal(data, &w)
+	if err != nil {
+		return err
+	}
+
+	t.logger.Info().Msgf("🌏 worldstate detected, beginning import at %s", dir)
+
+	// create a new root tree and node store
+	nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.treeStoreDir, RootTreeName))
 	if err != nil {
 		return err
 	}
 	t.rootTree = &stateTree{
 		name:      RootTreeName,
-		tree:      smt.ImportSparseMerkleTree(nodeStore, smtTreeHasher, w.rootHash),
+		tree:      smt.NewSparseMerkleTree(nodeStore, smtTreeHasher),
 		nodeStore: nodeStore,
 	}
 
-	// import merkle trees
-	for treeName, treeRootHash := range w.merkleRoots {
-		treePath := fmt.Sprintf("%s/%s_nodes", w.treeStoreDir, treeName)
+	// import merkle trees with the proper hash
+	t.merkleTrees = make(map[string]*stateTree)
+	for treeName, treeRootHash := range w.MerkleRoots {
+		treePath := fmt.Sprintf("%s/%s_nodes", dir, treeName)
 		nodeStore, err := kvstore.NewKVStore(treePath)
 		if err != nil {
 			return err
 		}
-
 		t.merkleTrees[treeName] = &stateTree{
 			name:      treeName,
-			nodeStore: nodeStore,
 			tree:      smt.ImportSparseMerkleTree(nodeStore, smtTreeHasher, treeRootHash),
+			nodeStore: nodeStore,
 		}
+		t.logger.Info().Msgf("🌳 %s initialized at %s", treeName, hex.EncodeToString(w.MerkleRoots[treeName]))
 	}
 
 	return nil
@@ -404,15 +432,34 @@ func (t *treeStore) save() (*worldState, error) {
 // Backup creates a new backup of each tree in the tree store to the provided directory.
 // Each tree is backed up in an eponymous file in the provided backupDir.
 func (t *treeStore) Backup(backupDir string) error {
-	errs := []error{}
+	// save all current branches
+	if err := t.Commit(); err != nil {
+		return err
+	}
+
+	w := &worldStateJson{
+		RootHash:    []byte(t.getStateHash()),
+		MerkleRoots: make(map[string][]byte),
+	}
+
 	for _, st := range t.merkleTrees {
-		treePath := filepath.Join(backupDir, st.name)
+		treePath := fmt.Sprintf("%s/%s_nodes.bak", backupDir, st.name)
 		if err := st.nodeStore.Backup(treePath); err != nil {
 			t.logger.Err(err).Msgf("failed to backup %s tree: %+v", st.name, err)
-			errs = append(errs, err)
+			return err
 		}
+		w.MerkleRoots[st.name] = st.tree.Root()
 	}
-	return errors.Join(errs...)
+
+	worldstatePath := filepath.Join(backupDir, "worldstate.json")
+	err := writeFile(worldstatePath, w)
+	if err != nil {
+		return err
+	}
+
+	t.logger.Info().Msgf("💾 backup created at %s", backupDir)
+
+	return nil
 }
 
 ////////////////////////
@@ -559,4 +606,47 @@ func getTransactions(txi indexer.TxIndexer, height uint64) ([]*coreTypes.Indexed
 		return nil, fmt.Errorf("failed to get transactions by height: %w", err)
 	}
 	return indexedTxs, nil
+}
+
+func readFile(filePath string) ([]byte, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	// Use os.Stat to get file size and read the content into a byte slice
+	stat, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]byte, stat.Size())
+	_, err = file.Read(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func writeFile(filePath string, data interface{}) error {
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Use the json.MarshalIndent function to encode data into JSON format with indentation
+	jsonData, err := json.MarshalIndent(data, "", "    ")
+	if err != nil {
+		return err
+	}
+
+	_, err = file.Write(jsonData)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

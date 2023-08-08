@@ -4,12 +4,16 @@ package blockstore
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/utils"
 )
+
+// backupName is the name of the archive file that is created when Backup is called for a BlockStore
+const backupName = "blockstore.bak"
 
 // BlockStore is a key-value store that maps block heights to serialized
 // block structures.
@@ -93,8 +97,8 @@ func (bs *blockStore) Stop() error {
 	return bs.kv.Stop()
 }
 
-func (bs *blockStore) Backup(path string) error {
-	return bs.kv.Backup(path)
+func (bs *blockStore) Backup(dir string) error {
+	return bs.kv.Backup(filepath.Join(dir, backupName))
 }
 
 ///////////////
