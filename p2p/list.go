@@ -1,4 +1,6 @@
-package debug
+//go:build debug
+
+package p2p
 
 import (
 	"fmt"
