@@ -13,7 +13,7 @@ import (
 var peerListTableHeader = []string{"Peer ID", "Pokt Address", "ServiceURL"}
 
 // PrintPeerList retrieves the correct peer list using the peerstore provider
-// on the bus and then passes this list to PrintPeerListTable to print the
+// on the bus and then passes this list to printPeerListTable to print the
 // list of peers to os.Stdout as a table
 func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 	var (
@@ -84,7 +84,7 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 	}
 
 	// NB: Intentionally printing with `fmt` instead of the logger to match
-	// `utils.PrintPeerListTable` which does not use the logger due to
+	// `utils.printPeerListTable` which does not use the logger due to
 	// incompatibilities with the tabwriter.
 	// (This doesn't seem to work as expected; i.e. not printing at all in tilt.)
 	if _, err := fmt.Fprintf(
@@ -96,15 +96,15 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 		return fmt.Errorf("error printing to stdout: %w", err)
 	}
 
-	if err := PrintPeerListTable(peers); err != nil {
+	if err := printPeerListTable(peers); err != nil {
 		return fmt.Errorf("error printing peer list: %w", err)
 	}
 	return nil
 }
 
-// PrintPeerListTable prints a table of the passed peers to stdout. Header row is defined
+// printPeerListTable prints a table of the passed peers to stdout. Header row is defined
 // by `peerListTableHeader`. Row printing behavior is defined by `peerListRowConsumerFactory`.
-func PrintPeerListTable(peers types.PeerList) error {
+func printPeerListTable(peers types.PeerList) error {
 	return utils.PrintTable(peerListTableHeader, peerListRowConsumerFactory(peers))
 }
 
