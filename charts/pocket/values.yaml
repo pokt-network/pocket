@@ -146,6 +146,10 @@ image:
   # -- image tag
   tag: "latest"
 
+healthchecks:
+  # -- enable liveness and readiness probes
+  enabled: true
+
 # -- image pull secrets
 imagePullSecrets: []
 nameOverride: ""
