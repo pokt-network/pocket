@@ -101,7 +101,6 @@ func (uow *leaderUtilityUnitOfWork) reapMempool(txMempool mempool.TXMempool, max
 		}
 
 		txHash, err := tx.Hash()
-
 		if err != nil {
 			uow.logger.Err(err).Msg("Error hashing transaction during mempool reaping")
 			return nil, err
