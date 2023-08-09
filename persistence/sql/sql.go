@@ -156,7 +156,7 @@ func GetParams(pgtx pgx.Tx, height uint64) ([]*coreTypes.Param, error) {
 
 func GetUpgrade(pgtx pgx.Tx, height uint64) (*coreTypes.Upgrade, error) {
 	row := pgtx.QueryRow(context.Background(), `
-select signer, version, height, created from upgrades where created = $1
+SELECT signer, version, height, created FROM upgrades WHERE created = $1
 `, height)
 
 	upgrade := new(coreTypes.Upgrade)
