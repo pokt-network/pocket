@@ -702,8 +702,6 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pokt-network/go-mockdns v0.0.1 h1:1Kb/kIFH6bNtY9F1bFhJyMRMCc7WyiqfGg0hotBZ1JI=
 github.com/pokt-network/go-mockdns v0.0.1/go.mod h1:lgRN6+KxQBawyIghpnl5CezHFGS9VLzvtVlwxvzXTQ4=
-github.com/pokt-network/gocuke v0.0.1 h1:qJ/Ryf+hi5L6T9lsOZDNbiAclHkLlDio5/eVKQEYhgE=
-github.com/pokt-network/gocuke v0.0.1/go.mod h1:BowLKW4++696gTTU33teodtIhjjyaphEbhQT9D5Refw=
 github.com/pokt-network/smt v0.6.1 h1:u5yTGNNND6edXv3vMQrAcjku1Ig4osehdu+EMYSXHUU=
 github.com/pokt-network/smt v0.6.1/go.mod h1:CWgC9UzDxXJNkL7TEADnJXutZVMYzK/+dmBb37RWkeQ=
 github.com/polydawn/refmt v0.89.0 h1:ADJTApkvkeBZsN0tBTx8QjpD9JkmxbKp0cxfr9qszm4=
@@ -752,6 +750,8 @@ github.com/quic-go/webtransport-go v0.5.2 h1:GA6Bl6oZY+g/flt00Pnu0XtivSD8vukOu3l
 github.com/quic-go/webtransport-go v0.5.2/go.mod h1:OhmmgJIzTTqXK5xvtuX0oBpLV2GkLWNDA+UeTGJXErU=
 github.com/raulk/go-watchdog v1.3.0 h1:oUmdlHxdkXRJlwfG0O9omj8ukerm8MEQavSiDTEtBsk=
 github.com/raulk/go-watchdog v1.3.0/go.mod h1:fIvOnLbF0b0ZwkB9YU4mOW9Did//4vPZtDqv66NfsMU=
+github.com/regen-network/gocuke v0.6.3 h1:RUOZJSZ4OHAKNjTCtjm090RI7/UjWCMb5kgK5QnbvfA=
+github.com/regen-network/gocuke v0.6.3/go.mod h1:BowLKW4++696gTTU33teodtIhjjyaphEbhQT9D5Refw=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.9.0 h1:73kH8U+JUqXU8lRuOHeVHaa/SZPifC7BkcraZVejAe8=
 github.com/rs/xid v1.2.1/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=

@@ -5,9 +5,6 @@ go 1.20
 // TECHDEBT: remove once upstream PR is merged (see: https://github.com/cosmos/ics23/pull/153)
 replace github.com/cosmos/ics23/go => github.com/h5law/ics23/go v0.0.0-20230619152251-56d948cafb83
 
-// TECHDEBT: remove once upstream PR is merged (see: https://github.com/regen-network/gocuke/pull/12)
-replace github.com/regen-network/gocuke => github.com/pokt-network/gocuke v0.0.1
-
 // TECHDEBT: remove once upstream PR is merged (see: https://github.com/foxcpp/go-mockdns/pull/13)
 replace github.com/foxcpp/go-mockdns => github.com/pokt-network/go-mockdns v0.0.1
 
@@ -44,7 +41,7 @@ require (
 	github.com/multiformats/go-multiaddr v0.8.0
 	github.com/pokt-network/smt v0.6.1
 	github.com/quasilyte/go-ruleguard/dsl v0.3.21
-	github.com/regen-network/gocuke v0.6.2
+	github.com/regen-network/gocuke v0.6.3
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/viper v1.13.0

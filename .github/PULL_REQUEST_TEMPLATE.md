@@ -12,6 +12,7 @@
  2. If applicable, specify the key files that should be looked at.
  3. If you leave the `reviewpad:summary` block below, it'll autopopulate an AI generated summary. Alternatively, you can leave a `/reviewpad summarize` comment to trigger it manually.
 -->
+
 reviewpad:summary
 
 ## Issue
@@ -56,14 +57,10 @@ Please mark the relevant option(s):
 ## Required Checklist
 
 - [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have added, or updated, [`godoc` format comments](https://go.dev/blog/godoc) on touched members (see: [tip.golang.org/doc/comment](https://tip.golang.org/doc/comment))
+- [ ] I have commented my code, particularly in hard-to-understand areas (README(s), docs, godoc comments, etc...)
 - [ ] I have tested my changes using the available tooling
-- [ ] I have updated the corresponding CHANGELOG
-
-### If Applicable Checklist
-
-- [ ] I have updated the corresponding README(s); local and/or global
-- [ ] I have added tests that prove my fix is effective or that my feature works
+- [ ] I have added, or updated, [`godoc` format comments](https://go.dev/blog/godoc) on touched members (see: [tip.golang.org/doc/comment](https://tip.golang.org/doc/comment))
 - [ ] I have added, or updated, [mermaid.js](https://mermaid-js.github.io) diagrams in the corresponding README(s)
-- [ ] I have added, or updated, documentation and [mermaid.js](https://mermaid-js.github.io) diagrams in `shared/docs/*` if I updated `shared/*`README(s)
+<!-- Changelogs are currently turned off
+- [ ] I have updated the corresponding CHANGELOG
+      -->

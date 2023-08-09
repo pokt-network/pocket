@@ -1,6 +1,8 @@
 # Development Overview <!-- omit in toc -->
 
-Please note that this repository is under very active development and breaking changes are likely to occur. If the documentation falls out of date please see our [guide](./../contributing/README.md) on how to contribute!
+**IMPORTANT NOTE TO THE READER**: _This document aims to be the `"get me going document"`, so it is unlikely here will still be a lot of things and tools you do not know after finishing it. However, it is intended for you to go through from start to finish in order to lay a foundation with regard to everything you need to know. PLEASE update it with additional resources you find helpful along the way._
+
+_TODO(@Olshansk, @bryanchriswhite): Make sure to update this document after #730 and #874 are merged in._
 
 - [LFG - Development](#lfg---development)
   - [Install Dependencies](#install-dependencies)
@@ -331,6 +333,7 @@ If you are adding a new `.md` file for documentation please included a similar c
   - [Starting a Review](./CODE_REVIEW_GUIDELINES.md#starting-a-review)
   - [Finishing a Review](./CODE_REVIEW_GUIDELINES.md#finishing-a-review)
   - [Merging](./CODE_REVIEW_GUIDELINES.md#merging)
+- [Code Guidelines](./CODE_GUIDELINES.md)
 
 ## Documentation Resources and Implementation
 
