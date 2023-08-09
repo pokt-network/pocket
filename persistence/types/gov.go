@@ -37,19 +37,19 @@ const (
 		)`
 
 	UpgradesTableSchema = `
-create table if not exists upgrades
+CREATE TABLE IF NOT EXISTS upgrades
 (
-    signer  text        not null,
-    version varchar(10) not null,
-    height  bigint      not null unique,
-    created bigint      not null unique,
-    primary key (version)
+    signer  text        NOT NULL,
+    version varchar(10) NOT NULL,
+    height  bigint      NOT NULL UNIQUE,
+    created bigint      NOT NULL UNIQUE,
+    PRIMARY KEY (version)
 );
-comment on table upgrades is 'stores the upgrade history of the network';
-comment on column upgrades.signer is 'the address of the signer of the upgrade';
-comment on column upgrades.version is 'the semver 2.0 version of the upgrade';
-comment on column upgrades.height is 'the activation height of the upgrade';
-comment on column upgrades.created is 'the height the upgrade was created';
+COMMENT ON TABLE upgrades IS 'stores the upgrade history of the network';
+COMMENT ON COLUMN upgrades.signer IS 'the address of the signer of the upgrade';
+COMMENT ON COLUMN upgrades.version IS 'the semver 2.0 version of the upgrade';
+COMMENT ON COLUMN upgrades.height IS 'the activation height of the upgrade';
+COMMENT ON COLUMN upgrades.created IS 'the height the upgrade was created';
 `
 )
 
