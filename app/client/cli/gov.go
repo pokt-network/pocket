@@ -48,7 +48,7 @@ func govCommands() []*cobra.Command {
 				value := args[2]
 
 				// TODO(0xbigboss): implement RPC client, route and handler
-				fmt.Printf("changing parameter %s owned by %s to %s\n", args[1], args[0], args[2])
+				fmt.Printf("changing parameter %s owned by %s to %s\n", key, fromAddrHex, value)
 
 				kb, err := keybaseForCLI()
 				if err != nil {
@@ -93,7 +93,7 @@ func govCommands() []*cobra.Command {
 					return fmt.Errorf("HTTP status code: %d\n", resp.StatusCode())
 				}
 
-				fmt.Printf("Successfully sent change parameter %s owned by %s to %s\n", args[1], args[0], args[2])
+				fmt.Printf("Successfully sent change parameter %s owned by %s to %s\n", key, fromAddrHex, value)
 				fmt.Printf("HTTP status code: %d\n", resp.StatusCode())
 				fmt.Println(string(resp.Body))
 
@@ -112,7 +112,7 @@ func govCommands() []*cobra.Command {
 				version := args[1]
 				heightArg := args[2]
 
-				fmt.Printf("submitting upgrade for version %s at height %s.\n", args[0], args[1])
+				fmt.Printf("submitting upgrade for version %s at height %s.\n", version, heightArg)
 
 				kb, err := keybaseForCLI()
 				if err != nil {
@@ -162,7 +162,7 @@ func govCommands() []*cobra.Command {
 					return fmt.Errorf("HTTP status code: %d\n", resp.StatusCode())
 				}
 
-				fmt.Printf("Successfully submitted upgrade for version %s at height %s.\n", args[0], args[1])
+				fmt.Printf("Successfully submitted upgrade for version %s at height %s.\n", version, heightArg)
 				fmt.Printf("HTTP status code: %d\n", resp.StatusCode())
 				fmt.Println(string(resp.Body))
 
