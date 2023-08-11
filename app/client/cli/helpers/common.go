@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -28,15 +27,9 @@ func FetchPeerstore(cmd *cobra.Command) (types.Peerstore, error) {
 	if err != nil {
 		return nil, err
 	}
-	currentHeightProvider := bus.GetCurrentHeightProvider()
-	height := currentHeightProvider.CurrentHeight()
-	pstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(height)
+	pstore, err := pstoreProvider.GetStakedPeerstoreAtCurrentHeight()
 	if err != nil {
-		return nil, fmt.Errorf("retrieving peerstore at height %d", height)
-	}
-	// Inform the client's main P2P that a the blockchain is at a new height so it can, if needed, update its view of the validator set
-	if err := sendConsensusNewHeightEventToP2PModule(height, bus); err != nil {
-		return nil, errors.New("sending consensus new height event")
+		return nil, fmt.Errorf("retrieving peerstore")
 	}
 	return pstore, nil
 }
