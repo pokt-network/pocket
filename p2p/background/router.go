@@ -5,6 +5,8 @@ package background
 import (
 	"context"
 	"fmt"
+	sharedUtils "github.com/pokt-network/pocket/shared/utils"
+	"strings"
 	"time"
 
 	dht "github.com/libp2p/go-libp2p-kad-dht"
@@ -188,7 +190,7 @@ func (rtr *backgroundRouter) GetPeerstore() typesP2P.Peerstore {
 func (rtr *backgroundRouter) AddPeer(peer typesP2P.Peer) error {
 	// Noop if peer with the pokt address already exists in the peerstore.
 	// TECHDEBT: add method(s) to update peers.
-	if p := rtr.pstore.GetPeer(peer.GetAddress()); p != nil {
+	if p := rtr.pstore.GetPeer(peer.GetAddress()); p == nil {
 		return nil
 	}
 
@@ -250,34 +252,28 @@ func (rtr *backgroundRouter) setupDependencies(ctx context.Context, _ *config.Ba
 		return fmt.Errorf("setting up subscription: %w", err)
 	}
 
-	if err := rtr.setupPeerstore(ctx); err != nil {
-		return fmt.Errorf("setting up peerstore: %w", err)
-	}
 	return nil
 }
 
-func (rtr *backgroundRouter) setupPeerstore(ctx context.Context) (err error) {
+func (rtr *backgroundRouter) getPeerstore() (typesP2P.Peerstore, error) {
 	// TECHDEBT(#811): use `bus.GetPeerstoreProvider()` after peerstore provider
 	// is retrievable as a proper submodule
 	pstoreProvider, err := peerstore_provider.GetPeerstoreProvider(rtr.GetBus())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rtr.logger.Debug().Msg("setupCurrentHeightProvider")
 	currentHeightProvider := rtr.GetBus().GetCurrentHeightProvider()
 
 	// seed initial peerstore with current on-chain peer info (i.e. staked actors)
-	rtr.pstore, err = pstoreProvider.GetStakedPeerstoreAtHeight(
+	pstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(
 		currentHeightProvider.CurrentHeight(),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	// TECHDEBT(#859): integrate with `p2pModule#bootstrap()`.
-	rtr.bootstrap(ctx)
-	return nil
+	return pstore, nil
 }
 
 // setupPeerDiscovery sets up the Kademlia Distributed Hash Table (DHT)
@@ -332,7 +328,28 @@ func (rtr *backgroundRouter) setupSubscription() (err error) {
 }
 
 // TECHDEBT(#859): integrate with `p2pModule#bootstrap()`.
-func (rtr *backgroundRouter) bootstrap(ctx context.Context) {
+func (rtr *backgroundRouter) Bootstrap(
+	ctx context.Context,
+	limiter *sharedUtils.Limiter,
+	serviceURLs []string,
+) error {
+
+	for _, url := range serviceURLs {
+		limiter.Go(ctx, func() {
+			serviceURL := strings.Clone(url)
+
+			rtr.logger.Info().
+				Str("url", serviceURL).
+				Msg("attempting to bootstrap from bootstrap node")
+
+			if err := utils.CheckHealth(ctx, serviceURL, rtr.logger); err != nil {
+				// NB: errors are logged in `checkHealth()`.
+				// abort bootstrap attempt if bootstrap node is unhealthy.
+				return
+			}
+		})
+	}
+
 	// CONSIDERATION: add `GetPeers` method, which returns a map,
 	// to the `PeerstoreProvider` interface to simplify this loop.
 	peerList := rtr.pstore.GetPeerList()
@@ -360,10 +377,12 @@ func (rtr *backgroundRouter) bootstrap(ctx context.Context) {
 			"num_peers": len(peerList) - 1, // -1 as includes self
 		}).Msg("connecting to peer")
 		if err := rtr.connectWithRetry(ctx, libp2pAddrInfo); err != nil {
-			rtr.logger.Error().Err(err).Msg("error connecting to bootstrap peer")
+			rtr.logger.Error().Err(err).Msg("error connecting to Bootstrap peer")
 			continue
 		}
 	}
+	// TECHDEBT(#859): determine appropriate error conditions.
+	return nil
 }
 
 // connectWithRetry attempts to connect to the given peer, retrying up to connectMaxRetries times
@@ -376,7 +395,19 @@ func (rtr *backgroundRouter) connectWithRetry(ctx context.Context, libp2pAddrInf
 			return nil
 		}
 
-		rtr.logger.Error().Msgf("failed to connect (attempt %d), retrying in %v...", i+1, connectRetryTimeout)
+		var multiaddrs []string
+		if len(libp2pAddrInfo.Addrs) > 0 {
+			for _, addr := range libp2pAddrInfo.Addrs {
+				multiaddrs = append(multiaddrs, addr.String())
+			}
+		}
+
+		rtr.logger.Error().Fields(map[string]any{
+			"attempt":        i + 1,
+			"peerID":         libp2pAddrInfo.ID.String(),
+			"peer_multiaddr": strings.Join(multiaddrs, ", "),
+		}).
+			Msgf("failed to connect, retrying in %v...", connectRetryTimeout)
 		time.Sleep(connectRetryTimeout)
 	}
 

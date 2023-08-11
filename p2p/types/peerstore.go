@@ -18,7 +18,7 @@ type Peerstore interface {
 	Size() int
 }
 
-// PeerAddrMap implements the `Peerstore` interface.
+// PeerAddrMap implements the `Peerstore` interface. The key is canonically the pokt address
 type PeerAddrMap map[string]Peer
 
 // GetPeer implements the respective `Peerstore` interface member.

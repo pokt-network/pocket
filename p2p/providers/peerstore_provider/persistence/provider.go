@@ -45,6 +45,8 @@ func (*persistencePeerstoreProvider) GetModuleName() string {
 }
 
 // GetStakedPeerstoreAtHeight implements the respective `PeerstoreProvider` interface method.
+// It does not rely on the staked actor router's copy of the peerstore which is
+// synchronized from this single source of truth.
 func (persistencePSP *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
 	readCtx, err := persistencePSP.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {
@@ -60,12 +62,15 @@ func (persistencePSP *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(h
 	return peerstore_provider.ActorsToPeerstore(persistencePSP, validators)
 }
 
+// GetStakedPeerstoreAtCurrentHeight implements the respective `PeerstoreProvider` interface method.
+// It gets the current height from the registered current height provider.
 func (persistencePSP *persistencePeerstoreProvider) GetStakedPeerstoreAtCurrentHeight() (typesP2P.Peerstore, error) {
 	currentHeight := persistencePSP.GetBus().GetCurrentHeightProvider().CurrentHeight()
 	return persistencePSP.GetStakedPeerstoreAtHeight(currentHeight)
 }
 
-// GetStakedPeerstoreAtHeight implements the respective `PeerstoreProvider` interface method.
+// GetUnstakedPeerstore implements the respective `PeerstoreProvider` interface method.
+// It relies on the unstaked actor router submodule to maintain this peerstore via its DHT.
 func (persistencePSP *persistencePeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
 	// TECHDEBT(#810, #811): use `bus.GetUnstakedActorRouter()` once it's available.
 	unstakedActorRouterMod, err := persistencePSP.GetBus().GetModulesRegistry().GetModule(typesP2P.UnstakedActorRouterSubmoduleName)

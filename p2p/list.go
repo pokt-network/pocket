@@ -6,20 +6,25 @@ import (
 	"fmt"
 	"os"
 
+	libp2pPeerstore "github.com/libp2p/go-libp2p/core/peerstore"
+
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
-	"github.com/pokt-network/pocket/p2p/types"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var peerListTableHeader = []string{"Peer ID", "Pokt Address", "ServiceURL"}
+var (
+	peerListTableHeader       = []string{"Peer ID", "Pokt Address", "ServiceURL", "Multiaddr"}
+	libp2pPeerListTableHeader = []string{"Peer ID", "Multiaddr"}
+)
 
 // PrintPeerList retrieves the correct peer list using the peerstore provider
 // on the bus and then passes this list to printPeerListTable to print the
 // list of peers to os.Stdout as a table
 func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 	var (
-		peers           types.PeerList
+		peers           typesP2P.PeerList
 		routerPlurality = ""
 	)
 
@@ -32,8 +37,6 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 
 	switch routerType {
 	case StakedRouterType:
-		// TODO_IN_THIS_COMMIT: what about unstaked peers actors?
-		// if !isStaked ...
 		pstore, err := pstoreProvider.GetStakedPeerstoreAtCurrentHeight()
 		if err != nil {
 			return fmt.Errorf("error getting staked peerstore: %v", err)
@@ -47,11 +50,26 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 		}
 
 		peers = pstore.GetPeerList()
+	case Libp2pHost:
+		p2pModule := bus.GetP2PModule()
+		p2p, ok := p2pModule.(*P2PModule)
+		if !ok {
+			return fmt.Errorf("unsupported P2P module type: %T", p2pModule)
+		}
+
+		_, err = fmt.Fprintf(
+			os.Stdout,
+			"self peer ID: %s\n",
+			p2p.GetLibp2pHost().ID().String(),
+		)
+		if err != nil {
+			return err
+		}
+
+		return printLibP2PPeerListTable(p2p.GetLibp2pHost().Peerstore())
 	case AllRouterTypes:
 		routerPlurality = "s"
 
-		// TODO_IN_THIS_COMMIT: what about unstaked peers actors?
-		// if !isStaked ...
 		stakedPStore, err := pstoreProvider.GetStakedPeerstoreAtCurrentHeight()
 		if err != nil {
 			return fmt.Errorf("error getting staked peerstore: %v", err)
@@ -71,10 +89,11 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 		// recently and hasn't yet completed background router bootstrapping may
 		// result in peers experiencing this state.
 		if len(additionalPeers) == 0 {
-			return PrintPeerListTable(unstakedPeers)
+			peers = unstakedPeers
+			break
 		}
 
-		allPeers := append(types.PeerList{}, unstakedPeers...)
+		allPeers := append(typesP2P.PeerList{}, unstakedPeers...)
 		allPeers = append(allPeers, additionalPeers...)
 		peers = allPeers
 	default:
@@ -99,23 +118,23 @@ func PrintPeerList(bus modules.Bus, routerType RouterType) error {
 	}
 
 	if err := printPeerListTable(peers); err != nil {
-		return fmt.Errorf("error printing peer list: %w", err)
+		return fmt.Errorf("error printing libp2pPeer list: %w", err)
 	}
 	return nil
 }
 
 // printPeerListTable prints a table of the passed peers to stdout. Header row is defined
 // by `peerListTableHeader`. Row printing behavior is defined by `peerListRowConsumerFactory`.
-func printPeerListTable(peers types.PeerList) error {
+func printPeerListTable(peers typesP2P.PeerList) error {
 	return utils.PrintTable(peerListTableHeader, peerListRowConsumerFactory(peers))
 }
 
-func peerListRowConsumerFactory(peers types.PeerList) utils.RowConsumer {
+func peerListRowConsumerFactory(peers typesP2P.PeerList) utils.RowConsumer {
 	return func(provideRow utils.RowProvider) error {
 		for _, peer := range peers {
 			libp2pAddrInfo, err := utils.Libp2pAddrInfoFromPeer(peer)
 			if err != nil {
-				return fmt.Errorf("error converting peer to libp2p addr info: %w", err)
+				return fmt.Errorf("error converting libp2pPeer to libp2p addr info: %w", err)
 			}
 
 			peerMultiaddr, err := utils.Libp2pMultiaddrFromServiceURL(peer.GetServiceURL())
@@ -127,8 +146,36 @@ func peerListRowConsumerFactory(peers types.PeerList) utils.RowConsumer {
 				libp2pAddrInfo.ID.String(),
 				peer.GetAddress().String(),
 				peer.GetServiceURL(),
+				peerMultiaddr.String(),
 			)
 			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
+// printPeerListTable prints a table of the passed peers to stdout. Header row is defined
+// by `peerListTableHeader`. Row printing behavior is defined by `peerListRowConsumerFactory`.
+func printLibP2PPeerListTable(pstore libp2pPeerstore.Peerstore) error {
+	return utils.PrintTable(libp2pPeerListTableHeader, libp2pPeerListRowConsumerFactory(pstore))
+}
+
+func libp2pPeerListRowConsumerFactory(pstore libp2pPeerstore.Peerstore) utils.RowConsumer {
+	return func(provideRow utils.RowProvider) error {
+		for _, peerID := range pstore.Peers() {
+			peerAddrs := pstore.Addrs(peerID)
+
+			peerMultiaddrStr := "empty"
+			if len(peerAddrs) > 0 {
+				peerMultiaddrStr = peerAddrs[0].String()
+			}
+
+			if err := provideRow(
+				peerID.String(),
+				peerMultiaddrStr,
+			); err != nil {
 				return err
 			}
 		}

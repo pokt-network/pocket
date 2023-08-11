@@ -108,6 +108,7 @@ func NewSortedPeerManager(startAddr crypto.Address, pstore Peerstore, isDynamic 
 }
 
 func (sortedPM *SortedPeerManager) GetPeerstore() Peerstore {
+	// TECHDEBT: prefer getting the peerstore on demand over holding a reference to it.
 	return sortedPM.pstore
 }
 

@@ -11,7 +11,9 @@ import (
 var allFlag,
 	stakedFlag,
 	unstakedFlag,
-	localFlag bool
+	localFlag,
+	libp2pHostFlag,
+	broadcastFlag bool
 
 func NewPeerCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -47,7 +49,21 @@ func NewPeerCommand() *cobra.Command {
 			&localFlag,
 			"local", "l",
 			false,
-			"operations apply to the local (CLI binary's) P2P module instead of being broadcast",
+			"commands apply to the local (CLI binary's) P2P module instead of being sent to --remote-cli-url or broadcast (see: -b)",
+		)
+	cmd.PersistentFlags().
+		BoolVarP(
+			&broadcastFlag,
+			"broadcast", "b",
+			false,
+			"the peer list command is broadcast to all nodes instead of being sent only to the --remote-cli-url",
+		)
+	cmd.PersistentFlags().
+		BoolVar(
+			&libp2pHostFlag,
+			"libp2p_host",
+			false,
+			"commands only apply to the underlying libp2p host's peerstore",
 		)
 
 	// Add subcommands

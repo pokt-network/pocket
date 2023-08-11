@@ -290,7 +290,7 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 		})
 	}
 
-	// bootstrap off of arbitrary testHost
+	// Bootstrap off of arbitrary testHost
 	privKey, selfPeer := newTestPeer(t)
 
 	// set up a test backgroundRouter
@@ -368,7 +368,7 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 	require.ElementsMatchf(t, expectedPeerIDs, actualPeerIDs, "peerIDs don't match")
 }
 
-// bootstrap connects each host to one other except for the arbitrarily chosen "bootstrap host"
+// bootstrap connects each host to one other except for the arbitrarily chosen "Bootstrap host"
 func bootstrap(t *testing.T, ctx context.Context, testHosts []libp2pHost.Host) {
 	t.Helper()
 

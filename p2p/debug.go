@@ -5,10 +5,12 @@ package p2p
 import (
 	"fmt"
 
-	"github.com/pokt-network/pocket/p2p/debug"
+	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
+
+type P2PModule = p2pModule
 
 func (m *p2pModule) handleDebugMessage(msg *messaging.DebugMessage) error {
 	switch msg.Action {
@@ -16,9 +18,13 @@ func (m *p2pModule) handleDebugMessage(msg *messaging.DebugMessage) error {
 		if !m.cfg.EnablePeerDiscoveryDebugRpc {
 			return typesP2P.ErrPeerDiscoveryDebugRPCDisabled
 		}
-		routerType := debug.RouterType(msg.Message.Value)
-		return debug.PrintPeerList(m.GetBus(), routerType)
+		routerType := RouterType(msg.Message.Value)
+		return PrintPeerList(m.GetBus(), routerType)
 	default:
 		return fmt.Errorf("unsupported P2P debug message action: %s", msg.Action)
 	}
+}
+
+func (m *p2pModule) GetLibp2pHost() libp2pHost.Host {
+	return m.host
 }

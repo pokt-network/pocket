@@ -3,6 +3,9 @@ package types
 //go:generate mockgen -package=mock_types -destination=./mocks/network_mock.go github.com/pokt-network/pocket/p2p/types Router,RouterConfig
 
 import (
+	"context"
+	"github.com/pokt-network/pocket/shared/utils"
+
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -27,6 +30,8 @@ const (
 type Router interface {
 	modules.Submodule
 
+	// Bootstrap
+	Bootstrap(ctx context.Context, limiter *utils.Limiter, serviceURLs []string) error
 	Broadcast(data []byte) error
 	Send(data []byte, address cryptoPocket.Address) error
 	Close() error

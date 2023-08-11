@@ -15,21 +15,50 @@ import (
 // PeerFromLibp2pStream builds a network peer using peer info available
 // from the given libp2p stream.
 func PeerFromLibp2pStream(stream network.Stream) (typesP2P.Peer, error) {
-	publicKeyBz, err := stream.Conn().RemotePublicKey().Raw()
-	if err != nil {
-		return nil, err
+	addrInfo := libp2pPeer.AddrInfo{
+		ID:    stream.Conn().RemotePeer(),
+		Addrs: []multiaddr.Multiaddr{stream.Conn().RemoteMultiaddr()},
 	}
+	return PeerFromLibp2pAddrInfo(&addrInfo)
+}
+
+func PeerFromLibp2pAddrInfo(addrInfo *libp2pPeer.AddrInfo) (typesP2P.Peer, error) {
+	publicKeyErr := func(err error) error {
+		return fmt.Errorf(
+			"error converting public key from libp2p peer ID %q: %w",
+			addrInfo.ID, err,
+		)
+	}
+
+	libP2PPublicKey, err := addrInfo.ID.ExtractPublicKey()
+	if err != nil {
+		return nil, publicKeyErr(err)
+	}
+
+	publicKeyBz, err := libP2PPublicKey.Raw()
+	if err != nil {
+		return nil, publicKeyErr(err)
+	}
+
 	publicKey, err := crypto.NewPublicKeyFromBytes(publicKeyBz)
 	if err != nil {
-		return nil, err
+		return nil, publicKeyErr(err)
 	}
 
-	peerMultiaddr := stream.Conn().RemoteMultiaddr()
-	peerServiceURL, err := ServiceURLFromLibp2pMultiaddr(peerMultiaddr)
-	if err != nil {
-		return nil, fmt.Errorf("converting multiaddr to service URL: %w", err)
+	var (
+		peerServiceURL string
+		peerMultiaddr  multiaddr.Multiaddr
+	)
+	if len(addrInfo.Addrs) > 0 {
+		// NOTE: only using the first multiaddr.
+		peerMultiaddr = addrInfo.Addrs[0]
+		peerServiceURL, err = ServiceURLFromLibp2pMultiaddr(addrInfo.Addrs[0])
+		if err != nil {
+			return nil, fmt.Errorf("error converting multiaddr to service URL: %w", err)
+		}
 	}
 
+	// NOTE: only using the first multiaddr.
 	return &types.NetworkPeer{
 		PublicKey:  publicKey,
 		Address:    publicKey.Address(),

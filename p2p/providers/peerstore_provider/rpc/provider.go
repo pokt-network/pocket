@@ -98,6 +98,7 @@ func (rpcPSP *rpcPeerstoreProvider) GetStakedPeerstoreAtCurrentHeight() (typesP2
 	return rpcPSP.GetStakedPeerstoreAtHeight(currentHeight)
 }
 
+// TECHDEBT: while this method is implemented for completeness, it is not currently
 func (rpcPSP *rpcPeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
 	// TECHDEBT(#811): use `bus.GetUnstakedActorRouter()` once it's available.
 	unstakedActorRouterMod, err := rpcPSP.GetBus().GetModulesRegistry().GetModule(typesP2P.UnstakedActorRouterSubmoduleName)

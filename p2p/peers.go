@@ -1,4 +1,6 @@
-package debug
+//go:build debug
+
+package p2p
 
 import (
 	"fmt"
@@ -13,6 +15,7 @@ const (
 	StakedRouterType   RouterType = "staked"
 	UnstakedRouterType RouterType = "unstaked"
 	AllRouterTypes     RouterType = "all"
+	Libp2pHost         RouterType = "libp2p_host"
 )
 
 func LogSelfAddress(bus modules.Bus) error {
@@ -26,6 +29,6 @@ func LogSelfAddress(bus modules.Bus) error {
 		return fmt.Errorf("getting self address: %w", err)
 	}
 
-	_, err = fmt.Fprintf(os.Stdout, "self address: %s", selfAddr.String())
+	_, err = fmt.Fprintf(os.Stdout, "self address: %s\n", selfAddr.String())
 	return err
 }

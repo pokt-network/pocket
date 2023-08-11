@@ -1,11 +1,9 @@
 package raintree
 
 import (
+	"context"
 	"fmt"
-
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
-	"google.golang.org/protobuf/proto"
-
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/protocol"
@@ -18,7 +16,9 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
+	sharedUtils "github.com/pokt-network/pocket/shared/utils"
 	"github.com/pokt-network/pocket/telemetry"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -94,6 +94,35 @@ func (*rainTreeRouter) Create(
 }
 
 func (rtr *rainTreeRouter) Close() error {
+	return nil
+}
+
+func (rtr *rainTreeRouter) Bootstrap(
+	ctx context.Context,
+	limiter *sharedUtils.Limiter,
+	serviceURLs []string,
+) error {
+
+	for _, url := range serviceURLs {
+		limiter.Go(ctx, func() {
+
+			var matchedPeer typesP2P.Peer
+			for _, peer := range pstore.GetPeerList() {
+				if peer.GetServiceURL() == url {
+					matchedPeer = peer
+					break
+				}
+			}
+			if matchedPeer == nil {
+				rtr.logger.Debug().Str("service_url", url).Msg("bootstrap peer not found in peerstore")
+				return
+			}
+
+			if err := rtr.AddPeer(matchedPeer); err != nil {
+				rtr.logger.Error().Err(err).Msg("error adding bootstrap peer")
+			}
+		})
+	}
 	return nil
 }
 

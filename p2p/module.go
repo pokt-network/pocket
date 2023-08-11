@@ -3,6 +3,7 @@ package p2p
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"sync/atomic"
 
 	"github.com/libp2p/go-libp2p"
@@ -20,6 +21,7 @@ import (
 	"github.com/pokt-network/pocket/p2p/raintree"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -31,7 +33,10 @@ import (
 	"github.com/pokt-network/pocket/telemetry"
 )
 
-var _ modules.P2PModule = &p2pModule{}
+var (
+	_                         modules.P2PModule = &p2pModule{}
+	errPSPModuleNotRegistered                   = runtime.ErrModuleNotRegistered(peerstore_provider.PeerstoreProviderSubmoduleName)
+)
 
 type p2pModule struct {
 	base_modules.IntegrableModule
@@ -292,18 +297,19 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 
 	// TECHDEBT(#811): use `bus.GetPeerstoreProvider()` after peerstore provider
 	// is retrievable as a proper submodule
-	if _, err := peerstore_provider.GetPeerstoreProvider(m.GetBus()); err != nil {
-		// TECHDEBT: compare against `runtime.ErrModuleNotRegistered(...)`.
-		m.logger.Debug().Msg("creating new persistence peerstore...")
+	_, err := peerstore_provider.GetPeerstoreProvider(m.GetBus())
+	switch {
+	case errors.As(err, &errPSPModuleNotRegistered):
+		m.logger.Debug().Msg("creating new persistence peerstore")
 		// Ensure a peerstore provider exists by creating a `persistencePeerstoreProvider`.
 		if _, err := persPSP.Create(m.GetBus()); err != nil {
 			return err
 		}
 		return nil
+	case err == nil:
+		m.logger.Debug().Msg("⚠️ using pre-registered peerstore provider ⚠️")
 	}
-
-	m.logger.Debug().Msg("loaded peerstore provider...")
-	return nil
+	return err
 }
 
 // setupNonceDeduper initializes an empty deduper with a max capacity of
@@ -416,9 +422,9 @@ func (m *p2pModule) setupHost() (err error) {
 	}
 
 	// TECHDEBT(#609): use `StringArrayLogMarshaler` post test-utilities refactor.
-	addrStrs := make(map[int]string)
+	addrStrs := make(map[string]string)
 	for i, addr := range libp2pHost.InfoFromHost(m.host).Addrs {
-		addrStrs[i] = addr.String()
+		addrStrs[strconv.Itoa(i)] = addr.String()
 	}
 	m.logger.Info().Fields(addrStrs).Msg("Listening for incoming connections...")
 	return nil

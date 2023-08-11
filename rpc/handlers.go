@@ -176,6 +176,7 @@ func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 	})
 }
 
+// TECHDEBT: rename to `GetV1P2pStakedActorsPeerstore`
 func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params GetV1P2pStakedActorsAddressBookParams) error {
 	var height int64
 	var actors []Actor

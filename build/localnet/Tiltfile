@@ -74,7 +74,7 @@ k8s_resource("dependencies-prometheus-server", labels=["monitoring"])
 # Builds the pocket binary. Note target OS is linux, because no matter what your OS is, container runs linux natively or in VM.
 local_resource(
     "pocket: Watch & Compile",
-    "GOOS=linux go build -o {root_dir}/bin/pocket-linux {root_dir}/app/pocket/main.go".format(
+    "GOOS=linux go build -tags=debug -o {root_dir}/bin/pocket-linux {root_dir}/app/pocket/main.go".format(
         root_dir=root_dir
     ),
     deps=deps_full_path,
@@ -82,7 +82,7 @@ local_resource(
 )
 local_resource(
     "debug client: Watch & Compile",
-    "GOOS=linux go build -tags=debug -o {root_dir}/bin/p1-linux {root_dir}/app/client/*.go".format(
+    "GOOS=linux go build -tags=debug -o {root_dir}/bin/p1-linux {root_dir}/app/client".format(
         root_dir=root_dir
     ),
     deps=deps_full_path,
