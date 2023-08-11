@@ -118,6 +118,11 @@ func peerListRowConsumerFactory(peers types.PeerList) utils.RowConsumer {
 				return fmt.Errorf("error converting peer to libp2p addr info: %w", err)
 			}
 
+			peerMultiaddr, err := utils.Libp2pMultiaddrFromServiceURL(peer.GetServiceURL())
+			if err != nil {
+				return fmt.Errorf("error converting libp2pPeer service URL to libp2p multiaddr: %w", err)
+			}
+
 			err = provideRow(
 				libp2pAddrInfo.ID.String(),
 				peer.GetAddress().String(),
