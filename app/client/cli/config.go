@@ -12,7 +12,7 @@ func init() {
 var saveDefaultConf = &cobra.Command{
 	Use:   "save_default_config",
 	Short: "Save the default config in a file",
-	Long:  "The default config generated during application start is saved in a config.yaml file",
+	Long:  "The default config generated during application start is saved in a config file path passed in the argument",
 	Run: func(cmd *cobra.Command, args []string) {
 		configs.SaveConfig(args[0])
 	},
