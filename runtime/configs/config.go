@@ -253,7 +253,10 @@ func SaveConfig(path string) {
 	}
 
 	NewDefaultConfig()
-	viper.WriteConfigAs(filePath)
+	err = viper.WriteConfigAs(filePath)
+	if err != nil {
+		log.Fatalf("[ERROR] failed to write config to file, error: %s", err.Error())
+	}
 
 	fmt.Printf("save_default_config: saved default config at %v", filePath)
 }
