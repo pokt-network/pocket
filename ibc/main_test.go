@@ -39,7 +39,7 @@ func newTestConsensusModule(t *testing.T, bus modules.Bus) modules.ConsensusModu
 	return consensusMod.(modules.ConsensusModule)
 }
 
-func newTestP2PModule(t *testing.T, bus modules.Bus) modules.P2PModule {
+func newTestP2PModule(t *testing.T) modules.P2PModule {
 	t.Helper()
 
 	ctrl := gomock.NewController(t)
@@ -57,7 +57,6 @@ func newTestP2PModule(t *testing.T, bus modules.Bus) modules.P2PModule {
 		AnyTimes()
 	p2pMock.EXPECT().GetModuleName().Return(modules.P2PModuleName).AnyTimes()
 	p2pMock.EXPECT().HandleEvent(gomock.Any()).Return(nil).AnyTimes()
-	bus.RegisterModule(p2pMock)
 
 	return p2pMock
 }
@@ -117,7 +116,7 @@ func prepareEnvironment(
 	require.NoError(t, err)
 	bus.RegisterModule(testConsensusMod)
 
-	testP2PMock := newTestP2PModule(t, bus)
+	testP2PMock := newTestP2PModule(t)
 	err = testP2PMock.Start()
 	require.NoError(t, err)
 	bus.RegisterModule(testP2PMock)
