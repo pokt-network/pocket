@@ -1,3 +1,7 @@
+⚠️ ❗ Update, November 2023: This repo is not under active development. Please head over to [poktroll](https://github.com/pokt-network/poktroll) for the latest ongoing implementation of Shannon (next version of the protocol) or [pocket-core](https://github.com/pokt-network/pocket-core) for the implementation of Morse (the current version of the protocol). ❗ ⚠️
+
+---
+
 <div align="center">
   <a href="https://www.pokt.network">
     <img src="https://user-images.githubusercontent.com/2219004/151564884-212c0e40-3bfa-412e-a341-edb54b5f1498.jpeg" alt="Pocket Network logo" width="340"/>
