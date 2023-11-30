@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.37] - 2023-08-19
+
+- Add cli to generate the default config and save it to a file.
+
 ## [0.0.0.36] - 2023-06-19
 
 - Add a new trustless relay sub-command to servicer command

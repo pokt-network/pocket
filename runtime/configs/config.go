@@ -2,8 +2,10 @@ package configs
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -242,4 +244,19 @@ func defaultServicerConfig() *ServicerConfig {
 			},
 		},
 	}
+}
+
+func SaveConfig(path string) {
+	filePath, err := filepath.Abs(path)
+	if err != nil {
+		log.Fatalf("[ERROR] failed to resolve config path, %s", err.Error())
+	}
+
+	NewDefaultConfig()
+	err = viper.WriteConfigAs(filePath)
+	if err != nil {
+		log.Fatalf("[ERROR] failed to write config to file, error: %s", err.Error())
+	}
+
+	fmt.Printf("save_default_config: saved default config at %v", filePath)
 }
