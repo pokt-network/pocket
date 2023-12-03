@@ -58,19 +58,6 @@ type UtilityModule interface {
 	GetValidatorModule() (ValidatorModule, error)
 }
 
-type FishermanModule interface {
-	Module
-}
-
-type ServicerModule interface {
-	Module
-	HandleRelay(*coreTypes.Relay) (*coreTypes.RelayResponse, error)
-}
-
-type ValidatorModule interface {
-	Module
-}
-
 // TECHDEBT: Remove this interface from `shared/modules` and use the `Actor` protobuf type instead
 // There will need to be some documentation or indicator that the Actor struct returned may not be
 // fully hydrated. Alternatively, we could eat the performance cost and just hydrate the entire struct
