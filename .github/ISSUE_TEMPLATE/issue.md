@@ -6,8 +6,8 @@ labels: ""
 assignees: ""
 ---
 
-<!-- DELETE ME after following these instructions
- 1. Make sure to update the _Assigness_, _Labels_, _Projects_, _Milestone_ before submitting the issue\_
+<!-- IMPORTANT - DO NOT SKIP READING ME AND DELETE ME AFTER FOLLOWING THESE INSTRUCTIONS
+ 1. Make sure to update the _Assigness_, _Labels_, _Project_, _Milestone_, _Iteration_, _Status_ and _Effort_ before submitting the issue\_
  2. Make sure to add labels for the purpose (e.g. `persistence`) and priority (e.g. `low`) of this PR\_
 -->
 
