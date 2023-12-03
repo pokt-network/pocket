@@ -46,8 +46,9 @@ func TestTreeStore_Update(t *testing.T) {
 		require.NoError(t, pool.Purge(resource))
 	})
 
-	t.Run("should update actor trees, commit, and modify the state hash", func(t *testing.T) {
-		pmod := newTestPersistenceModule(t, dbUrl)
+	t.Run("should update application trees, commit, and modify the state hash", func(t *testing.T) {
+		cfg := newTestDefaultConfig(t, dbUrl)
+		pmod := newTestPersistenceModule(t, cfg)
 		context := newTestPostgresContext(t, 0, pmod)
 
 		require.NoError(t, context.SetSavePoint())
@@ -69,21 +70,43 @@ func TestTreeStore_Update(t *testing.T) {
 	})
 
 	t.Run("should fail to rollback when no treestore savepoint is set", func(t *testing.T) {
-		pmod := newTestPersistenceModule(t, dbUrl)
+		// NB: test needs a file to persist against for test purposes
+		tmpdir := t.TempDir()
+		cfg := newTestDefaultConfig(t, dbUrl)
+		cfg.Persistence.TreesStoreDir = tmpdir
+		pmod := newTestPersistenceModule(t, cfg)
 		context := newTestPostgresContext(t, 0, pmod)
 
-		err := context.RollbackToSavePoint()
+		// calculate first hash
+		hash1, err := context.ComputeStateHash()
+		require.NoError(t, err)
+		require.NotEmpty(t, hash1)
+
+		// insert default app
+		_, err = createAndInsertDefaultTestApp(t, context)
+		require.NoError(t, err)
+
+		// trigger a rollback without creating a savepoint
+		err = context.RollbackToSavePoint()
 		require.Error(t, err)
 		require.ErrorIs(t, err, trees.ErrFailedRollback)
+
+		// initialize a new context with the same persistence module
+		context2 := newTestPostgresContext(t, 0, pmod)
+		hash3, err := context2.ComputeStateHash()
+		require.NoError(t, err)
+		require.NotEmpty(t, hash3)
+
+		// unsuccessful rollback should not violate treeStore integrity
+		require.Equal(t, hash3, hash1)
 	})
 }
 
-func newTestPersistenceModule(t *testing.T, databaseURL string) modules.PersistenceModule {
+func newTestPersistenceModule(t *testing.T, cfg *configs.Config) modules.PersistenceModule {
 	t.Helper()
 	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
 	defer teardownDeterministicKeygen()
 
-	cfg := newTestDefaultConfig(t, databaseURL)
 	genesisState, _ := test_artifacts.NewGenesisState(
 		genesisStateNumValidators,
 		genesisStateNumServicers,
