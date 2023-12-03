@@ -2,14 +2,16 @@ package trees
 
 import (
 	"encoding/hex"
+	"io"
+	"os"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/logger"
 	mock_types "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/shared/modules"
-	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,12 +22,19 @@ const (
 	h1 = "7d5712ea1507915c40e295845fa58773baa405b24b87e9d99761125d826ff915"
 )
 
+var (
+	testFoo = []byte("foo")
+	testBar = []byte("bar")
+	testKey = []byte("fiz")
+	testVal = []byte("buz")
+)
+
 func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	mockTxIndexer := mock_types.NewMockTxIndexer(ctrl)
-	mockBus := mockModules.NewMockBus(ctrl)
-	mockPersistenceMod := mockModules.NewMockPersistenceModule(ctrl)
+	mockBus := mock_modules.NewMockBus(ctrl)
+	mockPersistenceMod := mock_modules.NewMockPersistenceModule(ctrl)
 
 	mockBus.EXPECT().GetPersistenceModule().AnyTimes().Return(mockPersistenceMod)
 	mockPersistenceMod.EXPECT().GetTxIndexer().AnyTimes().Return(mockTxIndexer)
@@ -45,7 +54,7 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 
 	// insert test data into every tree
 	for _, treeName := range stateTreeNames {
-		err := ts.merkleTrees[treeName].tree.Update([]byte("foo"), []byte("bar"))
+		err := ts.merkleTrees[treeName].tree.Update(testFoo, testBar)
 		require.NoError(t, err)
 	}
 
@@ -78,7 +87,7 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 
 	// insert additional test data into all of the trees
 	for _, treeName := range stateTreeNames {
-		require.NoError(t, ts.merkleTrees[treeName].tree.Update([]byte("fiz"), []byte("buz")))
+		require.NoError(t, ts.merkleTrees[treeName].tree.Update(testKey, testVal))
 	}
 
 	// rollback the changes made to the trees above BEFORE anything was committed
@@ -89,4 +98,136 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 	hash3 := ts.getStateHash()
 	require.Equal(t, hash3, hash2)
 	require.Equal(t, hash3, h1)
+
+	err = ts.Rollback()
+	require.NoError(t, err)
+
+	// confirm it's not in the tree
+	v, err := ts.merkleTrees[TransactionsTreeName].tree.Get(testKey)
+	require.NoError(t, err)
+	require.Nil(t, v)
+}
+
+func TestTreeStore_SaveAndLoad(t *testing.T) {
+	t.Parallel()
+	t.Run("should save a backup in a directory", func(t *testing.T) {
+		ts := newTestTreeStore(t)
+		tmpdir := t.TempDir()
+		// assert that the directory is empty before backup
+		ok, err := isEmpty(tmpdir)
+		require.NoError(t, err)
+		require.True(t, ok)
+
+		// Trigger a backup
+		require.NoError(t, ts.Backup(tmpdir))
+
+		// assert that the directory is not empty after Backup has returned
+		ok, err = isEmpty(tmpdir)
+		require.NoError(t, err)
+		require.False(t, ok)
+	})
+	t.Run("should load a backup and maintain TreeStore hash integrity", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		tmpDir := t.TempDir()
+
+		mockTxIndexer := mock_types.NewMockTxIndexer(ctrl)
+		mockBus := mock_modules.NewMockBus(ctrl)
+		mockPersistenceMod := mock_modules.NewMockPersistenceModule(ctrl)
+
+		mockBus.EXPECT().GetPersistenceModule().AnyTimes().Return(mockPersistenceMod)
+		mockPersistenceMod.EXPECT().GetTxIndexer().AnyTimes().Return(mockTxIndexer)
+
+		ts := &treeStore{
+			logger:       logger.Global.CreateLoggerForModule(modules.TreeStoreSubmoduleName),
+			treeStoreDir: tmpDir,
+		}
+		require.NoError(t, ts.Start())
+		require.NotNil(t, ts.rootTree.tree)
+
+		for _, treeName := range stateTreeNames {
+			err := ts.merkleTrees[treeName].tree.Update([]byte("foo"), []byte("bar"))
+			require.NoError(t, err)
+		}
+
+		err := ts.Commit()
+		require.NoError(t, err)
+
+		hash1 := ts.getStateHash()
+		require.NotEmpty(t, hash1)
+
+		w, err := ts.save()
+		require.NoError(t, err)
+		require.NotNil(t, w)
+		require.NotNil(t, w.rootHash)
+		require.NotNil(t, w.merkleRoots)
+
+		// Stop the first tree store so that it's databases are no longer used
+		require.NoError(t, ts.Stop())
+
+		// declare a second TreeStore with no trees then load the first worldstate into it
+		ts2 := &treeStore{
+			logger:       logger.Global.CreateLoggerForModule(modules.TreeStoreSubmoduleName),
+			treeStoreDir: tmpDir,
+		}
+
+		// Load sets a tree store to the provided worldstate
+		err = ts2.Load(w)
+		require.NoError(t, err)
+
+		hash2 := ts2.getStateHash()
+
+		// Assert that hash is unchanged from save and load
+		require.Equal(t, hash1, hash2)
+	})
+}
+
+// creates a new tree store with a tmp directory for nodestore persistence
+// and then starts the tree store and returns its pointer.
+// TECHDEBT(#796) - Organize and dedupe this function into testutil package
+func newTestTreeStore(t *testing.T) *treeStore {
+	t.Helper()
+	ctrl := gomock.NewController(t)
+	tmpDir := t.TempDir()
+
+	mockTxIndexer := mock_types.NewMockTxIndexer(ctrl)
+	mockBus := mock_modules.NewMockBus(ctrl)
+	mockPersistenceMod := mock_modules.NewMockPersistenceModule(ctrl)
+
+	mockBus.EXPECT().GetPersistenceModule().AnyTimes().Return(mockPersistenceMod)
+	mockPersistenceMod.EXPECT().GetTxIndexer().AnyTimes().Return(mockTxIndexer)
+
+	ts := &treeStore{
+		logger:       logger.Global.CreateLoggerForModule(modules.TreeStoreSubmoduleName),
+		treeStoreDir: tmpDir,
+	}
+	require.NoError(t, ts.Start())
+	require.NotNil(t, ts.rootTree.tree)
+
+	for _, treeName := range stateTreeNames {
+		err := ts.merkleTrees[treeName].tree.Update(testFoo, testBar)
+		require.NoError(t, err)
+	}
+
+	err := ts.Commit()
+	require.NoError(t, err)
+
+	hash1 := ts.getStateHash()
+	require.NotEmpty(t, hash1)
+
+	return ts
+}
+
+// TECHDEBT(#796) - Organize and dedupe this function into testutil package
+func isEmpty(dir string) (bool, error) {
+	f, err := os.Open(dir)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	_, err = f.Readdirnames(1) // Or f.Readdir(1)
+	if err == io.EOF {
+		return true, nil
+	}
+	return false, err // Either not empty or error, suits both cases
 }

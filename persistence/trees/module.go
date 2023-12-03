@@ -1,6 +1,8 @@
 package trees
 
 import (
+	"encoding/hex"
+	"errors"
 	"fmt"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -10,6 +12,8 @@ import (
 
 var _ modules.TreeStoreModule = &treeStore{}
 
+// Create returns a TreeStoreSubmodule that has been setup with the provided TreeStoreOptions, started,
+// and then registered to the bus.
 func (*treeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeStoreModule, error) {
 	m := &treeStore{}
 
@@ -18,10 +22,6 @@ func (*treeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (m
 	}
 
 	bus.RegisterModule(m)
-
-	if err := m.setupTrees(); err != nil {
-		return nil, err
-	}
 
 	return m, nil
 }
@@ -50,8 +50,30 @@ func WithTreeStoreDirectory(path string) modules.TreeStoreOption {
 	}
 }
 
+// Start loads up the trees from the configured tree store directory.
+func (t *treeStore) Start() error {
+	return t.setupTrees()
+}
+
+// Stop shuts down the database connection to the nodestore for the root tree and then for each merkle tree.
+// If Commit has not been called before Stop is called, data will be lost.
+func (t *treeStore) Stop() error {
+	t.logger.Debug().Msgf("🛑 tree store stop initiated at %s 🛑", hex.EncodeToString(t.rootTree.tree.Root()))
+	errs := []error{}
+	if err := t.rootTree.nodeStore.Stop(); err != nil {
+		errs = append(errs, err)
+	}
+	for _, st := range t.merkleTrees {
+		if err := st.nodeStore.Stop(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
+}
+
 func (t *treeStore) GetModuleName() string { return modules.TreeStoreSubmoduleName }
 
+// setupTrees is called by Start and it loads the treestore at the given directory
 func (t *treeStore) setupTrees() error {
 	if t.treeStoreDir == ":memory:" {
 		return t.setupInMemory()

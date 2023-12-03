@@ -19,6 +19,7 @@ type treeStoreFactory = FactoryWithOptions[TreeStoreModule, TreeStoreOption]
 // merkle trees that compose the state hash of pocket.
 type TreeStoreModule interface {
 	Submodule
+	InterruptableModule
 	treeStoreFactory
 
 	AtomicStore

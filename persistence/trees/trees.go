@@ -15,9 +15,11 @@ package trees
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"hash"
 	"log"
+	"path/filepath"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pokt-network/pocket/persistence/indexer"
@@ -110,17 +112,19 @@ type treeStore struct {
 type worldState struct {
 	treeStoreDir string
 	rootTree     *stateTree
+	rootHash     []byte
 	merkleTrees  map[string]*stateTree
+	merkleRoots  map[string][]byte
 }
 
 // GetTree returns the root hash and nodeStore for the matching tree stored in the TreeStore.
 // This enables the caller to import the SMT without changing the one stored unless they call
 // `Commit()` to write to the nodestore.
 func (t *treeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
-	if name == RootTreeName {
+	if name == RootTreeName && t.rootTree.tree != nil {
 		return t.rootTree.tree.Root(), t.rootTree.nodeStore
 	}
-	if tree, ok := t.merkleTrees[name]; ok {
+	if tree, ok := t.merkleTrees[name]; ok && tree != nil {
 		return tree.tree.Root(), tree.nodeStore
 	}
 	return nil, nil
@@ -325,8 +329,42 @@ func (t *treeStore) Rollback() error {
 	return ErrFailedRollback
 }
 
-// save commits any pending changes to the trees and creates a copy of the current worldState,
-// then saves that copy as a rollback point for later use if errors are encountered.
+// Load sets the TreeStore trees to the values provided in the worldstate
+func (t *treeStore) Load(w *worldState) error {
+	t.merkleTrees = make(map[string]*stateTree)
+
+	// import root tree
+	rootTreePath := fmt.Sprintf("%s/%s_nodes", t.treeStoreDir, RootTreeName)
+	nodeStore, err := kvstore.NewKVStore(rootTreePath)
+	if err != nil {
+		return err
+	}
+	t.rootTree = &stateTree{
+		name:      RootTreeName,
+		tree:      smt.ImportSparseMerkleTree(nodeStore, smtTreeHasher, w.rootHash),
+		nodeStore: nodeStore,
+	}
+
+	// import merkle trees
+	for treeName, treeRootHash := range w.merkleRoots {
+		treePath := fmt.Sprintf("%s/%s_nodes", w.treeStoreDir, treeName)
+		nodeStore, err := kvstore.NewKVStore(treePath)
+		if err != nil {
+			return err
+		}
+
+		t.merkleTrees[treeName] = &stateTree{
+			name:      treeName,
+			nodeStore: nodeStore,
+			tree:      smt.ImportSparseMerkleTree(nodeStore, smtTreeHasher, treeRootHash),
+		}
+	}
+
+	return nil
+}
+
+// save commits any pending changes to the trees and creates a copy of the current state of the
+// tree store then saves that copy as a rollback point for later use if errors are encountered.
 // OPTIMIZE: Consider saving only the root hash of each tree and the tree directory here and then
 // load the trees up in Rollback instead of setting them up here.
 func (t *treeStore) save() (*worldState, error) {
@@ -336,7 +374,10 @@ func (t *treeStore) save() (*worldState, error) {
 
 	w := &worldState{
 		treeStoreDir: t.treeStoreDir,
-		merkleTrees:  map[string]*stateTree{},
+		merkleRoots:  make(map[string][]byte),
+		merkleTrees:  make(map[string]*stateTree),
+		rootHash:     t.rootTree.tree.Root(),
+		rootTree:     t.rootTree,
 	}
 
 	for treeName := range t.merkleTrees {
@@ -358,6 +399,20 @@ func (t *treeStore) save() (*worldState, error) {
 	}
 
 	return w, nil
+}
+
+// Backup creates a new backup of each tree in the tree store to the provided directory.
+// Each tree is backed up in an eponymous file in the provided backupDir.
+func (t *treeStore) Backup(backupDir string) error {
+	errs := []error{}
+	for _, st := range t.merkleTrees {
+		treePath := filepath.Join(backupDir, st.name)
+		if err := st.nodeStore.Backup(treePath); err != nil {
+			t.logger.Err(err).Msgf("failed to backup %s tree: %+v", st.name, err)
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
 }
 
 ////////////////////////

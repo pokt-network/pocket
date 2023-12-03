@@ -4,7 +4,10 @@ package kvstore
 
 import (
 	"errors"
+	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 
 	badger "github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/smt"
@@ -22,6 +25,8 @@ type KVStore interface {
 	GetAll(prefixKey []byte, descending bool) (keys, values [][]byte, err error)
 	Exists(key []byte) (bool, error)
 	ClearAll() error
+
+	Backup(filepath string) error
 }
 
 const (
@@ -139,6 +144,30 @@ func (store *badgerKVStore) ClearAll() error {
 
 func (store *badgerKVStore) Stop() error {
 	return store.db.Close()
+}
+
+// Backup creates a backup for the badgerDB at the provided path.
+// It creates a file
+func (store *badgerKVStore) Backup(backupPath string) error {
+	// create backup directory if it doesn't exist
+	if err := os.MkdirAll(filepath.Dir(backupPath), os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create backup directory: %v", err)
+	}
+
+	// create the backup file itself
+	backupFile, err := os.Create(backupPath)
+	if err != nil {
+		return fmt.Errorf("failed to create backup file: %v", err)
+	}
+	defer backupFile.Close()
+
+	// dump the database to the backup file
+	_, err = store.db.Backup(backupFile, 0)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // PrefixEndBytes returns the end byteslice for a noninclusive range

@@ -50,8 +50,6 @@ func TestTreeStore_Update(t *testing.T) {
 		pmod := newTestPersistenceModule(t, dbUrl)
 		context := newTestPostgresContext(t, 0, pmod)
 
-		require.NoError(t, context.SetSavePoint())
-
 		hash1, err := context.ComputeStateHash()
 		require.NoError(t, err)
 		require.NotEmpty(t, hash1)
@@ -59,8 +57,6 @@ func TestTreeStore_Update(t *testing.T) {
 
 		_, err = createAndInsertDefaultTestApp(t, context)
 		require.NoError(t, err)
-
-		require.NoError(t, context.SetSavePoint())
 
 		hash2, err := context.ComputeStateHash()
 		require.NoError(t, err)
