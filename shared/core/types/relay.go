@@ -14,6 +14,7 @@ var (
 	errInvalidJSONRPC              = errors.New("invalid value for JSONRPC field")
 	errInvalidJSONRPCMissingMethod = errors.New("Method field not set")
 	errInvalidRESTPayload          = errors.New("invalid REST payload")
+	errInvalidRESTMethod           = errors.New("invalid REST method")
 )
 
 // IMPROVE: use a factory function to build test relays
@@ -48,6 +49,16 @@ func (p *JSONRPCPayload) Validate() error {
 
 // Validate verifies that the payload is valid REST, i.e. valid JSON
 func (p *RESTPayload) Validate() error {
+	validMethods := map[RESTRequestType]struct{}{
+		RESTRequestType_RESTRequestTypeGET:    {},
+		RESTRequestType_RESTRequestTypePUT:    {},
+		RESTRequestType_RESTRequestTypePOST:   {},
+		RESTRequestType_RESTRequestTypeDELETE: {},
+	}
+	if _, ok := validMethods[p.RequestType]; !ok {
+		return fmt.Errorf("%w: invalid REST method: %d", errInvalidRESTMethod, p.RequestType)
+	}
+
 	var parsed json.RawMessage
 	if err := json.Unmarshal([]byte(p.Contents), &parsed); err != nil {
 		return fmt.Errorf("%w: %s: %s", errInvalidRESTPayload, p.Contents, err.Error())

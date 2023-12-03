@@ -19,7 +19,7 @@ message Relay {
 
 // INCOMPLETE: add REST relay payload fields
 message RESTPayload {
-    string contents = 1;
+    bytes contents = 1;
     string http_path = 2;
     RESTRequestType request_type = 3;
 }

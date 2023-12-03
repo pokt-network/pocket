@@ -181,6 +181,10 @@ func TestRelay_Execute(t *testing.T) {
 			name:  "JSONRPC Relay is executed",
 			relay: testRelay(testEthGoerliRelay()),
 		},
+		{
+			name:  "REST Relay is executed",
+			relay: testRelay(testRESTRelay()),
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -279,6 +283,17 @@ func testEthGoerliRelay() relayEditor {
 	}
 }
 
+func testRESTRelay() relayEditor {
+	return func(relay *coreTypes.Relay) {
+		relay.Meta.RelayChain.Id = "RESTful-service"
+		relay.RelayPayload = &coreTypes.Relay_RestPayload{
+			RestPayload: &coreTypes.RESTPayload{
+				Contents: []byte(`{"field1": "value1"}`),
+			},
+		}
+	}
+}
+
 func testRelay(editors ...relayEditor) *coreTypes.Relay {
 	relay := &coreTypes.Relay{
 		Meta: &coreTypes.RelayMeta{
@@ -321,6 +336,7 @@ func testServicerConfig(editors ...configModifier) *configs.ServicerConfig {
 		Services: map[string]*configs.ServiceConfig{
 			"POKT-UnitTestNet": testServiceConfig1,
 			"ETH-Goerli":       testServiceConfig1,
+			"RESTful-service":  testServiceConfig1,
 		},
 	}
 

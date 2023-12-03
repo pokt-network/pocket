@@ -2,12 +2,17 @@ package rpc
 
 import (
 	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
+
+var errInvalidJsonRpc = errors.New("JSONRPC validation failed")
 
 // CONSIDER: Remove all the V1 prefixes from the RPC module
 
@@ -83,9 +88,7 @@ func (s *rpcServer) PostV1ClientGetSession(ctx echo.Context) error {
 }
 
 func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
-	utility := s.GetBus().GetUtilityModule()
-	_, err := utility.GetServicerModule()
-
+	servicer, err := s.GetBus().GetUtilityModule().GetServicerModule()
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, "node is not a servicer")
 	}
@@ -112,10 +115,18 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 		Signature:         body.Meta.Signature,
 	}
 
-	relayRequest := buildJsonRPCRelayPayload(&body)
+	var relayRequest *coreTypes.Relay
+	switch p := body.Payload.(type) {
+	case JSONRPCPayload:
+		relayRequest = buildJsonRPCRelayPayload(&p)
+	case RESTPayload:
+		relayRequest = buildRestRelayPayload(&p)
+	default:
+		return ctx.String(http.StatusBadRequest, "unsupported relay type")
+	}
 	relayRequest.Meta = relayMeta
 
-	relayResponse, err := utility.HandleRelay(relayRequest)
+	relayResponse, err := servicer.HandleRelay(relayRequest)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -217,25 +228,25 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 }
 
 // TECHDEBT: handle other relay payload types, e.g. JSON, GRPC, etc.
-func buildJsonRPCRelayPayload(body *RelayRequest) *coreTypes.Relay {
+func buildJsonRPCRelayPayload(src *JSONRPCPayload) *coreTypes.Relay {
 	payload := &coreTypes.Relay_JsonRpcPayload{
 		JsonRpcPayload: &coreTypes.JSONRPCPayload{
-			JsonRpc: body.Payload.Jsonrpc,
-			Method:  body.Payload.Method,
+			JsonRpc: src.Jsonrpc,
+			Method:  src.Method,
 		},
 	}
 
-	if body.Payload.Id != nil {
-		payload.JsonRpcPayload.Id = []byte(*body.Payload.Id)
+	if src.Id != nil {
+		payload.JsonRpcPayload.Id = src.Id.Id
 	}
 
-	if body.Payload.Parameters != nil {
-		payload.JsonRpcPayload.Parameters = *body.Payload.Parameters
+	if src.Parameters != nil {
+		payload.JsonRpcPayload.Parameters = *src.Parameters
 	}
 
-	if body.Payload.Headers != nil {
+	if src.Headers != nil {
 		headers := make(map[string]string)
-		for _, header := range *body.Payload.Headers {
+		for _, header := range *src.Headers {
 			headers[header.Name] = header.Value
 		}
 		payload.JsonRpcPayload.Headers = headers
@@ -244,4 +255,80 @@ func buildJsonRPCRelayPayload(body *RelayRequest) *coreTypes.Relay {
 	return &coreTypes.Relay{
 		RelayPayload: payload,
 	}
+}
+
+// DISCUSS: Path and Method requirements of relays in REST format.
+func buildRestRelayPayload(src *RESTPayload) *coreTypes.Relay {
+	return &coreTypes.Relay{
+		RelayPayload: &coreTypes.Relay_RestPayload{
+			RestPayload: &coreTypes.RESTPayload{
+				Contents: *src,
+			},
+		},
+	}
+}
+
+// UnmarshalJSON is the custom unmarshaller for RelayRequest type. This is needed because the payload could be JSONRPC or REST.
+func (r *RelayRequest) UnmarshalJSON(data []byte) error {
+	type relayWithJsonRpcPayload struct {
+		Meta    RelayRequestMeta `json:"meta"`
+		Payload JSONRPCPayload   `json:"payload"`
+	}
+	var jsonRpcRelay relayWithJsonRpcPayload
+	if err := json.Unmarshal(data, &jsonRpcRelay); err == nil && jsonRpcRelay.Payload.Validate() == nil {
+		r.Meta = jsonRpcRelay.Meta
+		r.Payload = jsonRpcRelay.Payload
+		return nil
+	}
+
+	type relayWithRestPayload struct {
+		Meta    RelayRequestMeta `json:"meta"`
+		Payload RESTPayload      `json:"payload"`
+	}
+	var restRelay relayWithRestPayload
+	if err := json.Unmarshal(data, &restRelay); err == nil {
+		r.Meta = restRelay.Meta
+		r.Payload = restRelay.Payload
+		return nil
+	}
+
+	return fmt.Errorf("invalid relay: %s", string(data))
+}
+
+// Validate returns an error if the payload struct is not valid JSONRPC
+func (p *JSONRPCPayload) Validate() error {
+	if p.Method == "" {
+		return fmt.Errorf("%w: missing method field", errInvalidJsonRpc)
+	}
+
+	if p.Jsonrpc != "2.0" {
+		return fmt.Errorf("%w: invalid JSONRPC field value: %q", errInvalidJsonRpc, p.Jsonrpc)
+	}
+
+	return nil
+}
+
+// UnmarshalJSON is the custom unmarshaller for JsonRpcId type. It is needed because JSONRPC spec allows the "id" field to be nil, an integer, or a string.
+//
+//	See the following link for more details:
+//	https://www.jsonrpc.org/specification#request_object
+func (i *JsonRpcId) UnmarshalJSON(data []byte) error {
+	var v int64
+	if err := json.Unmarshal(data, &v); err == nil {
+		i.Id = []byte(fmt.Sprintf("%d", v))
+		return nil
+	}
+
+	var s string
+	if err := json.Unmarshal(data, &s); err == nil {
+		i.Id = []byte(s)
+		return nil
+	}
+
+	return fmt.Errorf("invalid JSONRPC ID value: %v", data)
+}
+
+// MarshalJSON is the custom marshaller for JsonRpcId type. It is needed to flatten the struct as a single value, i.e. mask the "Id" field.
+func (i *JsonRpcId) MarshalJSON() ([]byte, error) {
+	return i.Id, nil
 }

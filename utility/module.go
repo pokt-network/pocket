@@ -142,10 +142,10 @@ func (u *utilityModule) GetActorModules() map[string]modules.Module {
 }
 
 func (u *utilityModule) GetServicerModule() (modules.ServicerModule, error) {
-	if u.actorModules[servicer.ServicerModuleName] == nil {
+	if u.actorModules[modules.ServicerModuleName] == nil {
 		return nil, errors.New("servicer module not enabled")
 	}
-	if m, ok := u.actorModules[servicer.ServicerModuleName].(modules.ServicerModule); ok {
+	if m, ok := u.actorModules[modules.ServicerModuleName].(modules.ServicerModule); ok {
 		return m, nil
 	}
 	return nil, errors.New("failed to cast servicer module")

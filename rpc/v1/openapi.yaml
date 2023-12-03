@@ -1082,7 +1082,9 @@ components:
         - meta
       properties:
         payload:
-          $ref: "#/components/schemas/Payload"
+          oneOf:
+            - $ref: "#/components/schemas/JSONRPCPayload"
+            - $ref: "#/components/schemas/RESTPayload"
         meta:
           $ref: "#/components/schemas/RelayRequestMeta"
     SessionRequest:
@@ -1704,15 +1706,14 @@ components:
           type: string
         address:
           type: string
-    Payload:
+    JSONRPCPayload:
       type: object
       required:
         - jsonrpc
         - method
       properties:
         id:
-          type: string
-          format: byte
+          $ref: "#/components/schemas/JsonRpcId"
         jsonrpc:
           type: string
         method:
@@ -1722,6 +1723,16 @@ components:
           format: byte
         headers:
           $ref: "#/components/schemas/Headers"
+    JsonRpcId:
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          format: byte
+    RESTPayload:
+      type: string
+      format: byte
     Pool:
       type: object
       required:

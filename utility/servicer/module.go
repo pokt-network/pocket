@@ -35,10 +35,6 @@ var (
 	_ modules.ServicerModule = &servicer{}
 )
 
-const (
-	ServicerModuleName = "servicer"
-)
-
 // sessionTokens is used to cache the starting number of tokens available
 // during a specific session: it is used as the value for a map with keys being applications' public keys
 // TODO: What if we have a servicer managing more than one session from the same app at once? We may/may not need to resolve this in the future.
@@ -121,7 +117,7 @@ func (s *servicer) Stop() error {
 }
 
 func (s *servicer) GetModuleName() string {
-	return ServicerModuleName
+	return modules.ServicerModuleName
 }
 
 // HandleRelay processes a relay after performing validation.
@@ -458,11 +454,23 @@ func (s *servicer) executeJsonRPCRelay(meta *coreTypes.RelayMeta, payload *coreT
 
 // executeRESTRelay performs the relay for REST payloads, sending them to the chain's/service's URL.
 // INCOMPLETE(#860): RESTful service relays: basic checks and execution through HTTP calls.
-func (s *servicer) executeRESTRelay(meta *coreTypes.RelayMeta, _ *coreTypes.RESTPayload) (*coreTypes.RelayResponse, error) {
-	if _, ok := s.config.Services[meta.RelayChain.Id]; !ok {
+func (s *servicer) executeRESTRelay(meta *coreTypes.RelayMeta, payload *coreTypes.RESTPayload) (*coreTypes.RelayResponse, error) {
+	// DISCUSS: do we need to support Path and Method fields for REST relays now?
+	if meta == nil || meta.RelayChain == nil || meta.RelayChain.Id == "" {
+		return nil, fmt.Errorf("Relay for application %s does not specify relay chain", meta.ApplicationAddress)
+	}
+
+	serviceConfig, ok := s.config.Services[meta.RelayChain.Id]
+	if !ok {
 		return nil, fmt.Errorf("Chain %s not found in servicer configuration: %w", meta.RelayChain.Id, errValidateRelayMeta)
 	}
-	return nil, nil
+
+	relayBytes, err := codec.GetCodec().Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("Error marshalling payload %s: %w", payload.String(), err)
+	}
+
+	return s.executeHTTPRelay(serviceConfig, relayBytes, nil)
 }
 
 // executeHTTPRequest performs the HTTP request that sends the relay to the chain's/service's URL.
