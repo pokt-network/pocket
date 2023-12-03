@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/pokt-network/pocket/ibc/client"
 	"github.com/pokt-network/pocket/ibc/events"
 	"github.com/pokt-network/pocket/ibc/store"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -20,10 +21,6 @@ type ibcHost struct {
 	cfg       *configs.IBCHostConfig
 	logger    *modules.Logger
 	storesDir string
-
-	// only a single bulk store cacher and event logger are allowed
-	bsc modules.BulkStoreCacher
-	em  modules.EventLogger
 }
 
 func Create(bus modules.Bus, config *configs.IBCHostConfig, options ...modules.IBCHostOption) (modules.IBCHostSubmodule, error) {
@@ -59,7 +56,7 @@ func (*ibcHost) Create(bus modules.Bus, config *configs.IBCHostConfig, options .
 
 	bus.RegisterModule(h)
 
-	bsc, err := store.Create(h.GetBus(),
+	_, err := store.Create(h.GetBus(),
 		h.cfg.BulkStoreCacher,
 		store.WithLogger(h.logger),
 		store.WithStoresDir(h.storesDir),
@@ -68,13 +65,16 @@ func (*ibcHost) Create(bus modules.Bus, config *configs.IBCHostConfig, options .
 	if err != nil {
 		return nil, err
 	}
-	h.bsc = bsc
 
-	em, err := events.Create(h.GetBus(), events.WithLogger(h.logger))
+	_, err = events.Create(h.GetBus(), events.WithLogger(h.logger))
 	if err != nil {
 		return nil, err
 	}
-	h.em = em
+
+	_, err = client.Create(h.GetBus(), client.WithLogger(h.logger))
+	if err != nil {
+		return nil, err
+	}
 
 	return h, nil
 }

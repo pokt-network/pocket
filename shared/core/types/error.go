@@ -48,7 +48,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 149
+// NextCode: 150
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -198,6 +198,7 @@ const (
 	CodeIBCStoreAlreadyExistsError        Code = 146
 	CodeIBCStoreDoesNotExistError         Code = 147
 	CodeIBCKeyDoesNotExistError           Code = 148
+	CodeIBCClientNotActiveError           Code = 149
 )
 
 const (
@@ -344,6 +345,7 @@ const (
 	IBCStoreAlreadyExistsError        = "ibc store already exists in the store manager"
 	IBCStoreDoesNotExistError         = "ibc store does not exist in the store manager"
 	IBCKeyDoesNotExistError           = "key does not exist in the ibc store"
+	IBCClientNotActiveError           = "ibc client is not active"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -921,4 +923,8 @@ func ErrIBCStoreDoesNotExist(name string) Error {
 
 func ErrIBCKeyDoesNotExist(key string) Error {
 	return NewError(CodeIBCKeyDoesNotExistError, fmt.Sprintf("%s: %s", IBCKeyDoesNotExistError, key))
+}
+
+func ErrIBCClientNotActive() Error {
+	return NewError(CodeIBCClientNotActiveError, IBCClientNotActiveError)
 }
