@@ -92,6 +92,7 @@ privateKeySecretKeyRef:
 | genesis.preProvisionedGenesis.enabled | bool | `true` | Use genesis file supplied by the Helm chart, of false refer to `genesis.externalConfigMap` |
 | genesis.preProvisionedGenesis.type | string | `"devnet"` | Type of the genesis file to use, can be `devnet`, `testnet`, `mainnet` |
 | global.postgresql.service.ports.postgresql | string | `"5432"` |  |
+| healthchecks.enabled | bool | `true` | enable liveness and readiness probes |
 | image.pullPolicy | string | `"IfNotPresent"` | image pull policy |
 | image.repository | string | `"ghcr.io/pokt-network/pocket-v1"` | image repository |
 | image.tag | string | `"latest"` | image tag |

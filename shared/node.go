@@ -83,6 +83,10 @@ func (node *Node) Start() error {
 		return err
 	}
 
+	if err := node.GetBus().GetRPCModule().Start(); err != nil {
+		return err
+	}
+
 	if err := node.GetBus().GetP2PModule().Start(); err != nil {
 		return err
 	}
@@ -92,10 +96,6 @@ func (node *Node) Start() error {
 	}
 
 	if err := node.GetBus().GetConsensusModule().Start(); err != nil {
-		return err
-	}
-
-	if err := node.GetBus().GetRPCModule().Start(); err != nil {
 		return err
 	}
 
