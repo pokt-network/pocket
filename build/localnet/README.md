@@ -21,6 +21,10 @@ This guide shows how to deploy a LocalNet using [pocket-operator](https://github
 - [How to change configuration files](#how-to-change-configuration-files)
   - [Overriding default values for localnet with Tilt](#overriding-default-values-for-localnet-with-tilt)
 - [How does it work?](#how-does-it-work)
+- [Debug with dlv](#debug-with-dlv)
+  - [k8s LocalNet: Connect to a node debugging server](#k8s-localnet-connect-to-a-node-debugging-server)
+    - [Configure VSCode debugger](#configure-vscode-debugger)
+  - [Debug tests](#debug-tests)
 - [Troubleshooting](#troubleshooting)
   - [Why?](#why)
   - [Force Trigger an Update](#force-trigger-an-update)
@@ -209,6 +213,55 @@ EOF
 The k8s manifests that `tilt` submits to the cluster can be found in [this directory](./). Please refer to [code structure](#code-structure) for more details where different parts are located.
 
 Tilt continuously monitors files on local filesystem in [specific directories](Tiltfile#L27), and it rebuilds the binary and distributes it to the pods on every code change. This allows developers to iterate on the code and see the changes immediately (i.e. hot-reloading).
+
+## Debug with dlv
+
+### k8s LocalNet: Connect to a node debugging server
+
+LocalNet Pocket nodes have a `dlv` debugging server opened on port `7081`. In order to connect a debugging client (VSCode, GoLand) and be able to set breakpoints, we need to setup a tunnel to the pod we want to debug.
+
+```bash
+make kube_config
+```
+
+#### Configure VSCode debugger
+
+Add the following to your VSCode debugging configuration file `.vscode/launch.json`. You can add the file from IDE if it does not exist.
+
+![image](https://github.com/pokt-network/pocket/assets/231488/2882008e-3632-469c-9d1e-2f77ad785dfe)
+
+```json
+{
+  "name": "Debug Pocket Node",
+  "type": "go",
+  "request": "attach",
+  "mode": "remote",
+  "remotePath": "${workspaceFolder}",
+  "port": 7081,
+  "host": "localhost"
+}
+```
+
+Then you have just to set your breakpoints and start the debugging session (no need to rebuild or restart the binary).
+
+[Watch demo](https://github.com/pokt-network/pocket/assets/231488/3525161f-2098-488a-8f36-8747e40320a6)
+
+k8s runs liveness and readiness checks will restart the pods that are not responsive. In order to not have the debugging session dropped because of the pod restarting, you have to comment `livenessProbe` and `readinessProbe` sections in `charts/pocket/templates/statefulset.yaml`
+
+```yaml
+# Comment this section disable liveness checks for debugging
+livenessProbe:
+  httpGet:
+    path: /v1/health
+    port: rpc
+# Comment this section disable readiness checks for debugging
+readinessProbe:
+  httpGet:
+    path: /v1/health
+    port: rpc
+```
+
+### Debug tests
 
 ## Troubleshooting
 

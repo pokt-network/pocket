@@ -632,3 +632,10 @@ ggshield_secrets_scan: ## Scans the project for secrets using ggshield
 .PHONY: ggshield_secrets_add
 ggshield_secrets_add: ## A helper that adds the last results from `make ggshield_secrets_scan`, store in `.cache_ggshield` to `.gitguardian.yaml`. See `ggshield for more configuratiosn`
 	ggshield secret ignore --last-found
+
+# The validator's pod name to debug
+debugPod=validator-001-pocket-0
+
+.PHONY: kube_debug
+kube_debug: ## Forward dlv client connections to debugPod that should be running a dlv server at the same port
+	kubectl port-forward ${debugPod} 7081:7081
