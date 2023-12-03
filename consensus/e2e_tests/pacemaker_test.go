@@ -172,6 +172,113 @@ func forcePacemakerTimeout(t *testing.T, clockMock *clock.Mock, paceMakerTimeout
 	advanceTime(t, clockMock, paceMakerTimeout+10*time.Millisecond)
 }
 
+func TestPacemaker_MinBlockTime_DelayBlockPrep(t *testing.T) {
+	// Test preparation
+	clockMock := clock.NewMock()
+	timeReminder(t, clockMock, time.Second)
+
+	// UnitTestNet configs
+	paceMakerTimeoutMsec := uint64(300000)
+	consensusMessageTimeout := time.Duration(paceMakerTimeoutMsec / 5) // Must be smaller than pacemaker timeout because we expect a deterministic number of consensus messages.
+	paceMakerMinBlockTimeMsec := uint64(paceMakerTimeoutMsec / 6)
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	for _, runtimeConfig := range runtimeMgrs {
+		consCfg := runtimeConfig.GetConfig().Consensus.PacemakerConfig
+		consCfg.TimeoutMsec = paceMakerTimeoutMsec
+		consCfg.MinBlockTimeMsec = paceMakerMinBlockTimeMsec
+	}
+	buses := GenerateBuses(t, runtimeMgrs)
+
+	// Create & start test pocket nodes
+	eventsChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+	err := StartAllTestPocketNodes(t, pocketNodes)
+	require.NoError(t, err)
+
+	// First round ever has leaderId=2 ((height+round+step-1)%numValidators)+1
+	// See: consensus/leader_election/module.go#electNextLeaderDeterministicRoundRobin
+	leaderId := typesCons.NodeId(2)
+	numReplicas := len(pocketNodes) - 1
+
+	// Debug message to start consensus by triggering next view
+	// Get leader out of replica set
+	for _, pocketNode := range pocketNodes {
+		TriggerNextView(t, pocketNode)
+
+		// Right after triggering the next view
+		// Consensus started and all nodes are at NewRound step
+		step := typesCons.HotstuffStep(pocketNode.GetBus().GetConsensusModule().CurrentStep())
+		require.Equal(t, consensus.NewRound, step)
+	}
+
+	newRoundMessages, err := WaitForNetworkConsensusEvents(
+		t, clockMock, eventsChannel, typesCons.HotstuffStep(consensus.NewRound), typesCons.HotstuffMessageType(consensus.NewRound),
+		numReplicas, // We want new round messages from replicas only
+		consensusMessageTimeout, false,
+	)
+	require.NoError(t, err)
+
+	// Broadcast new round messages to leader to build a block
+	broadcastMessages(t, newRoundMessages, IdToNodeMapping{leaderId: pocketNodes[leaderId]})
+
+	var step typesCons.HotstuffStep
+	minTimeIncrement := 1 * time.Millisecond // Min time it takes to switch from NewRound to Prepare step
+
+	// Give go routines time to trigger
+	advanceTime(t, clockMock, 0)
+
+	// We get consensus module from leader to get its POV
+	leaderConsensusModule := pocketNodes[leaderId].GetBus().GetConsensusModule()
+
+	// Make sure all nodes are aligned to the same leader
+	for _, pocketNode := range pocketNodes {
+		nodeLeader := pocketNode.GetBus().GetConsensusModule().GetLeaderForView(1, 0, uint8(consensus.NewRound))
+		require.Equal(t, typesCons.NodeId(nodeLeader), leaderId)
+	}
+
+	// Timer is blocking the proposal step
+	step = typesCons.HotstuffStep(leaderConsensusModule.CurrentStep())
+	require.Equal(t, consensus.NewRound, step)
+
+	// Advance time right before minBlockTime triggers
+	paceMakerPreActivationTime := time.Duration(paceMakerMinBlockTimeMsec*uint64(time.Millisecond)) - minTimeIncrement
+	advanceTime(t, clockMock, paceMakerPreActivationTime)
+
+	// Should still be blocking proposal step
+	step = typesCons.HotstuffStep(leaderConsensusModule.CurrentStep())
+	require.Equal(t, consensus.NewRound, step)
+
+	// Advance time just enough to trigger minBlockTime
+	advanceTime(t, clockMock, minTimeIncrement)
+	step = typesCons.HotstuffStep(leaderConsensusModule.CurrentStep())
+
+	// Time advanced by minBlockTime
+	require.Equal(t, uint64(clockMock.Now().UnixMilli()), paceMakerMinBlockTimeMsec)
+	// Leader is at proposal step
+	require.Equal(t, consensus.Prepare, step)
+}
+
+// TODO: Block preparation triggers ASAP if conditions are met AFTER minBlockTime has triggered.
+func TestPacemaker_MinBlockTime_BlockPrepAsapAfterTrigger(t *testing.T) {
+	t.Skip()
+}
+
+// TODO: Block preparation is always discarded if a new one with better QC is received within minBlockTime.
+func TestPacemaker_MinBlockTime_AllowOnlyLatestBlockPrep(t *testing.T) {
+	t.Skip()
+}
+
+// TODO: Mempool reaped is the one present at minBlockTime or later.
+// Since leader could just reap an earlier mempool and just blocks broadcasting the proposal
+func TestPacemaker_MinBlockTime_DelayReapMempool(t *testing.T) {
+	t.Skip()
+}
+
+// TODO: Successive blocks timings are at least minBlockTime apart.
+func TestPacemaker_MinBlockTime_ConsecutiveBlocksAtLeastMinBlockTimeApart(t *testing.T) {
+	t.Skip()
+}
+
 // TODO: Implement these tests and use them as a starting point for new ones. Consider using ChatGPT to help you out :)
 
 func TestPacemakerDifferentHeightsCatchup(t *testing.T) {

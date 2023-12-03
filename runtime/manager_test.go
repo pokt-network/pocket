@@ -1775,6 +1775,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 							TimeoutMsec:               10000,
 							Manual:                    true,
 							DebugTimeBetweenStepsMsec: 1000,
+							MinBlockTimeMsec:          5000,
 						},
 						ServerModeEnabled: true,
 					},
