@@ -40,7 +40,7 @@ For decades, the `IETF` (Internet Engineering Task Force) has used the motto `ro
 
 ## Code Reviews
 
-_tl;dr Code Reviews are a necessary evil, and there are no specific guidelines that will university apply everywhere all the time._
+_tl;dr Code Reviews are a necessary evil, and there are no specific guidelines that will universally apply everywhere all the time._
 
 One tactic often employed to produce `maintainable` or `more-readable` code is a `code review`. These can take many shapes and forms and often have goals beyond simply `code quality``.
 
